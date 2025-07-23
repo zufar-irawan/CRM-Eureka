@@ -12,12 +12,13 @@ export const Leads = sequelize.define('Lead', {
     allowNull: true
   },
   company: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: true
   },
   title: {
     type: DataTypes.ENUM('Mr', 'Ms', 'Mrs'),
-    allowNull: true
+    allowNull: true,
+    defaultValue: 'Mr'
   },
   first_name: {
     type: DataTypes.STRING(50),
@@ -37,7 +38,12 @@ export const Leads = sequelize.define('Lead', {
   },
   email: {
     type: DataTypes.STRING(100),
-    allowNull: true
+    allowNull: true,
+    validate: {
+      isEmail: {
+        msg: "Must be a valid email address"
+      }
+    }
   },
   phone: {
     type: DataTypes.STRING(20),
@@ -53,7 +59,12 @@ export const Leads = sequelize.define('Lead', {
   },
   website: {
     type: DataTypes.STRING(100),
-    allowNull: true
+    allowNull: true,
+    validate: {
+      isUrl: {
+        msg: "Must be a valid URL"
+      }
+    }
   },
   industry: {
     type: DataTypes.STRING(100),
@@ -61,15 +72,22 @@ export const Leads = sequelize.define('Lead', {
   },
   number_of_employees: {
     type: DataTypes.INTEGER,
-    allowNull: true
+    allowNull: true,
+    validate: {
+      min: {
+        args: [0],
+        msg: "Number of employees must be positive"
+      }
+    }
   },
   lead_source: {
     type: DataTypes.STRING(50),
     allowNull: true
   },
   stage: {
-    type: DataTypes.ENUM('New', 'Contacted', 'Qualification', 'Converted', 'Lost'),
-    allowNull: true
+    type: DataTypes.ENUM('New', 'Contacted', 'Qualification', 'Converted', 'Unqualified'),
+    allowNull: true,
+    defaultValue: 'New'
   },
   rating: {
     type: DataTypes.ENUM('Hot', 'Warm', 'Cold'),
@@ -103,5 +121,17 @@ export const Leads = sequelize.define('Lead', {
   tableName: 'leads',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updatedAt: 'updated_at',
+  hooks: {
+    beforeCreate: (lead, options) => {
+      if (lead.first_name || lead.last_name) {
+        lead.fullname = `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
+      }
+    },
+    beforeUpdate: (lead, options) => {
+      if (lead.changed('first_name') || lead.changed('last_name')) {
+        lead.fullname = `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
+      }
+    }
+  }
 });

@@ -16,7 +16,8 @@ import {
   LogOut,
   ChevronDown,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image";
 
 const Sidebar = () => {
   const menuItems = [
@@ -42,13 +43,14 @@ const Sidebar = () => {
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="w-full flex flex-col items-start gap-2"
         >
-          <img
-            src="/images/eureka-full-logo.png"
+          <Image
+            src="/Images/logo-crm-eureka.png"
             alt="CRM Logo"
-            className="h-6 max-w-[100px] object-contain"
+            width={140}
+            height={10}
           />
           <div className="text-left">
-            <h1 className="text-sm font-semibold leading-none">CRM</h1>
+            {/* <h1 className="text-sm font-semibold leading-none">CRM</h1> */}
             <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
               Administrator <ChevronDown size={14} />
             </p>

@@ -21,3 +21,7 @@ export const getTaskById = async (req, res) => {
     res.status(500).json({ message: "Error fetching task", error: error.message });
   }
 };
+
+export const createTask = async (req, res) => {
+  
+}

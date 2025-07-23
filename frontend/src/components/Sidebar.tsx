@@ -35,7 +35,8 @@ const Sidebar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
-    <div className="w-64 bg-slate-800 text-white h-screen flex flex-col">
+    <div className="w-64 bg-slate-800 text-white min-h-screen flex flex-col">
+      {/* Admin Info Header */}
       <div className="p-4 border-b border-slate-700 relative">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}

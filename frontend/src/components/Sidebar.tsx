@@ -37,20 +37,21 @@ const Sidebar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
-    <div className="w-64 bg-slate-800 text-white h-screen flex flex-col">
-      {/* Header & Dropdown */}
+    <div className="w-64 bg-slate-800 text-white min-h-screen flex flex-col">
+      {/* Admin Info Header */}
       <div className="p-4 border-b border-slate-700 relative">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="w-full flex flex-col items-start gap-2"
         >
-          <img
-            src="/images/eureka-full-logo.png"
+          <Image
+            src="/Images/logo-crm-eureka.png"
             alt="CRM Logo"
-            className="h-6 max-w-[100px] object-contain"
+            width={140}
+            height={10}
           />
           <div className="text-left">
-            <h1 className="text-sm font-semibold leading-none">CRM</h1>
+            {/* <h1 className="text-sm font-semibold leading-none">CRM</h1> */}
             <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
               Administrator <ChevronDown size={14} />
             </p>

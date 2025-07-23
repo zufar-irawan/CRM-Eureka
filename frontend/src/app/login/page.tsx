@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
+import { useRouter } from "next/navigation";
 
 interface LoginData {
   email: string;
@@ -18,6 +19,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -41,7 +43,7 @@ export default function Login() {
 
       alert("Login berhasil!");
         // Redirect to dashboard or home page
-       /* window.location.href = "/dashboard";*/
+       router.push("/leads");
     } catch (err: any) {
       alert(err.message);
     } finally {

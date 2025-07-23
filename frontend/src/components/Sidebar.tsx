@@ -16,26 +16,29 @@ import {
   LogOut,
   ChevronDown,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-const Sidebar = () => {
-  const menuItems = [
-    { icon: Bell, label: "Notifications" },
-    { icon: BarChart3, label: "Dashboard" },
-    { icon: Users, label: "Leads" },
-    { icon: Handshake, label: "Deals" },
-    { icon: CheckSquare, label: "Tasks" },
-    { icon: Building, label: "Companies" },
-    { icon: FileText, label: "Quotations" },
-    { icon: FileSignature, label: "Contracts" },
-    { icon: LineChart, label: "Reports" },
-  ];
+const menuItems = [
+  { icon: Bell, label: "Notifications", path: "/notifications" },
+  { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
+  { icon: Users, label: "Leads", path: "/leads" },
+  { icon: Handshake, label: "Deals", path: "/deals" },
+  { icon: CheckSquare, label: "Tasks", path: "/tasks" },
+  { icon: Building, label: "Companies", path: "/companies" },
+  { icon: FileText, label: "Quotations", path: "/quotations" },
+  { icon: FileSignature, label: "Contracts", path: "/contracts" },
+  { icon: LineChart, label: "Reports", path: "/reports" },
+];
 
+const Sidebar = () => {
+  const router = useRouter();
   const [active, setActive] = useState("Dashboard");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
     <div className="w-64 bg-slate-800 text-white h-screen flex flex-col">
+      {/* Header & Dropdown */}
       <div className="p-4 border-b border-slate-700 relative">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -54,7 +57,7 @@ const Sidebar = () => {
           </div>
         </button>
 
-        {/* Dropdown with animation */}
+        {/* Dropdown animated */}
         <AnimatePresence>
           {isDropdownOpen && (
             <motion.div
@@ -99,11 +102,15 @@ const Sidebar = () => {
             return (
               <li key={index}>
                 <button
-                  onClick={() => setActive(item.label)}
-                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
-                    ? "bg-slate-700 text-white"
-                    : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                    }`}
+                  onClick={() => {
+                    setActive(item.label);
+                    router.push(item.path);
+                  }}
+                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${
+                    isActive
+                      ? "bg-slate-700 text-white"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                  }`}
                 >
                   <Icon size={16} />
                   <span>{item.label}</span>

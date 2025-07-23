@@ -101,11 +101,10 @@ const Sidebar = () => {
               <li key={index}>
                 <button
                   onClick={() => setActive(item.label)}
-                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${
-                    isActive
-                      ? "bg-slate-700 text-white"
-                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }`}
+                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
+                    ? "bg-slate-700 text-white"
+                    : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                    }`}
                 >
                   <Icon size={16} />
                   <span>{item.label}</span>

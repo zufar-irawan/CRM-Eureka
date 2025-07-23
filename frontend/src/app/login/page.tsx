@@ -83,7 +83,7 @@ export default function Login() {
                     </div>
 
                     <div className="bg-white w-[90%] sm:w-[80%] lg:w-[70%] mx-auto rounded-t-3xl shadow-2xl px-6 sm:px-8 pt-6 sm:pt-8 pb-8 sm:pb-15 backdrop-blur-sm border border-white/20 flex-grow flex flex-col">
-                        <div className="space-y-6 sm:space-y-8 max-w-md w-full pt-5">
+                        <div className="space-y-6 sm:space-y-8 w-full pt-5">
                             {/* Email Input */}
                             <div className="space-y-2">
                                 <label htmlFor="email" className="text-sm font-medium text-gray-700 block">

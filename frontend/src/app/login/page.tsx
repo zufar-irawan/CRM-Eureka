@@ -82,8 +82,8 @@ export default function Login() {
                         </div>
                     </div>
 
-                    <div className="bg-white w-[90%] sm:w-[80%] lg:w-[70%] mx-auto rounded-t-3xl shadow-2xl px-6 sm:px-8 pt-6 sm:pt-8 pb-8 sm:pb-15 backdrop-blur-sm border border-white/20 flex-grow flex flex-col justify-center">
-                        <div className="space-y-6 sm:space-y-8 max-w-md mx-auto w-full">
+                    <div className="bg-white w-[90%] sm:w-[80%] lg:w-[70%] mx-auto rounded-t-3xl shadow-2xl px-6 sm:px-8 pt-6 sm:pt-8 pb-8 sm:pb-15 backdrop-blur-sm border border-white/20 flex-grow flex flex-col">
+                        <div className="space-y-6 sm:space-y-8 max-w-md w-full pt-5">
                             {/* Email Input */}
                             <div className="space-y-2">
                                 <label htmlFor="email" className="text-sm font-medium text-gray-700 block">
@@ -163,16 +163,6 @@ export default function Login() {
                                     </>
                                 )}
                             </button>
-
-                            {/* Divider */}
-                            <div className="relative my-6">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-200"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-4 bg-white text-gray-500">atau</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

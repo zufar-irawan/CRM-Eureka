@@ -30,7 +30,7 @@ export default function MainLeads() {
                 }
 
                 const data = await res.json()
-                setLeads(data)
+                setLeads(data.leads)
             } catch (err: any) {
                 alert(err.message)
             } finally {

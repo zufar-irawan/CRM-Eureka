@@ -16,7 +16,6 @@ import axios from 'axios';
 
 export default function MainLeads() {
     const [leads, setLeads] = useState([])
-
     useEffect(() => {
         axios.get("http://localhost:5000/api/leads")
             .then((res) => {
@@ -84,7 +83,7 @@ export default function MainLeads() {
                                             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                                                 <User className="w-4 h-4 text-blue-600" />
                                             </div>
-                                            <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                                            <div className="text-sm font-medium text-gray-900">{lead.fullname}</div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.company}</td>

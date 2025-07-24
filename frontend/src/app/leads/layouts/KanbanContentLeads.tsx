@@ -1,6 +1,6 @@
 "use client"
 
-import { closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, KeyboardSensor, PointerSensor, UniqueIdentifier, useSensor, useSensors } from "@dnd-kit/core"
+import { closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragOverlay, DragStartEvent, KeyboardSensor, PointerSensor, UniqueIdentifier, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { Filter, Kanban, RotateCcw } from "lucide-react"
 import { useState } from "react"
@@ -80,6 +80,26 @@ const KanbanLead = () => {
             return containers.find((container) => container.items.find((item) => item.id === id))
         }
     }
+
+    const findItemTitle = (id: UniqueIdentifier | undefined) => {
+        const container = findValueOfItems(id, 'item');
+        if (!container) return '';
+        const item = container.items.find((item) => item.id === id);
+        if (!item) return '';
+        return item.title;
+    };
+
+    const findContainerTitle = (id: UniqueIdentifier | undefined) => {
+        const container = findValueOfItems(id, 'container');
+        if (!container) return '';
+        return container.title;
+    };
+
+    const findContainerItems = (id: UniqueIdentifier | undefined) => {
+        const container = findValueOfItems(id, 'container');
+        if (!container) return [];
+        return container.items;
+    };
 
     const onAddItem = () => {
         if (!itemName) return
@@ -365,7 +385,7 @@ const KanbanLead = () => {
             </div>
 
             <div className="mt-10">
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-4 gap-5">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCorners}
@@ -398,6 +418,20 @@ const KanbanLead = () => {
                                 </Container>
                             ))}
                         </SortableContext>
+                        <DragOverlay adjustScale={false}>
+                            {/* Drag Overlay For item Item */}
+                            {activeId && activeId.toString().includes('item') && (
+                                <Items id={activeId} title={findItemTitle(activeId)} />
+                            )}
+                            {/* Drag Overlay For Container */}
+                            {activeId && activeId.toString().includes('container') && (
+                                <Container id={activeId} title={findContainerTitle(activeId)}>
+                                    {findContainerItems(activeId).map((i) => (
+                                        <Items key={i.id} title={i.title} id={i.id} />
+                                    ))}
+                                </Container>
+                            )}
+                        </DragOverlay>
                     </DndContext>
                 </div>
             </div>

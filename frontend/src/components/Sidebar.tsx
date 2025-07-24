@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 const menuItems = [
   { icon: Bell, label: "Notifications", path: "/notifications" },

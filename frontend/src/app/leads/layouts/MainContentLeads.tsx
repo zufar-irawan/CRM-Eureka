@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from 'react';
 import {
@@ -10,24 +10,40 @@ import {
   Phone,
   Mail,
   User,
-  Building2
-} from 'lucide-react'
-import axios from 'axios';
+  Building2,
+} from 'lucide-react';
 import SelectedActionBar from "../components/SelectedActionBar";
 
 export default function MainLeads() {
-  const [leads, setLeads] = useState([])
+  const [leads, setLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/leads")
-      .then((res) => {
-        setLeads(res.data)
-      })
-      .catch((err) => {
-        alert(err)
-      })
-  }, [])
+    const fetchLeads = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/leads/", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Gagal mengambil data leads");
+        }
+
+        const data = await res.json();
+        setLeads(data.leads);
+      } catch (err: any) {
+        alert(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeads();
+  }, []);
 
   const toggleSelectLead = (id: string) => {
     setSelectedLeads((prev) =>
@@ -48,7 +64,7 @@ export default function MainLeads() {
   };
 
   return (
-    <main className="p-4 overflow-auto lg:p-6 bg-gray-50">
+    <main className="p-4 overflow-auto lg:p-6 bg-white pb-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -98,35 +114,32 @@ export default function MainLeads() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {leads.map((lead: any, index: number) => (
-                <tr key={index} className="hover:bg-gray-50 transition-colors">
+              {loading ? (
+                <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
+              ) : leads.map((lead) => (
+                <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <input
+                      type="checkbox"
+                      checked={selectedLeads.includes(lead.id)}
+                      onChange={() => toggleSelectLead(lead.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                         <User className="w-4 h-4 text-blue-600" />
                       </div>
-                      <div className="text-sm font-medium text-gray-900">{lead.fullname}</div>
+                      <div className="text-sm font-medium text-gray-900">{lead.name}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.company}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {lead.stage}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.mobile}</td>
-                  {/* <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-2">
-                                                    <span className="text-xs font-medium text-purple-600">{contact.assignedTo.avatar}</span>
-                                                </div>
-                                                <span className="text-sm text-gray-900">{contact.assignedTo.name}</span>
-                                            </div>
-                                        </td> */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lead.updated_at}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 text-sm text-gray-900">{lead.company}</td>
+                  <td className="px-6 py-4">{lead.stage}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{lead.email}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{lead.mobile}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{lead.updated_at}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
                     <button className="text-gray-400 hover:text-gray-600">
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
@@ -137,13 +150,20 @@ export default function MainLeads() {
           </table>
         </div>
 
-        {/* Mobile/Tablet Cards */}
+        {/* Mobile Cards */}
         <div className="lg:hidden space-y-4">
-          {leads.map((lead: any, index: number) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          {loading ? (
+            <p className="text-2xl">Loading...</p>
+          ) : leads.map((lead) => (
+            <div key={lead.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3" />
+                  <input
+                    type="checkbox"
+                    checked={selectedLeads.includes(lead.id)}
+                    onChange={() => toggleSelectLead(lead.id)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
+                  />
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                     <User className="w-5 h-5 text-blue-600" />
                   </div>

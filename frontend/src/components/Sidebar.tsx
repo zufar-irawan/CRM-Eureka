@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image"; // ✅ FIXED: Proper import
 import {
   Bell,
   BarChart3,
@@ -48,10 +49,9 @@ const Sidebar = () => {
             src="/Images/logo-crm-eureka.png"
             alt="CRM Logo"
             width={140}
-            height={10}
+            height={40}
           />
           <div className="text-left">
-            {/* <h1 className="text-sm font-semibold leading-none">CRM</h1> */}
             <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
               Administrator <ChevronDown size={14} />
             </p>

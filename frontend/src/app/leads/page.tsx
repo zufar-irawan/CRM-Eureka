@@ -5,6 +5,7 @@ import { AlignJustify, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import MainLeads from "./layouts/MainContentLeads";
 import CreateLeadModal from "./add/page"; // ⬅️ buat file ini di bawah
+import KanbanLead from "./layouts/KanbanContentLeads";
 
 export default function Leads() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,7 +38,9 @@ export default function Leads() {
           </button>
         </header>
 
-        <MainLeads />
+        {/* <MainLeads /> */}
+
+        <KanbanLead />
 
         {isModalOpen && (
           <CreateLeadModal onClose={() => setIsModalOpen(false)} />

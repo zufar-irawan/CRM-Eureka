@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState } from 'react';
 import {
     RotateCcw,
@@ -10,39 +12,23 @@ import {
     User,
     Building2
 } from 'lucide-react'
+import axios from 'axios';
 
 export default function MainLeads() {
     const [leads, setLeads] = useState([])
-    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const fetchLeads = async () => {
-            try {
-                const res = await fetch("http://localhost:5000/api/leads/", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                })
-
-                if (!res.ok) {
-                    throw new Error("Login gagal")
-                }
-
-                const data = await res.json()
-                setLeads(data)
-            } catch (err: any) {
-                alert(err.message)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchLeads()
+        axios.get("http://localhost:5000/api/leads")
+            .then((res) => {
+                setLeads(res.data)
+            })
+            .catch((err) => {
+                alert(err)
+            })
     }, [])
 
     return (
-        <main className="p-4 overflow-auto lg:p-6 bg-gray-50]">
+        <main className="p-4 overflow-auto lg:p-6 bg-gray-50">
             <div className="max-w-7xl mx-auto">
                 {/* Header Controls */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -87,36 +73,27 @@ export default function MainLeads() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        {loading ? (
-                            <tbody className="text-2xl text-gray-800">
-                                <tr>
-                                    <td></td>
-                                    <td className='p-10'>Loading...</td>
-
-                                </tr>
-                            </tbody>
-                        ) : (
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {leads.map((lead: any, index: number) => (
-                                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                                    <User className="w-4 h-4 text-blue-600" />
-                                                </div>
-                                                <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {leads.map((lead: any, index: number) => (
+                                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center">
+                                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                                <User className="w-4 h-4 text-blue-600" />
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.company}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            {lead.stage}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.email}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.mobile}</td>
-                                        {/* <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.company}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {lead.stage}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.email}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.mobile}</td>
+                                    {/* <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-2">
                                                     <span className="text-xs font-medium text-purple-600">{contact.assignedTo.avatar}</span>
@@ -124,25 +101,21 @@ export default function MainLeads() {
                                                 <span className="text-sm text-gray-900">{contact.assignedTo.name}</span>
                                             </div>
                                         </td> */}
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lead.updated_at}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button className="text-gray-400 hover:text-gray-600">
-                                                <MoreHorizontal className="w-4 h-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        )}
-
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lead.updated_at}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <button className="text-gray-400 hover:text-gray-600">
+                                            <MoreHorizontal className="w-4 h-4" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
                     </table>
                 </div>
 
                 {/* Mobile/Tablet Cards */}
                 <div className="lg:hidden space-y-4">
-                    {loading ? (
-                        <p className="text-2xl py-5"></p>
-                    ) : leads.map((lead: any, index: number) => (
+                    {leads.map((lead: any, index: number) => (
                         <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                             <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center">

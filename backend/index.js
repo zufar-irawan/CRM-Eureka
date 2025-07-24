@@ -5,6 +5,7 @@ import { sequelize } from './config/db.js';
 import leadsRouter from './routes/leadsRoutes.js';
 import tasksRouter from './routes/tasksRoutes.js';
 import authRouter from './routes/authRoutes.js';
+import { setupAssociations } from './models/associations.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(cors({
     origin: 'http://localhost:3000'
 }))
 app.use(express.json());
+setupAssociations();
 app.use("/api/auth", authRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api/tasks", tasksRouter);

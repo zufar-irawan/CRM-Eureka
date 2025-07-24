@@ -3,7 +3,7 @@
 import { closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragOverlay, DragStartEvent, KeyboardSensor, PointerSensor, UniqueIdentifier, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { Filter, Kanban, RotateCcw } from "lucide-react"
-import { useState } from "react"
+import { JSX, useState } from "react"
 import Container from "./Container/Container"
 import Items from "./Item/Item"
 import { v4 as uuidv4 } from 'uuid'
@@ -15,6 +15,7 @@ import { Button } from "./Button/Button"
 type DNDType = {
     id: UniqueIdentifier
     title: string
+    icon: JSX.Element
     items: {
         id: UniqueIdentifier
         title: string
@@ -25,7 +26,11 @@ const KanbanLead = () => {
     const [containers, setContainers] = useState<DNDType[]>([
         {
             id: `container-${uuidv4()}`,
-            title: 'container 1',
+            icon: <div className="w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+            </div>
+            ,
+            title: 'New',
             items: [
                 {
                     id: `item-${uuidv4()}`,
@@ -35,7 +40,11 @@ const KanbanLead = () => {
         },
         {
             id: `container-${uuidv4()}`,
-            title: 'container 2',
+            icon: <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+            </div>
+            ,
+            title: 'Contacted',
             items: [
                 {
                     id: `item-${uuidv4()}`,
@@ -45,7 +54,10 @@ const KanbanLead = () => {
         },
         {
             id: `container-${uuidv4()}`,
-            title: 'container 3',
+            icon: <div className="w-4 h-4 rounded-full bg-green-700 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+            </div>,
+            title: 'Nurture',
             items: [
                 {
                     id: `item-${uuidv4()}`,
@@ -55,7 +67,10 @@ const KanbanLead = () => {
         },
         {
             id: `container-${uuidv4()}`,
-            title: 'container 4',
+            icon: <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+            </div>,
+            title: 'Qualified',
             items: [
                 {
                     id: `item-${uuidv4()}`,
@@ -99,7 +114,13 @@ const KanbanLead = () => {
         const container = findValueOfItems(id, 'container');
         if (!container) return [];
         return container.items;
-    };
+    }
+
+    const findContainerIcons = (id: UniqueIdentifier | undefined) => {
+        const container = findValueOfItems(id, 'container')
+        if (!container) return <></>
+        return container.icon
+    }
 
     const onAddItem = () => {
         if (!itemName) return
@@ -363,7 +384,7 @@ const KanbanLead = () => {
                 </div>
             </Modal>
 
-            <div className="max-w-7xl mx-auto">
+            <div className="mx-auto">
                 {/* Header Controls */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="flex flex-wrap gap-2">
@@ -400,6 +421,7 @@ const KanbanLead = () => {
                                 <Container
                                     key={container.id}
                                     title={container.title}
+                                    icon={container.icon}
                                     id={container.id}
                                     onAddItem={() => {
                                         setShowAddItemModal(true)
@@ -418,6 +440,7 @@ const KanbanLead = () => {
                                 </Container>
                             ))}
                         </SortableContext>
+
                         <DragOverlay adjustScale={false}>
                             {/* Drag Overlay For item Item */}
                             {activeId && activeId.toString().includes('item') && (
@@ -425,7 +448,7 @@ const KanbanLead = () => {
                             )}
                             {/* Drag Overlay For Container */}
                             {activeId && activeId.toString().includes('container') && (
-                                <Container id={activeId} title={findContainerTitle(activeId)}>
+                                <Container id={activeId} icon={findContainerIcons(activeId)} title={findContainerTitle(activeId)}>
                                     {findContainerItems(activeId).map((i) => (
                                         <Items key={i.id} title={i.title} id={i.id} />
                                     ))}

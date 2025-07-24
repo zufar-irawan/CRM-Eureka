@@ -15,6 +15,8 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
@@ -23,6 +25,8 @@ import Link from "next/link"
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const menuItems = [
     { icon: Bell, label: "Notifications", link: "#" },
@@ -36,33 +40,52 @@ const Sidebar = () => {
     { icon: LineChart, label: "Reports", link: "reports" },
   ];
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
   return (
-    <div className="w-64 bg-slate-800 text-white min-h-screen flex flex-col">
+    <div className={`${isMinimized ? 'w-16' : 'w-64 pr-8 pl-2 '} pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 relative`}>
+      {/* Toggle Button */}
+      <button
+        onClick={() => {
+          setIsMinimized(!isMinimized);
+          setIsDropdownOpen(false); // Close dropdown when minimizing
+        }}
+        className="absolute -right-3 top-6 bg-slate-800 border border-slate-600 text-white rounded-full p-1 hover:bg-slate-700 transition-colors z-50"
+      >
+        {isMinimized ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+
       {/* Admin Info Header */}
       <div className="p-4 border-b border-slate-700 relative">
-        <button
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="w-full flex flex-col items-start gap-2"
-        >
-          <Image
-            src="/Images/logo-crm-eureka.png"
-            alt="CRM Logo"
-            width={140}
-            height={10}
-          />
-          <div className="text-left">
-            {/* <h1 className="text-sm font-semibold leading-none">CRM</h1> */}
-            <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
-              Administrator <ChevronDown size={14} />
-            </p>
+        {!isMinimized ? (
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full flex flex-col items-start gap-2"
+          >
+            <Image
+              src="/Images/logo-crm-eureka.png"
+              alt="CRM Logo"
+              width={140}
+              height={10}
+            />
+            <div className="text-left">
+              <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
+                Administrator <ChevronDown size={14} />
+              </p>
+            </div>
+          </button>
+        ) : (
+          <div className="flex justify-center">
+            <Image
+              src="/Images/logo-crm.png"
+              alt="ERM Logo"
+              width={32}
+              height={32}
+            />
           </div>
-        </button>
+        )}
 
         {/* Dropdown with animation */}
         <AnimatePresence>
-          {isDropdownOpen && (
+          {isDropdownOpen && !isMinimized && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -106,13 +129,14 @@ const Sidebar = () => {
               <li key={index}>
                 <Link href={item.link}>
                   <div
-                    className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
-                        ? "bg-slate-700 text-white"
-                        : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                    className={`w-full flex items-center ${isMinimized ? 'justify-center px-2' : 'space-x-2 px-2.5'} py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
+                      ? "bg-slate-700 text-white"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
                       }`}
+                    title={isMinimized ? item.label : undefined}
                   >
-                    <Icon size={16} />
-                    <span>{item.label}</span>
+                    <Icon size={22} />
+                    {!isMinimized && <span>{item.label}</span>}
                   </div>
                 </Link>
               </li>
@@ -120,7 +144,6 @@ const Sidebar = () => {
           })}
         </ul>
       </nav>
-
     </div>
   );
 };

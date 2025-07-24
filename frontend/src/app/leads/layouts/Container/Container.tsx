@@ -4,11 +4,13 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
 import { Button } from '../Button/Button';
+import { GripHorizontal } from 'lucide-react';
 
 const Container = ({
     id,
     children,
     title,
+    icon,
     description,
     onAddItem,
 }: ContainerProps) => {
@@ -40,14 +42,17 @@ const Container = ({
         >
             <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-y-1">
-                    <h1 className="text-gray-800 text-xl">{title}</h1>
+                    <div className="flex flex-row gap-x-2 items-center">
+                        {icon}
+                        <h1 className="text-gray-800 text-xl">{title}</h1>
+                    </div>
                     <p className="text-gray-400 text-sm">{description}</p>
                 </div>
                 <button
-                    className="border p-2 text-xs rounded-xl shadow-lg hover:shadow-xl"
+                    className="p-2 text-xs rounded-xl text-gray-500 group hover:bg-gray-100"
                     {...listeners}
                 >
-                    Drag Handle
+                    <GripHorizontal className='group-hover:text-gray-800' />
                 </button>
             </div>
 

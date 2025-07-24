@@ -33,7 +33,18 @@ const menuItems = [
 ];
 
 const Sidebar = () => {
-  const router = useRouter();
+  const menuItems = [
+    { icon: Bell, label: "Notifications" },
+    { icon: BarChart3, label: "Dashboard" },
+    { icon: Users, label: "Leads" },
+    { icon: Handshake, label: "Deals" },
+    { icon: CheckSquare, label: "Tasks" },
+    { icon: Building, label: "Companies" },
+    { icon: FileText, label: "Quotations" },
+    { icon: FileSignature, label: "Contracts" },
+    { icon: LineChart, label: "Reports" },
+  ];
+
   const [active, setActive] = useState("Dashboard");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -98,20 +109,16 @@ const Sidebar = () => {
         <ul className="space-y-1 px-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
-            const isActive = active === item.label;
+            const isActive = pathname === item.link;
 
             return (
               <li key={index}>
                 <button
-                  onClick={() => {
-                    setActive(item.label);
-                    router.push(item.path);
-                  }}
-                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${
-                    isActive
-                      ? "bg-slate-700 text-white"
-                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }`}
+                  onClick={() => setActive(item.label)}
+                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
+                    ? "bg-slate-700 text-white"
+                    : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                    }`}
                 >
                   <Icon size={16} />
                   <span>{item.label}</span>
@@ -121,6 +128,7 @@ const Sidebar = () => {
           })}
         </ul>
       </nav>
+
     </div>
   );
 };

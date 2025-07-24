@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Bell,
   BarChart3,
@@ -16,27 +17,25 @@ import {
   LogOut,
   ChevronDown,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
-import { usePathname } from "next/navigation";
-import Link from "next/link"
+import { useRouter, usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+
+const menuItems = [
+  { icon: Bell, label: "Notifications", path: "/notifications" },
+  { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
+  { icon: Users, label: "Leads", path: "/leads" },
+  { icon: Handshake, label: "Deals", path: "/deals" },
+  { icon: CheckSquare, label: "Tasks", path: "/tasks" },
+  { icon: Building, label: "Companies", path: "/companies" },
+  { icon: FileText, label: "Quotations", path: "/quotations" },
+  { icon: FileSignature, label: "Contracts", path: "/contracts" },
+  { icon: LineChart, label: "Reports", path: "/reports" },
+];
 
 const Sidebar = () => {
-  const pathname = usePathname();
-
-  const menuItems = [
-    { icon: Bell, label: "Notifications", link: "#" },
-    { icon: BarChart3, label: "Dashboard", link: "/dashboard" },
-    { icon: Users, label: "Leads", link: "/leads" },
-    { icon: Handshake, label: "Deals", link: "/deals" },
-    { icon: CheckSquare, label: "Tasks", link: "/tasks" },
-    { icon: Building, label: "Companies", link: "/company" },
-    { icon: FileText, label: "Quotations", link: "/quotations" },
-    { icon: FileSignature, label: "Contracts", link: "/contracts" },
-    { icon: LineChart, label: "Reports", link: "reports" },
-  ];
-
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <div className="w-64 bg-slate-800 text-white min-h-screen flex flex-col">
@@ -50,17 +49,16 @@ const Sidebar = () => {
             src="/Images/logo-crm-eureka.png"
             alt="CRM Logo"
             width={140}
-            height={10}
+            height={40}
           />
           <div className="text-left">
-            {/* <h1 className="text-sm font-semibold leading-none">CRM</h1> */}
             <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
               Administrator <ChevronDown size={14} />
             </p>
           </div>
         </button>
 
-        {/* Dropdown with animation */}
+        {/* Dropdown animated */}
         <AnimatePresence>
           {isDropdownOpen && (
             <motion.div
@@ -100,27 +98,26 @@ const Sidebar = () => {
         <ul className="space-y-1 px-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
-            const isActive = pathname === item.link;
+            const isActive = pathname === item.path;
 
             return (
               <li key={index}>
-                <Link href={item.link}>
-                  <div
-                    className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
-                        ? "bg-slate-700 text-white"
-                        : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                      }`}
-                  >
-                    <Icon size={16} />
-                    <span>{item.label}</span>
-                  </div>
-                </Link>
+                <button
+                  onClick={() => router.push(item.path)}
+                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${
+                    isActive
+                      ? "bg-slate-700 text-white"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                  }`}
+                >
+                  <Icon size={16} />
+                  <span>{item.label}</span>
+                </button>
               </li>
             );
           })}
         </ul>
       </nav>
-
     </div>
   );
 };

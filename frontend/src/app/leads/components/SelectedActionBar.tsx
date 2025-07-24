@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { MoreHorizontal, X } from "lucide-react";
 import BulkEditModal from "./BulkEditModal";
-import ModalPortal from "./ModalPortal"; // pastikan path sesuai
+import ConvertToDealModal from "./ConvertToDealModal";
+import DeleteLeadModal from "./DeleteLeadModal"; // ✅ pastikan path sesuai
+import ModalPortal from "./ModalPortal";
 
 interface SelectedActionBarProps {
   selectedCount: number;
@@ -16,6 +18,20 @@ export default function SelectedActionBar({
 }: SelectedActionBarProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBulkEdit, setShowBulkEdit] = useState(false);
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const dummyLeadId = "CRM-LEAD-2025-00002"; // ✅ ganti sesuai data yang dipilih nanti
+
+  const handleConvert = () => {
+    alert(`${selectedCount} Lead(s) converted to Deal(s)!`);
+    setShowConvertModal(false);
+  };
+
+  const handleDelete = () => {
+    alert(`Lead ${dummyLeadId} deleted`);
+    setShowDeleteModal(false);
+  };
 
   if (selectedCount === 0) return null;
 
@@ -57,7 +73,7 @@ export default function SelectedActionBar({
                   </button>
                   <button
                     onClick={() => {
-                      alert("Delete clicked");
+                      setShowDeleteModal(true);
                       setShowDropdown(false);
                     }}
                     className="block w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100"
@@ -66,7 +82,7 @@ export default function SelectedActionBar({
                   </button>
                   <button
                     onClick={() => {
-                      alert("Convert to Deal clicked");
+                      setShowConvertModal(true);
                       setShowDropdown(false);
                     }}
                     className="block w-full px-4 py-2 text-left text-blue-600 hover:bg-gray-100"
@@ -85,6 +101,26 @@ export default function SelectedActionBar({
           <BulkEditModal
             selectedCount={selectedCount}
             onClose={() => setShowBulkEdit(false)}
+          />
+        </ModalPortal>
+      )}
+
+      {showConvertModal && (
+        <ModalPortal>
+          <ConvertToDealModal
+            selectedCount={selectedCount}
+            onClose={() => setShowConvertModal(false)}
+            onConfirm={handleConvert}
+          />
+        </ModalPortal>
+      )}
+
+      {showDeleteModal && (
+        <ModalPortal>
+          <DeleteLeadModal
+            leadId={dummyLeadId}
+            onClose={() => setShowDeleteModal(false)}
+            onConfirm={handleDelete}
           />
         </ModalPortal>
       )}

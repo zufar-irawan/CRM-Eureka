@@ -17,22 +17,25 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image";
+import Image from "next/image"
+import { usePathname } from "next/navigation";
+import Link from "next/link"
 
 const Sidebar = () => {
+  const pathname = usePathname();
+
   const menuItems = [
-    { icon: Bell, label: "Notifications" },
-    { icon: BarChart3, label: "Dashboard" },
-    { icon: Users, label: "Leads" },
-    { icon: Handshake, label: "Deals" },
-    { icon: CheckSquare, label: "Tasks" },
-    { icon: Building, label: "Companies" },
-    { icon: FileText, label: "Quotations" },
-    { icon: FileSignature, label: "Contracts" },
-    { icon: LineChart, label: "Reports" },
+    { icon: Bell, label: "Notifications", link: "#" },
+    { icon: BarChart3, label: "Dashboard", link: "/dashboard" },
+    { icon: Users, label: "Leads", link: "/leads" },
+    { icon: Handshake, label: "Deals", link: "/deals" },
+    { icon: CheckSquare, label: "Tasks", link: "/tasks" },
+    { icon: Building, label: "Companies", link: "/company" },
+    { icon: FileText, label: "Quotations", link: "/quotations" },
+    { icon: FileSignature, label: "Contracts", link: "/contracts" },
+    { icon: LineChart, label: "Reports", link: "reports" },
   ];
 
-  const [active, setActive] = useState("Dashboard");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
@@ -97,25 +100,27 @@ const Sidebar = () => {
         <ul className="space-y-1 px-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
-            const isActive = active === item.label;
+            const isActive = pathname === item.link;
 
             return (
               <li key={index}>
-                <button
-                  onClick={() => setActive(item.label)}
-                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
-                    ? "bg-slate-700 text-white"
-                    : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                    }`}
-                >
-                  <Icon size={16} />
-                  <span>{item.label}</span>
-                </button>
+                <Link href={item.link}>
+                  <div
+                    className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
+                        ? "bg-slate-700 text-white"
+                        : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                      }`}
+                  >
+                    <Icon size={16} />
+                    <span>{item.label}</span>
+                  </div>
+                </Link>
               </li>
             );
           })}
         </ul>
       </nav>
+
     </div>
   );
 };

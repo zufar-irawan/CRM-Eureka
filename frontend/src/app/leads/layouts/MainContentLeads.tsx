@@ -33,17 +33,35 @@ export default function MainLeads() {
           throw new Error("Gagal mengambil data leads");
         }
 
-                const data = await res.json()
-                setLeads(data.leads)
-            } catch (err: any) {
-                alert(err.message)
-            } finally {
-                setLoading(false)
-            }
-        }
+        const data = await res.json();
+        setLeads(data.leads);
+      } catch (err: any) {
+        alert(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        fetchLeads()
-    }, [])
+    fetchLeads();
+  }, []);
+
+  const toggleSelectLead = (id: string) => {
+    setSelectedLeads((prev) =>
+      prev.includes(id)
+        ? prev.filter((leadId) => leadId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const isAllSelected = leads.length > 0 && selectedLeads.length === leads.length;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedLeads([]);
+    } else {
+      setSelectedLeads(leads.map((lead) => lead.id));
+    }
+  };
 
   return (
     <main className="p-4 overflow-auto lg:p-6 bg-white pb-6">
@@ -113,7 +131,7 @@ export default function MainLeads() {
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                         <User className="w-4 h-4 text-blue-600" />
                       </div>
-                      <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                      <div className="text-sm font-medium text-gray-900">{lead.fullname}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">{lead.company}</td>

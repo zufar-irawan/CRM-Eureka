@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import useUser from "../../hooks/useUser";
 
 const menuItems = [
   { icon: Bell, label: "Notifications", path: "/notifications" },
@@ -34,6 +35,7 @@ const menuItems = [
 
 const Sidebar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { user, loading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -53,7 +55,8 @@ const Sidebar = () => {
           />
           <div className="text-left">
             <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
-              Administrator <ChevronDown size={14} />
+              {loading ? "Memuat..." : user?.name || "Administrator"}{" "}
+              <ChevronDown size={14} />
             </p>
           </div>
         </button>

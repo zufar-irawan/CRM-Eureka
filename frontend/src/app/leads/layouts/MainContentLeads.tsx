@@ -12,7 +12,7 @@ import {
   User,
   Building2,
 } from 'lucide-react';
-import SelectedActionBar from "@/components/SelectedActionBar";
+import SelectedActionBar from "../components/SelectedActionBar";
 
 export default function MainLeads() {
   const [leads, setLeads] = useState<any[]>([]);
@@ -33,8 +33,8 @@ export default function MainLeads() {
           throw new Error("Gagal mengambil data leads");
         }
 
-        const data = await res.json();
-        setLeads(data);
+        const data = await res.json();  
+        setLeads(data.leads);
       } catch (err: any) {
         alert(err.message);
       } finally {

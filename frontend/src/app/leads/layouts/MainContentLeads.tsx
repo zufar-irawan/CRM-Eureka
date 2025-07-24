@@ -90,7 +90,8 @@ export default function MainLeads() {
                         {loading ? (
                             <tbody className="text-2xl text-gray-800">
                                 <tr>
-                                    <td>Loading...</td>
+                                    <td></td>
+                                    <td className='p-10'>Loading...</td>
 
                                 </tr>
                             </tbody>
@@ -140,7 +141,7 @@ export default function MainLeads() {
                 {/* Mobile/Tablet Cards */}
                 <div className="lg:hidden space-y-4">
                     {loading ? (
-                        <p className="text-2xl"></p>
+                        <p className="text-2xl py-5"></p>
                     ) : leads.map((lead: any, index: number) => (
                         <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                             <div className="flex items-start justify-between mb-3">

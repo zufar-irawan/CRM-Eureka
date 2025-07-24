@@ -42,8 +42,7 @@ export default function Login() {
       localStorage.setItem("token", data.token);
 
       alert("Login berhasil!");
-      // Redirect to dashboard or home page
-      router.push("/leads");
+      router.push("/dashboard");
     } catch (err: any) {
       alert(err.message);
     } finally {

@@ -40,14 +40,14 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
                 isDragging && 'opacity-50',
             )}
         >
-            <div className="flex pl-1.5 text-[0.8rem] items-center justify-between">
+            <div className="flex pl-1.5 py-2 text-md items-center justify-between" {...listeners}>
                 {fullname}
-                <button
+                {/* <button
                     className="p-2 hover:bg-gray-100 rounded-xl group text-gray-500"
-                    {...listeners}
+
                 >
                     <GripVertical size={16} className='group-hover:text-gray-800' />
-                </button>
+                </button> */}
             </div>
 
             <div className='w-full py-1'>

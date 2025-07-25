@@ -48,12 +48,12 @@ const Container = ({
                     </div>
                     <p className="text-gray-400 text-xs">{description}</p>
                 </div>
-                <button
+                {/* <button
                     className="p-2 text-xs rounded-xl text-gray-500 group hover:bg-gray-100"
                     {...listeners}
                 >
                     <GripHorizontal size={16} className='group-hover:text-gray-800' />
-                </button>
+                </button> */}
             </div>
 
             {children}

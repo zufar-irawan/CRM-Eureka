@@ -24,18 +24,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import useUser from "../../hooks/useUser";
 
-const menuItems = [
-  { icon: Bell, label: "Notifications", path: "/notifications" },
-  { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
-  { icon: Users, label: "Leads", path: "/leads" },
-  { icon: Handshake, label: "Deals", path: "/deals" },
-  { icon: CheckSquare, label: "Tasks", path: "/tasks" },
-  { icon: Building, label: "Companies", path: "/companies" },
-  { icon: FileText, label: "Quotations", path: "/quotations" },
-  { icon: FileSignature, label: "Contracts", path: "/contracts" },
-  { icon: LineChart, label: "Reports", path: "/reports" },
-];
-
 const Sidebar = () => {
   const pathname = usePathname();
   const [isMinimized, setIsMinimized] = useState(false);
@@ -137,7 +125,7 @@ const Sidebar = () => {
         <ul className="space-y-1 px-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
-            const isActive = pathname === item.path;
+            const isActive = pathname === item.link;
 
             return (
               <li key={index}>

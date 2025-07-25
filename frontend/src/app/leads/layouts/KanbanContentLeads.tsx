@@ -78,6 +78,32 @@ const KanbanLead = () => {
                 }
             ]
         },
+        {
+            id: `container-${uuidv4()}`,
+            icon: <div className="w-4 h-4 rounded-full bg-gray-800 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+            </div>,
+            title: 'Unqualified',
+            items: [
+                {
+                    id: `item-${uuidv4()}`,
+                    title: 'Item 5'
+                }
+            ]
+        },
+        {
+            id: `container-${uuidv4()}`,
+            icon: <div className="w-4 h-4 rounded-full bg-pink-500 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+            </div>,
+            title: 'Junk',
+            items: [
+                {
+                    id: `item-${uuidv4()}`,
+                    title: 'Item 6'
+                }
+            ]
+        },
     ])
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
     const [currentContainerId, setCurrentContainerId] = useState<UniqueIdentifier>()
@@ -406,7 +432,7 @@ const KanbanLead = () => {
             </div>
 
             <div className="mt-10">
-                <div className="grid grid-cols-4 gap-5">
+                <div className="grid grid-cols-6 gap-3">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCorners}

@@ -44,21 +44,21 @@ const Container = ({
                 <div className="flex flex-col gap-y-1">
                     <div className="flex flex-row gap-x-2 items-center">
                         {icon}
-                        <h1 className="text-gray-800 text-xl">{title}</h1>
+                        <h1 className="text-gray-800 text-md">{title}</h1>
                     </div>
-                    <p className="text-gray-400 text-sm">{description}</p>
+                    <p className="text-gray-400 text-xs">{description}</p>
                 </div>
                 <button
                     className="p-2 text-xs rounded-xl text-gray-500 group hover:bg-gray-100"
                     {...listeners}
                 >
-                    <GripHorizontal className='group-hover:text-gray-800' />
+                    <GripHorizontal size={16} className='group-hover:text-gray-800' />
                 </button>
             </div>
 
             {children}
-            <Button variant="ghost" onClick={onAddItem}>
-                Add Item
+            <Button variant="ghost" className='text-sm' onClick={onAddItem}>
+                + New
             </Button>
         </div>
     );

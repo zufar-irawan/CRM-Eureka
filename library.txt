@@ -1,0 +1,3 @@
+npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/modifiers
+npm i axios
+npm i uuid

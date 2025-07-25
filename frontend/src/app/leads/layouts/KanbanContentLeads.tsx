@@ -3,7 +3,7 @@
 import { closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragOverlay, DragStartEvent, KeyboardSensor, PointerSensor, UniqueIdentifier, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { Filter, Kanban, RotateCcw } from "lucide-react"
-import { JSX, useEffect, useState } from "react"
+import { act, JSX, useEffect, useState } from "react"
 import Container from "./Container/Container"
 import Items from "./Item/Item"
 import { v4 as uuidv4 } from 'uuid'
@@ -19,7 +19,10 @@ type DNDType = {
     icon: JSX.Element
     items: {
         id: UniqueIdentifier
-        title: string
+        fullname: string
+        organization: string
+        email: string
+        mobileno: string
     }[]
 }
 
@@ -105,7 +108,10 @@ const KanbanLead = () => {
 
                             const items = leadsForStage.map((lead) => ({
                                 id: `item-${lead.id}`,
-                                title: lead.fullname || lead.company || lead.title
+                                fullname: lead.fullname,
+                                organization: lead.company,
+                                email: lead.email,
+                                mobileno: lead.mobile
                             }));
 
                             return { ...container, items };
@@ -143,7 +149,28 @@ const KanbanLead = () => {
         if (!container) return '';
         const item = container.items.find((item) => item.id === id);
         if (!item) return '';
-        return item.title;
+        return item.fullname;
+    };
+    const findItemCompany = (id: UniqueIdentifier | undefined) => {
+        const container = findValueOfItems(id, 'item');
+        if (!container) return '';
+        const item = container.items.find((item) => item.id === id);
+        if (!item) return '';
+        return item.organization;
+    };
+    const findItemEmail = (id: UniqueIdentifier | undefined) => {
+        const container = findValueOfItems(id, 'item');
+        if (!container) return '';
+        const item = container.items.find((item) => item.id === id);
+        if (!item) return '';
+        return item.email;
+    };
+    const findItemMobile = (id: UniqueIdentifier | undefined) => {
+        const container = findValueOfItems(id, 'item');
+        if (!container) return '';
+        const item = container.items.find((item) => item.id === id);
+        if (!item) return '';
+        return item.mobileno;
     };
 
     const findContainerTitle = (id: UniqueIdentifier | undefined) => {
@@ -172,7 +199,10 @@ const KanbanLead = () => {
         if (!container) return
         container.items.push({
             id,
-            title: itemName
+            fullname: itemName,
+            organization: '',
+            email: '',
+            mobileno: ''
         })
         setContainers([...containers])
         setItemName('')
@@ -475,7 +505,7 @@ const KanbanLead = () => {
                                     >
                                         <div className="flex items-start flex-col gap-y-4">
                                             {container.items.map((item) => (
-                                                <Items key={item.id} id={item.id} title={item.title} />
+                                                <Items key={item.id} id={item.id} fullname={item.fullname} organization={item.organization} email={item.email} mobileno={item.mobileno} />
                                             ))}
                                         </div>
                                     </SortableContext>
@@ -486,13 +516,13 @@ const KanbanLead = () => {
                         <DragOverlay adjustScale={false}>
                             {/* Drag Overlay For item Item */}
                             {activeId && activeId.toString().includes('item') && (
-                                <Items id={activeId} title={findItemTitle(activeId)} />
+                                <Items id={activeId} fullname={findItemTitle(activeId)} organization={findItemCompany(activeId)} email={findItemEmail(activeId)} mobileno={findItemMobile(activeId)} />
                             )}
                             {/* Drag Overlay For Container */}
                             {activeId && activeId.toString().includes('container') && (
                                 <Container id={activeId} icon={findContainerIcons(activeId)} title={findContainerTitle(activeId)}>
                                     {findContainerItems(activeId).map((i) => (
-                                        <Items key={i.id} title={i.title} id={i.id} />
+                                        <Items key={i.id} fullname={i.fullname} id={i.id} organization={i.organization} email={i.email} mobileno={i.mobileno} />
                                     ))}
                                 </Container>
                             )}

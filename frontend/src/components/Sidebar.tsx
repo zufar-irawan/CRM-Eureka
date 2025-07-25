@@ -18,8 +18,9 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Mail,
 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import useUser from "../../hooks/useUser";
@@ -36,10 +37,11 @@ const Sidebar = () => {
     { icon: Users, label: "Leads", link: "/leads" },
     { icon: Handshake, label: "Deals", link: "/deals" },
     { icon: CheckSquare, label: "Tasks", link: "/tasks" },
+    { icon: Mail, label: "Contacts", link: "/contacts" },
     { icon: Building, label: "Companies", link: "/company" },
     { icon: FileText, label: "Quotations", link: "/quotations" },
     { icon: FileSignature, label: "Contracts", link: "/contracts" },
-    { icon: LineChart, label: "Reports", link: "reports" },
+    { icon: LineChart, label: "Reports", link: "/reports" },
   ];
 
   return (
@@ -48,7 +50,7 @@ const Sidebar = () => {
       <button
         onClick={() => {
           setIsMinimized(!isMinimized);
-          setIsDropdownOpen(false); // Close dropdown when minimizing
+          setIsDropdownOpen(false);
         }}
         className="absolute -right-3 top-6 bg-slate-800 border border-slate-600 text-white rounded-full p-1 hover:bg-slate-700 transition-colors z-20"
       >
@@ -85,7 +87,7 @@ const Sidebar = () => {
           </div>
         )}
 
-        {/* Dropdown animated */}
+        {/* Dropdown */}
         <AnimatePresence>
           {isDropdownOpen && !isMinimized && (
             <motion.div
@@ -120,7 +122,7 @@ const Sidebar = () => {
         </AnimatePresence>
       </div>
 
-      {/* Sidebar Navigation */}
+      {/* Sidebar Menu */}
       <nav className="flex-1 py-3">
         <ul className="space-y-1 px-2">
           {menuItems.map((item, index) => {

@@ -21,6 +21,7 @@ import { useState } from "react";
 export default function LeadDetailLayout() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("New");
+  const [activeTab, setActiveTab] = useState("Notes");
 
   const statusOptions = [
     { name: "New", color: "bg-gray-500" },
@@ -30,6 +31,7 @@ export default function LeadDetailLayout() {
     { name: "Unqualified", color: "bg-red-500" },
     { name: "Junk", color: "bg-purple-500" }
   ];
+
   const tabs = [
     { name: "Activity", icon: BarChart3 },
     { name: "Emails", icon: Mail },
@@ -40,6 +42,190 @@ export default function LeadDetailLayout() {
     { name: "Notes", icon: StickyNote },
     { name: "Attachments", icon: Paperclip }
   ];
+
+  // Function to render content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "Activity":
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900">Activity</h2>
+              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
+                <Plus className="w-4 h-4" />
+                <span>New Activity</span>
+              </button>
+            </div>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">No Activities</h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Create Activity
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Emails":
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900">Emails</h2>
+              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
+                <Plus className="w-4 h-4" />
+                <span>Compose Email</span>
+              </button>
+            </div>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Mail className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">No Emails</h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Send Email
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Comments":
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900">Comments</h2>
+              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
+                <Plus className="w-4 h-4" />
+                <span>Add Comment</span>
+              </button>
+            </div>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                <MessageSquare className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">No Comments</h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Add Comment
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Data":
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900">Data</h2>
+              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
+                <Plus className="w-4 h-4" />
+                <span>Add Data</span>
+              </button>
+            </div>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Database className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">No Data</h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Import Data
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Calls":
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900">Calls</h2>
+              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
+                <Plus className="w-4 h-4" />
+                <span>Log Call</span>
+              </button>
+            </div>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Phone className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">No Calls</h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Make Call
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Tasks":
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900">Tasks</h2>
+              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
+                <Plus className="w-4 h-4" />
+                <span>New Task</span>
+              </button>
+            </div>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                <CheckSquare className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">No Tasks</h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Create Task
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Notes":
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900">Notes</h2>
+              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
+                <Plus className="w-4 h-4" />
+                <span>New Note</span>
+              </button>
+            </div>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">No Notes</h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Create Note
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Attachments":
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-xl font-semibold text-gray-900">Attachments</h2>
+              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
+                <Plus className="w-4 h-4" />
+                <span>Upload File</span>
+              </button>
+            </div>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Paperclip className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">No Attachments</h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Upload File
+              </button>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -121,8 +307,9 @@ export default function LeadDetailLayout() {
               {tabs.map((tab) => (
                 <button
                   key={tab.name}
+                  onClick={() => setActiveTab(tab.name)}
                   className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    tab.name === "Notes"
+                    tab.name === activeTab
                       ? "border-gray-900 text-gray-900"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
@@ -134,27 +321,8 @@ export default function LeadDetailLayout() {
             </div>
           </div>
 
-          {/* Notes Content */}
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Notes</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>New Note</span>
-              </button>
-            </div>
-
-            {/* Empty State */}
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Notes</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Create Note
-              </button>
-            </div>
-          </div>
+          {/* Dynamic Content Based on Active Tab */}
+          {renderTabContent()}
         </div>
 
         {/* Right Sidebar */}

@@ -13,7 +13,7 @@ import {
   Building2,
   DollarSign,
 } from "lucide-react";
-import SelectedActionBar from "@/components/SelectedActionBar";
+import SelectedActionBar from "@/app/leads/components/SelectedActionBar";
 
 export default function MainContentDeals() {
   const [deals, setDeals] = useState<any[]>([]);
@@ -21,53 +21,111 @@ export default function MainContentDeals() {
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchDeals = async () => {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const mockDeals = [
-          {
-            id: "1",
-            organization: "Tech Corp",
-            annualRevenue: "$50,000.00",
-            status: "Qualification",
-            email: "rionkenzo@gmail.com",
-            mobile: "081829382",
-            assignedTo: "Administrator",
-            updated_at: "20 hours ago",
-          },
-          {
-            id: "2",
-            organization: "StartUp Inc",
-            annualRevenue: "$25,000.00",
-            status: "Proposal",
-            email: "contact@startup.com",
-            mobile: "081234567",
-            assignedTo: "Sales Manager",
-            updated_at: "1 day ago",
-          },
-          {
-            id: "3",
-            organization: "Enterprise Solutions",
-            annualRevenue: "$100,000.00",
-            status: "Negotiation",
-            email: "deals@enterprise.com",
-            mobile: "081987654",
-            assignedTo: "Senior Sales",
-            updated_at: "3 hours ago",
-          },
-        ];
-
-        setDeals(mockDeals);
-      } catch (err: any) {
-        alert(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDeals();
   }, []);
+
+  const fetchDeals = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/deals");
+      const result = await res.json();
+
+      if (!result.success) throw new Error(result.message);
+      
+      const formattedDeals = result.data.map((deal: any) => ({
+        id: String(deal.id),
+        organization: deal.lead?.company || "N/A",
+        annualRevenue: deal.value ? `$${parseFloat(deal.value).toLocaleString()}` : "$0.00",
+        status: deal.stage || "N/A",
+        email: deal.lead?.email || "-",
+        mobile: deal.lead?.phone || "-",
+        assignedTo: deal.creator?.name || "Unassigned",
+        updated_at: new Date(deal.updated_at).toLocaleString('en-US', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        }),
+        rawData: deal // Keep original data for API calls
+      }));
+
+      setDeals(formattedDeals);
+    } catch (err: any) {
+      alert("Failed to load deals: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Bulk Delete Handler
+  const handleBulkDelete = async (ids: string[]) => {
+    if (!window.confirm(`Are you sure you want to delete ${ids.length} deal(s)?`)) return;
+    
+    try {
+      const deletePromises = ids.map(async (id) => {
+        const response = await fetch(`/api/deals/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `Failed to delete deal ${id}`);
+        }
+        
+        return response.json();
+      });
+
+      await Promise.all(deletePromises);
+      
+      // Remove deleted deals from state
+      setDeals((prev) => prev.filter((deal) => !ids.includes(deal.id)));
+      setSelectedDeals([]);
+      alert(`Successfully deleted ${ids.length} deal(s)`);
+    } catch (err: any) {
+      alert("Failed to delete deals: " + err.message);
+    }
+  };
+
+  // Bulk Update Handler
+  const handleBulkUpdate = async (ids: string[], field: string, value: string) => {
+    try {
+      const fieldMap: { [key: string]: string } = {
+        "Title": "title",
+        "Value": "value",
+        "Stage": "stage",
+        "Owner": "owner"
+      };
+
+      const apiField = fieldMap[field] || field.toLowerCase().replace(/ /g, "_");
+      
+      const updatePromises = ids.map(async (id) => {
+        const response = await fetch(`/api/deals/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ [apiField]: value }),
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `Failed to update deal ${id}`);
+        }
+        
+        return response.json();
+      });
+
+      await Promise.all(updatePromises);
+      
+      // Refresh deals after update
+      await fetchDeals();
+      setSelectedDeals([]);
+      alert(`Successfully updated ${ids.length} deal(s)`);
+    } catch (err: any) {
+      alert("Failed to update deals: " + err.message);
+    }
+  };
 
   const toggleSelectDeal = (id: string) => {
     setSelectedDeals((prev) =>
@@ -94,7 +152,10 @@ export default function MainContentDeals() {
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex flex-wrap gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={fetchDeals}
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
+            >
               <RotateCcw className="w-4 h-4" />
               <span className="hidden sm:inline">Refresh</span>
             </button>
@@ -319,7 +380,11 @@ export default function MainContentDeals() {
         {/* Action bar */}
         <SelectedActionBar
           selectedCount={selectedDeals.length}
+          selectedIds={selectedDeals}
           onClearSelection={() => setSelectedDeals([])}
+          onDelete={handleBulkDelete}
+          onUpdate={handleBulkUpdate}
+          type="deals"
         />
       </div>
     </main>

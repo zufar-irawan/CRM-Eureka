@@ -1,0 +1,469 @@
+{
+  "info": {
+    "name": "CRM API Testing",
+    "description": "Complete API testing for Leads, Deals, and Tasks",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Leads",
+      "item": [
+        {
+          "name": "Get All Leads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "stage", "value": "New", "disabled": true},
+                {"key": "rating", "value": "Hot", "disabled": true},
+                {"key": "owner", "value": "1", "disabled": true},
+                {"key": "search", "value": "PT", "disabled": true}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Lead by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"owner\": 1,\n    \"company\": \"PT Test Company\",\n    \"title\": \"Mr\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"job_position\": \"Manager\",\n    \"email\": \"john@testcompany.com\",\n    \"phone\": \"021-1234567\",\n    \"mobile\": \"081234567890\",\n    \"website\": \"https://testcompany.com\",\n    \"industry\": \"Manufacturing\",\n    \"number_of_employees\": 50,\n    \"lead_source\": \"Website\",\n    \"stage\": \"New\",\n    \"rating\": \"Warm\",\n    \"street\": \"Jl. Test No. 123\",\n    \"city\": \"Jakarta\",\n    \"state\": \"DKI Jakarta\",\n    \"postal_code\": \"12345\",\n    \"country\": \"Indonesia\",\n    \"description\": \"Test lead description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads"]
+            }
+          }
+        },
+        {
+          "name": "Update Lead",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"company\": \"PT Test Company Updated\",\n    \"rating\": \"Hot\",\n    \"stage\": \"Contacted\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads", "1"]
+            }
+          }
+        },
+        {
+          "name": "Convert Lead to Deal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"deal_title\": \"Deal from Lead Conversion\",\n    \"deal_value\": 50000000,\n    \"deal_stage\": \"proposal_sent\",\n    \"owner\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/1/convert",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads", "1", "convert"]
+            }
+          }
+        },
+        {
+          "name": "Update Lead Stage",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"stage\": \"Qualification\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/1/stage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads", "1", "stage"]
+            }
+          }
+        },
+        {
+          "name": "Get Lead Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/1/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads", "1", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Add Lead Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"message\": \"Sudah follow up via email\",\n    \"user_id\": 2,\n    \"user_name\": \"Sales One\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/1/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads", "1", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Delete Lead",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "leads", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deals",
+      "item": [
+        {
+          "name": "Get All Deals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/deals?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deals"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "stage", "value": "proposal_sent", "disabled": true},
+                {"key": "owner", "value": "1", "disabled": true},
+                {"key": "search", "value": "Deal", "disabled": true}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Deal by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/deals/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deals", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Deal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"lead_id\": 1,\n    \"title\": \"Deal Pengiriman Jakarta-Surabaya\",\n    \"value\": 25000000,\n    \"stage\": \"proposal_sent\",\n    \"owner\": 1,\n    \"id_contact\": 0,\n    \"id_company\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/deals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deals"]
+            }
+          }
+        },
+        {
+          "name": "Update Deal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Deal Pengiriman Jakarta-Surabaya Updated\",\n    \"value\": 30000000,\n    \"stage\": \"negotiation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/deals/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deals", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Deal Stage",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"stage\": \"won\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/deals/1/updateStage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deals", "1", "updateStage"]
+            }
+          }
+        },
+        {
+          "name": "Get Deal Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/deals/1/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deals", "1", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Add Deal Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"message\": \"Deal sudah masuk tahap negosiasi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/deals/1/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deals", "1", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Delete Deal",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/deals/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deals", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {"key": "status", "value": "new", "disabled": true},
+                {"key": "priority", "value": "high", "disabled": true},
+                {"key": "category", "value": "Kanvasing", "disabled": true},
+                {"key": "assigned_to", "value": "2", "disabled": true}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Task by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"lead_id\": 1,\n    \"assigned_to\": 2,\n    \"title\": \"Follow up call client PT ABC\",\n    \"description\": \"Menghubungi client untuk follow up penawaran\",\n    \"category\": \"Followup\",\n    \"due_date\": \"2025-07-30 14:00:00\",\n    \"priority\": \"medium\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            }
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"completed\",\n    \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Task Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/1/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "1", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Add Task Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"comment_text\": \"Sudah melakukan follow up, client tertarik\",\n    \"commented_by\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/1/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "1", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Update Task Comment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"comment_text\": \"Update: Client sudah memberikan feedback positif\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/task-comments/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "task-comments", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Task Comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/task-comments/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "task-comments", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}

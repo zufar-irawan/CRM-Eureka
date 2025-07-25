@@ -93,7 +93,7 @@ const KanbanLead = () => {
                     const groupedLeads: { [key: string]: any[] } = {};
 
                     fetchLeads.forEach((lead: any) => {
-                        const stage = lead.stage || 'New'; // fallback ke "New"
+                        const stage = lead.stage || 'New'
                         if (!groupedLeads[stage]) {
                             groupedLeads[stage] = [];
                         }

@@ -378,7 +378,7 @@ export const getDealComments = async (req, res) => {
 export const addDealComment = async (req, res) => {
     try {
         const { id } = req.params;
-        const { message } = req.body;
+        const { message, user_id, user_name } = req.body; // TAMBAHAN: terima user_id dan user_name dari body
 
         if (!message) {
             return res.status(400).json({
@@ -396,14 +396,10 @@ export const addDealComment = async (req, res) => {
             });
         }
 
-        // Get user info (assuming from auth middleware)
-        const userId = req.user?.id || 1;
-        const userName = req.user?.name || 'Unknown User';
-
         const comment = await DealComments.create({
             deal_id: id,
-            user_id: userId,
-            user_name: userName,
+            user_id: user_id || 1, // PERBAIKAN: default untuk testing
+            user_name: user_name || 'Test User',
             message,
             created_at: new Date()
         });

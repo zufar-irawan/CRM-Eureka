@@ -6,15 +6,21 @@ import { X, ChevronDown } from "lucide-react";
 interface BulkEditModalProps {
   onClose: () => void;
   selectedCount: number;
+  onUpdate: (field: string, value: string) => void;
+  type: "leads" | "deals";
 }
 
-const enumOptions = {
-  title: ["Mr", "Ms", "Mrs", "Dr"],
-  stage: ["New", "Contacted", "Qualified", "Lost"],
+const leadsEnumOptions = {
+  title: ["Mr", "Ms", "Mrs"],
+  stage: ["New", "Contacted", "Qualification", "Converted", "Unqualified"],
   rating: ["Hot", "Warm", "Cold"]
 };
 
-const fields = [
+const dealsEnumOptions = {
+  stage: ["proposal", "negotiation", "closed_won", "closed_lost"]
+};
+
+const leadsFields = [
   "Owner", "Company", "Title", "First Name", "Last Name", "Fullname",
   "Job Position", "Email", "Phone", "Mobile", "Fax", "Website",
   "Industry", "Number Of Employees", "Lead Source", "Stage",
@@ -22,11 +28,18 @@ const fields = [
   "Description"
 ];
 
-export default function BulkEditModal({ onClose, selectedCount }: BulkEditModalProps) {
-  const [selectedField, setSelectedField] = useState("Lead Source");
+const dealsFields = [
+  "Title", "Value", "Stage", "Owner"
+];
+
+export default function BulkEditModal({ onClose, selectedCount, onUpdate, type }: BulkEditModalProps) {
+  const [selectedField, setSelectedField] = useState("");
   const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const fields = type === "leads" ? leadsFields : dealsFields;
+  const enumOptions = type === "leads" ? leadsEnumOptions : dealsEnumOptions;
 
   const isEnumField = Object.keys(enumOptions).includes(
     selectedField.toLowerCase().replace(/ /g, "_")
@@ -38,6 +51,15 @@ export default function BulkEditModal({ onClose, selectedCount }: BulkEditModalP
   const filteredFields = fields.filter((f) =>
     f.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleUpdate = () => {
+    if (!selectedField || !value) {
+      alert("Please select a field and enter a value");
+      return;
+    }
+    onUpdate(selectedField, value);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
@@ -99,7 +121,7 @@ export default function BulkEditModal({ onClose, selectedCount }: BulkEditModalP
           </div>
         </div>
 
-        {/* VALUE section tetap seperti sebelumnya */}
+        {/* VALUE section */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
           {isEnumField ? (
@@ -122,7 +144,7 @@ export default function BulkEditModal({ onClose, selectedCount }: BulkEditModalP
             </div>
           ) : (
             <input
-              type="text"
+              type={selectedField === "Value" || selectedField === "Number Of Employees" ? "number" : "text"}
               value={value}
               onChange={(e) => setValue(e.target.value)}
               className="w-full rounded-md border px-3 py-2 text-sm"
@@ -131,7 +153,10 @@ export default function BulkEditModal({ onClose, selectedCount }: BulkEditModalP
           )}
         </div>
 
-        <button className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-900 transition">
+        <button 
+          onClick={handleUpdate}
+          className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-900 transition"
+        >
           Update {selectedCount} Records
         </button>
       </div>

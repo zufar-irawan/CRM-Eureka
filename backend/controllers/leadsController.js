@@ -1,6 +1,8 @@
 import { Leads } from "../models/leads/leadsModel.js";
 import { LeadComments } from "../models/leads/leadsCommentModel.js";
 import { Tasks } from "../models/tasks/tasksModel.js";
+import { Deals } from "../models/deals/dealsModel.js"; // Import Deals model
+import { Op } from 'sequelize';
 
 export const getLeads = async (req, res) => {
     try {
@@ -229,30 +231,49 @@ export const deleteLead = async (req, res) => {
     }
 };
 
+// FIXED: Convert Lead - sekarang benar-benar membuat deal di database
 export const convertLead = async (req, res) => {
     try {
         const leadId = parseInt(req.params.id);
-        const { deal_title, deal_value, deal_stage = 'proposal' } = req.body;
+        const { deal_title, deal_value, deal_stage = 'proposal_sent', owner } = req.body;
 
         const lead = await Leads.findByPk(leadId);
         if (!lead) {
             return res.status(404).json({ message: "Lead not found" });
         }
 
+        // Update lead stage to Converted
         await lead.update({ stage: 'Converted' });
 
-        const delData = {
+        // Create deal in database
+        const newDeal = await Deals.create({
             lead_id: leadId,
-            title: deal_title || `Deal - ${lead.company}`,
+            title: deal_title || `Deal from Lead Conversion`,
             value: deal_value || 0,
             stage: deal_stage,
-            created_by: req.user?.id
-        };
+            owner: owner || lead.owner || 0,
+            id_contact: 0,
+            id_company: 0,
+            created_by: req.user?.id || 1,
+            created_at: new Date(),
+            updated_at: new Date()
+        });
 
         res.status(200).json({
+            success: true,
             message: "Lead converted successfully",
-            lead: lead,
-            deal: delData
+            data: {
+                lead: lead,
+                deal_data: {
+                    id: newDeal.id,
+                    lead_id: newDeal.lead_id,
+                    title: newDeal.title,
+                    value: newDeal.value,
+                    stage: newDeal.stage,
+                    owner: newDeal.owner,
+                    created_by: newDeal.created_by
+                }
+            }
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

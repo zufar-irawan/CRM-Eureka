@@ -4,33 +4,52 @@ import { useState } from "react";
 import { MoreHorizontal, X } from "lucide-react";
 import BulkEditModal from "./BulkEditModal";
 import ConvertToDealModal from "./ConvertToDealModal";
-import DeleteLeadModal from "./DeleteLeadModal"; // ✅ pastikan path sesuai
+import DeleteLeadModal from "./DeleteLeadModal";
 import ModalPortal from "./ModalPortal";
 
 interface SelectedActionBarProps {
   selectedCount: number;
+  selectedIds: string[];
   onClearSelection: () => void;
+  onDelete?: (ids: string[]) => void;
+  onUpdate?: (ids: string[], field: string, value: string) => void;
+  onConvert?: (dealTitle: string, dealValue: number, dealStage: string) => void;
+  type: "leads" | "deals";
 }
 
 export default function SelectedActionBar({
   selectedCount,
+  selectedIds,
   onClearSelection,
+  onDelete,
+  onUpdate,
+  onConvert,
+  type,
 }: SelectedActionBarProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const dummyLeadId = "CRM-LEAD-2025-00002"; // ✅ ganti sesuai data yang dipilih nanti
-
-  const handleConvert = () => {
-    alert(`${selectedCount} Lead(s) converted to Deal(s)!`);
+  const handleConvert = async (dealTitle: string, dealValue: number, dealStage: string) => {
+    if (onConvert) {
+      await onConvert(dealTitle, dealValue, dealStage);
+    }
     setShowConvertModal(false);
   };
 
   const handleDelete = () => {
-    alert(`Lead ${dummyLeadId} deleted`);
+    if (onDelete) {
+      onDelete(selectedIds);
+    }
     setShowDeleteModal(false);
+  };
+
+  const handleBulkUpdate = (field: string, value: string) => {
+    if (onUpdate) {
+      onUpdate(selectedIds, field, value);
+    }
+    setShowBulkEdit(false);
   };
 
   if (selectedCount === 0) return null;
@@ -80,15 +99,17 @@ export default function SelectedActionBar({
                   >
                     Delete
                   </button>
-                  <button
-                    onClick={() => {
-                      setShowConvertModal(true);
-                      setShowDropdown(false);
-                    }}
-                    className="block w-full px-4 py-2 text-left text-blue-600 hover:bg-gray-100"
-                  >
-                    Convert to Deal
-                  </button>
+                  {type === "leads" && (
+                    <button
+                      onClick={() => {
+                        setShowConvertModal(true);
+                        setShowDropdown(false);
+                      }}
+                      className="block w-full px-4 py-2 text-left text-blue-600 hover:bg-gray-100"
+                    >
+                      Convert to Deal
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -101,14 +122,17 @@ export default function SelectedActionBar({
           <BulkEditModal
             selectedCount={selectedCount}
             onClose={() => setShowBulkEdit(false)}
+            onUpdate={handleBulkUpdate}
+            type={type}
           />
         </ModalPortal>
       )}
 
-      {showConvertModal && (
+      {showConvertModal && type === "leads" && (
         <ModalPortal>
           <ConvertToDealModal
             selectedCount={selectedCount}
+            selectedIds={selectedIds}
             onClose={() => setShowConvertModal(false)}
             onConfirm={handleConvert}
           />
@@ -118,9 +142,11 @@ export default function SelectedActionBar({
       {showDeleteModal && (
         <ModalPortal>
           <DeleteLeadModal
-            leadId={dummyLeadId}
+            selectedCount={selectedCount}
+            selectedIds={selectedIds}
             onClose={() => setShowDeleteModal(false)}
             onConfirm={handleDelete}
+            type={type}
           />
         </ModalPortal>
       )}

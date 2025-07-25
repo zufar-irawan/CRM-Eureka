@@ -84,7 +84,7 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
                 <Plus className="w-3 h-3" />
             </div>
         </div>
-    );
-};
+    )
+}
 
 export default Items;

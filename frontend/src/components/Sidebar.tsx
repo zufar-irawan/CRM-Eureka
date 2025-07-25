@@ -16,54 +16,80 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Mail,
 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import useUser from "../../hooks/useUser";
 
-const menuItems = [
-  { icon: Bell, label: "Notifications", path: "/notifications" },
-  { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
-  { icon: Users, label: "Leads", path: "/leads" },
-  { icon: Handshake, label: "Deals", path: "/deals" },
-  { icon: CheckSquare, label: "Tasks", path: "/tasks" },
-  { icon: Building, label: "Companies", path: "/companies" },
-  { icon: FileText, label: "Quotations", path: "/quotations" },
-  { icon: FileSignature, label: "Contracts", path: "/contracts" },
-  { icon: LineChart, label: "Reports", path: "/reports" },
-];
-
 const Sidebar = () => {
+  const pathname = usePathname();
+  const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { user, loading } = useUser();
-  const pathname = usePathname();
-  const router = useRouter();
+
+  const menuItems = [
+    { icon: Bell, label: "Notifications", link: "#" },
+    { icon: BarChart3, label: "Dashboard", link: "/dashboard" },
+    { icon: Users, label: "Leads", link: "/leads" },
+    { icon: Handshake, label: "Deals", link: "/deals" },
+    { icon: CheckSquare, label: "Tasks", link: "/tasks" },
+    { icon: Mail, label: "Contacts", link: "/contacts" },
+    { icon: Building, label: "Companies", link: "/company" },
+    { icon: FileText, label: "Quotations", link: "/quotations" },
+    { icon: FileSignature, label: "Contracts", link: "/contracts" },
+    { icon: LineChart, label: "Reports", link: "/reports" },
+  ];
 
   return (
-    <div className="w-64 bg-slate-800 text-white min-h-screen flex flex-col">
+    <div className={`${isMinimized ? 'w-16' : 'w-50 pr-8 pl-2 '} pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 relative`}>
+      {/* Toggle Button */}
+      <button
+        onClick={() => {
+          setIsMinimized(!isMinimized);
+          setIsDropdownOpen(false);
+        }}
+        className="absolute -right-3 top-6 bg-slate-800 border border-slate-600 text-white rounded-full p-1 hover:bg-slate-700 transition-colors z-20"
+      >
+        {isMinimized ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+
       {/* Admin Info Header */}
       <div className="p-4 border-b border-slate-700 relative">
-        <button
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="w-full flex flex-col items-start gap-2"
-        >
-          <Image
-            src="/Images/logo-crm-eureka.png"
-            alt="CRM Logo"
-            width={140}
-            height={40}
-          />
-          <div className="text-left">
-            <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
-              {loading ? "Memuat..." : user?.name || "Administrator"}{" "}
-              <ChevronDown size={14} />
-            </p>
+        {!isMinimized ? (
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full flex flex-col items-start gap-2"
+          >
+            <Image
+              src="/Images/logo-crm-eureka.png"
+              alt="CRM Logo"
+              width={140}
+              height={10}
+            />
+            <div className="text-left">
+              <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
+                Administrator <ChevronDown size={14} />
+              </p>
+            </div>
+          </button>
+        ) : (
+          <div className="flex justify-center">
+            <Image
+              src="/Images/logo-crm.png"
+              alt="ERM Logo"
+              width={32}
+              height={32}
+            />
           </div>
-        </button>
+        )}
 
-        {/* Dropdown animated */}
+        {/* Dropdown */}
         <AnimatePresence>
-          {isDropdownOpen && (
+          {isDropdownOpen && !isMinimized && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -96,26 +122,27 @@ const Sidebar = () => {
         </AnimatePresence>
       </div>
 
-      {/* Sidebar Navigation */}
+      {/* Sidebar Menu */}
       <nav className="flex-1 py-3">
         <ul className="space-y-1 px-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
-            const isActive = pathname === item.path;
+            const isActive = pathname === item.link;
 
             return (
               <li key={index}>
-                <button
-                  onClick={() => router.push(item.path)}
-                  className={`w-full flex items-center space-x-2 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${
-                    isActive
+                <Link href={item.link}>
+                  <div
+                    className={`w-full flex items-center ${isMinimized ? 'justify-center px-2' : 'space-x-2 px-2.5'} py-2 rounded-md text-xs font-medium transition-colors duration-200 ${isActive
                       ? "bg-slate-700 text-white"
                       : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }`}
-                >
-                  <Icon size={16} />
-                  <span>{item.label}</span>
-                </button>
+                      }`}
+                    title={isMinimized ? item.label : undefined}
+                  >
+                    <Icon size={18} />
+                    {!isMinimized && <span>{item.label}</span>}
+                  </div>
+                </Link>
               </li>
             );
           })}

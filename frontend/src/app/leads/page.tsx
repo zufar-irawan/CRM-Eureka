@@ -23,7 +23,7 @@ export default function Leads() {
 
       <div className="flex-1 flex flex-col bg-white">
         {/* Header */}
-        <header className="p-4 flex flex-row shadow-sm border-b border-gray-200">
+        <header className="p-4 pl-8 flex flex-row shadow-sm border-b border-gray-200">
           <div className="flex flex-1 items-center relative">
             <h2 className="text-xl text-gray-500 mr-2">Leads /</h2>
             <button

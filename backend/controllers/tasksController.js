@@ -1,6 +1,6 @@
-import { Tasks } from "../models/tasksModel.js";
-import { TaskComments } from "../models/tasksCommentModel.js";
-import { TaskResults } from "../models/tasksResultModel.js";
+import { Tasks } from "../models/tasks/tasksModel.js";
+import { TaskComments } from "../models/tasks/tasksCommentModel.js";
+import { TaskResults } from "../models/tasks/tasksResultModel.js";
 import { Op } from "sequelize";
 
 // GET /api/tasks - List task berdasarkan user

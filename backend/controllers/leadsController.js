@@ -1,6 +1,6 @@
-import { Leads } from "../models/leadsModel.js";
-import { LeadComments } from "../models/leadsCommentModel.js";
-import { Tasks } from "../models/tasksModel.js";
+import { Leads } from "../models/leads/leadsModel.js";
+import { LeadComments } from "../models/leads/leadsCommentModel.js";
+import { Tasks } from "../models/tasks/tasksModel.js";
 
 export const getLeads = async (req, res) => {
     try {
@@ -232,13 +232,15 @@ export const deleteLead = async (req, res) => {
 export const convertLead = async (req, res) => {
     try {
         const leadId = parseInt(req.params.id);
-        const { deal_little, deal_value, deal_stage = 'proposal' } = req.body;
+        const { deal_title, deal_value, deal_stage = 'proposal' } = req.body;
+
         const lead = await Leads.findByPk(leadId);
-        if(!lead) {
-            return res.status(404).json({message: "Lead not found"});
+        if (!lead) {
+            return res.status(404).json({ message: "Lead not found" });
         }
-        
-        await lead.update({ stage: 'Converted'});
+
+        await lead.update({ stage: 'Converted' });
+
         const delData = {
             lead_id: leadId,
             title: deal_title || `Deal - ${lead.company}`,
@@ -246,10 +248,11 @@ export const convertLead = async (req, res) => {
             stage: deal_stage,
             created_by: req.user?.id
         };
+
         res.status(200).json({
             message: "Lead converted successfully",
             lead: lead,
-            deal: dealData
+            deal: delData
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

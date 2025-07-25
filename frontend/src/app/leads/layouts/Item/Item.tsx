@@ -33,17 +33,17 @@ const Items = ({ id, title }: ItemsType) => {
                 transform: CSS.Translate.toString(transform),
             }}
             className={clsx(
-                'px-2 py-4 bg-white shadow-md rounded-xl w-full border border-transparent hover:border-gray-200 cursor-pointer',
+                'px-2 py-4 bg-white rounded-xl w-full border border-gray-200 cursor-pointer',
                 isDragging && 'opacity-50',
             )}
         >
-            <div className="flex items-center justify-between">
+            <div className="flex pl-1.5 text-sm items-center justify-between">
                 {title}
                 <button
-                    className="p-2 hover:bg-gray-100 text-xs rounded-xl group text-gray-500"
+                    className="p-2 hover:bg-gray-100 rounded-xl group text-gray-500"
                     {...listeners}
                 >
-                    <GripVertical className='group-hover:text-gray-800' />
+                    <GripVertical size={16} className='group-hover:text-gray-800' />
                 </button>
             </div>
         </div>

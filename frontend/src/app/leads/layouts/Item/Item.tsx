@@ -33,11 +33,11 @@ const Items = ({ id, title }: ItemsType) => {
                 transform: CSS.Translate.toString(transform),
             }}
             className={clsx(
-                'px-2 py-4 bg-white rounded-xl w-full border border-gray-200 cursor-pointer',
+                'px-2 py-1 bg-white rounded-xl w-full border border-gray-200 cursor-pointer',
                 isDragging && 'opacity-50',
             )}
         >
-            <div className="flex pl-1.5 text-sm items-center justify-between">
+            <div className="flex pl-1.5 text-[0.8rem] items-center justify-between">
                 {title}
                 <button
                     className="p-2 hover:bg-gray-100 rounded-xl group text-gray-500"

@@ -43,7 +43,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className={`${isMinimized ? 'w-16' : 'w-64 pr-8 pl-2 '} pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 relative`}>
+    <div className={`${isMinimized ? 'w-16' : 'w-50 pr-8 pl-2 '} pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 relative`}>
       {/* Toggle Button */}
       <button
         onClick={() => {
@@ -131,13 +131,13 @@ const Sidebar = () => {
               <li key={index}>
                 <Link href={item.link}>
                   <div
-                    className={`w-full flex items-center ${isMinimized ? 'justify-center px-2' : 'space-x-2 px-2.5'} py-2 rounded-md text-[13px] font-medium transition-colors duration-200 ${isActive
+                    className={`w-full flex items-center ${isMinimized ? 'justify-center px-2' : 'space-x-2 px-2.5'} py-2 rounded-md text-xs font-medium transition-colors duration-200 ${isActive
                       ? "bg-slate-700 text-white"
                       : "text-slate-300 hover:bg-slate-700 hover:text-white"
                       }`}
                     title={isMinimized ? item.label : undefined}
                   >
-                    <Icon size={22} />
+                    <Icon size={18} />
                     {!isMinimized && <span>{item.label}</span>}
                   </div>
                 </Link>

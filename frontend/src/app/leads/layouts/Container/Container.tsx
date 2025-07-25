@@ -36,16 +36,26 @@ const Container = ({
                 transform: CSS.Translate.toString(transform),
             }}
             className={clsx(
-                'w-full h-full p-4 bg-gray-50 rounded-xl flex flex-col gap-y-4',
+                'w-full h-full rounded-xl hover:bg-gray-100 py-4 px-2 bg-gray-50 flex flex-col gap-y-5',
                 isDragging && 'opacity-50',
             )}
         >
             <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-y-1">
-                    <div className="flex flex-row gap-x-2 items-center">
-                        {icon}
-                        <h1 className="text-gray-800 text-md">{title}</h1>
+                <div className="w-full flex flex-col gap-y-1">
+                    <div className="px-2 flex flex-row items-center">
+                        <div className="flex relative gap-x-2 flex-1 items-center">
+                            {icon}
+                            <h1 className="text-gray-800 text-sm">{title}</h1>
+                        </div>
+                        <button
+                            onClick={onAddItem}
+                            className="inline-block text-xl px-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-200"
+                        >
+                            +
+                        </button>
                     </div>
+
+
                     <p className="text-gray-400 text-xs">{description}</p>
                 </div>
                 {/* <button
@@ -57,9 +67,6 @@ const Container = ({
             </div>
 
             {children}
-            <Button variant="ghost" className='text-sm' onClick={onAddItem}>
-                + New
-            </Button>
         </div>
     );
 };

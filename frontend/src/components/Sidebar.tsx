@@ -50,7 +50,7 @@ const Sidebar = () => {
           setIsMinimized(!isMinimized);
           setIsDropdownOpen(false); // Close dropdown when minimizing
         }}
-        className="absolute -right-3 top-6 bg-slate-800 border border-slate-600 text-white rounded-full p-1 hover:bg-slate-700 transition-colors z-50"
+        className="absolute -right-3 top-6 bg-slate-800 border border-slate-600 text-white rounded-full p-1 hover:bg-slate-700 transition-colors z-20"
       >
         {isMinimized ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
       </button>

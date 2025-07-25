@@ -3,13 +3,14 @@
 import { closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragOverlay, DragStartEvent, KeyboardSensor, PointerSensor, UniqueIdentifier, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { Filter, Kanban, RotateCcw } from "lucide-react"
-import { JSX, useState } from "react"
+import { JSX, useEffect, useState } from "react"
 import Container from "./Container/Container"
 import Items from "./Item/Item"
 import { v4 as uuidv4 } from 'uuid'
 import Modal from "./Modal/Modal"
 import Input from "./Input/Input"
 import { Button } from "./Button/Button"
+import axios from "axios"
 
 
 type DNDType = {
@@ -23,6 +24,8 @@ type DNDType = {
 }
 
 const KanbanLead = () => {
+    const [leads, setLeads] = useState([])
+
     const [containers, setContainers] = useState<DNDType[]>([
         {
             id: `container-${uuidv4()}`,
@@ -31,12 +34,7 @@ const KanbanLead = () => {
             </div>
             ,
             title: 'New',
-            items: [
-                {
-                    id: `item-${uuidv4()}`,
-                    title: 'Item 1'
-                }
-            ]
+            items: []
         },
         {
             id: `container-${uuidv4()}`,
@@ -45,38 +43,23 @@ const KanbanLead = () => {
             </div>
             ,
             title: 'Contacted',
-            items: [
-                {
-                    id: `item-${uuidv4()}`,
-                    title: 'Item 2'
-                }
-            ]
+            items: []
         },
         {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-green-700 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>,
-            title: 'Nurture',
-            items: [
-                {
-                    id: `item-${uuidv4()}`,
-                    title: 'Item 3'
-                }
-            ]
+            title: 'Converted',
+            items: []
         },
         {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>,
-            title: 'Qualified',
-            items: [
-                {
-                    id: `item-${uuidv4()}`,
-                    title: 'Item 4'
-                }
-            ]
+            title: 'Qualification',
+            items: []
         },
         {
             id: `container-${uuidv4()}`,
@@ -84,12 +67,7 @@ const KanbanLead = () => {
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>,
             title: 'Unqualified',
-            items: [
-                {
-                    id: `item-${uuidv4()}`,
-                    title: 'Item 5'
-                }
-            ]
+            items: []
         },
         {
             id: `container-${uuidv4()}`,
@@ -97,14 +75,52 @@ const KanbanLead = () => {
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>,
             title: 'Junk',
-            items: [
-                {
-                    id: `item-${uuidv4()}`,
-                    title: 'Item 6'
-                }
-            ]
+            items: []
         },
     ])
+
+    useEffect(() => {
+        const delay = setTimeout(() => {
+            axios.get("http://localhost:5000/api/leads/")
+                .then((response) => {
+                    const fetchLeads = response.data.leads;
+                    setLeads(fetchLeads);
+
+                    // Kelompokkan lead berdasarkan stage
+                    const groupedLeads: { [key: string]: any[] } = {};
+
+                    fetchLeads.forEach((lead: any) => {
+                        const stage = lead.stage || 'New'; // fallback ke "New"
+                        if (!groupedLeads[stage]) {
+                            groupedLeads[stage] = [];
+                        }
+                        groupedLeads[stage].push(lead);
+                    });
+
+                    // Ubah state container berdasarkan stage
+                    setContainers((prevContainers) =>
+                        prevContainers.map((container) => {
+                            const containerStage = container.title;
+                            const leadsForStage = groupedLeads[containerStage] || [];
+
+                            const items = leadsForStage.map((lead) => ({
+                                id: `item-${lead.id}`,
+                                title: lead.fullname || lead.company || lead.title
+                            }));
+
+                            return { ...container, items };
+                        })
+                    );
+
+                    console.log("Grouped leads:", groupedLeads);
+                })
+                .catch((error) => console.log(error));
+        }, 400);
+
+        return () => clearTimeout(delay);
+    }, []);
+
+
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
     const [currentContainerId, setCurrentContainerId] = useState<UniqueIdentifier>()
     const [containerName, setContainerName] = useState('')
@@ -432,7 +448,7 @@ const KanbanLead = () => {
             </div>
 
             <div className="mt-8">
-                <div className="grid grid-cols-6 gap-1">
+                <div className="grid grid-cols-6">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCorners}

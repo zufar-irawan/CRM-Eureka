@@ -220,7 +220,6 @@ export default function MainLeads() {
           </div>
         </div>
 
-        {/* Action bar component */}
         <SelectedActionBar
         selectedCount={selectedLeads.length}
         onClearSelection={() => setSelectedLeads([])}

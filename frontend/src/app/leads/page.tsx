@@ -25,17 +25,17 @@ export default function Leads() {
         {/* Header */}
         <header className="p-4 pl-8 flex flex-row shadow-sm border-b border-gray-200">
           <div className="flex flex-1 items-center relative">
-            <h2 className="text-xl text-gray-500 mr-2">Leads /</h2>
+            <h2 className="text-md text-gray-500 mr-2">Leads /</h2>
             <button
               onClick={() => setIsOpen((prev) => !prev)}
               className="flex cursor-pointer hover:scale-105 hover:-translate-y-0.5 transition-transform items-center"
             >
               {selectedView === "List" ? (
-                <AlignJustify size={16} className="text-gray-500 mr-2" />
+                <AlignJustify size={13} className="text-gray-500 mr-1.5" />
               ) : (
-                <Kanban size={20} className="text-gray-500 mr-1.5" />
+                <Kanban size={15} className="text-gray-500 mr-1" />
               )}
-              <h2 className="text-xl text-gray-900 mr-1">{selectedView}</h2>
+              <h2 className="text-md text-gray-900 mr-1">{selectedView}</h2>
               <ChevronDown size={16} className="text-gray-500" />
             </button>
 
@@ -69,7 +69,7 @@ export default function Leads() {
             onClick={() => setIsModalOpen(true)}
             className="relative inline-block group"
           >
-            <span className="relative flex hover:scale-105 text-md bg-black rounded-2xl overflow-hidden transition-all px-3 py-2 text-white items-center">
+            <span className="relative flex hover:scale-105 text-md bg-black rounded-md overflow-hidden transition-all px-3 py-1 text-white items-center">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               <span className="relative z-10 flex items-center">
                 <span className="mr-1.5">+</span> Create

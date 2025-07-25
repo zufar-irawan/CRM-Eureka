@@ -438,7 +438,7 @@ const KanbanLead = () => {
 
 
     return (
-        <main className="p-4 overflow-auto lg:p-6 bg-gray-50">
+       <main className="p-4 overflow-auto lg:p-6 bg-white">
             {/* Add Modal */}
             <Modal
                 showModal={showAddItemModal}

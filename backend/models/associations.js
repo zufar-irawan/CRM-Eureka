@@ -1,10 +1,12 @@
 // File: models/associations.js
-import { Leads } from "./leadsModel.js";
-import { LeadComments } from "./leadsCommentModel.js";
-import { Tasks } from "./tasksModel.js";
+import { Leads } from "./leads/leadsModel.js";
+import { LeadComments } from "./leads/leadsCommentModel.js";
+import { Tasks } from "./tasks/tasksModel.js";
+import { TaskComments } from "./tasks/tasksCommentModel.js";
+import { TaskResults } from "./tasks/tasksResultModel.js";
 import { User } from "./usersModel.js";
-import { TaskComments } from './tasksCommentModel.js';  
-import { TaskResults } from './tasksResultModel.js';    
+import { Deals } from "./deals/dealsModel.js";
+import { DealComments } from "./deals/dealsCommentModel.js";
 
 export const setupAssociations = () => {
     Leads.hasMany(LeadComments, {
@@ -35,7 +37,7 @@ export const setupAssociations = () => {
         as: 'user'
     });
     
-    // Tasks associations
+    // Existing Tasks associations
     Tasks.belongsTo(User, {
         foreignKey: 'assigned_to',
         as: 'assignee'
@@ -60,8 +62,40 @@ export const setupAssociations = () => {
         foreignKey: 'task_id',
         as: 'task'
     });
+    Leads.hasMany(Deals, {
+        foreignKey: 'lead_id',
+        as: 'deals'
+    });
+    Deals.belongsTo(Leads, {
+        foreignKey: 'lead_id',
+        as: 'lead'
+    });
+    User.hasMany(Deals, {
+        foreignKey: 'created_by',
+        as: 'created_deals'
+    });
+    Deals.belongsTo(User, {
+        foreignKey: 'created_by',
+        as: 'creator'
+    });
+    Deals.hasMany(DealComments, {
+        foreignKey: 'deal_id',
+        as: 'comments',
+        onDelete: 'CASCADE'
+    });
+    DealComments.belongsTo(Deals, {
+        foreignKey: 'deal_id',
+        as: 'deal'
+    });
     
-    console.log('All associations have been set up successfully!');
+    User.hasMany(DealComments, {
+        foreignKey: 'user_id',
+        as: 'deal_comments'
+    });
+    DealComments.belongsTo(User, {
+        foreignKey: 'user_id',
+        as: 'user'
+    });
 };
 
-export { Tasks, TaskComments, TaskResults, Leads, LeadComments, User };
+export { Tasks, TaskComments, TaskResults, Leads, LeadComments, User, Deals, DealComments };

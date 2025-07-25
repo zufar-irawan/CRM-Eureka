@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   RotateCcw,
   Filter,
@@ -11,13 +11,28 @@ import {
   Mail,
   User,
   Building2,
-} from 'lucide-react';
+  X,
+} from "lucide-react";
 import SelectedActionBar from "../components/SelectedActionBar";
 
 export default function MainLeads() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const sortOptions = [
+    "Owner", "Company", "Title", "First Name", "Last Name", "Fullname",
+    "Job Position", "Email", "Phone", "Mobile", "Fax", "Website",
+    "Industry", "Number Of Employees", "Lead Source", "Stage",
+    "Rating", "Street", "City", "State", "Postal Code", "Country",
+    "Description"
+  ];
+
+  const filteredSortOptions = sortOptions.filter((option) =>
+    option.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -53,7 +68,8 @@ export default function MainLeads() {
     );
   };
 
-  const isAllSelected = leads.length > 0 && selectedLeads.length === leads.length;
+  const isAllSelected =
+    leads.length > 0 && selectedLeads.length === leads.length;
 
   const toggleSelectAll = () => {
     if (isAllSelected) {
@@ -62,6 +78,17 @@ export default function MainLeads() {
       setSelectedLeads(leads.map((lead) => lead.id));
     }
   };
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".sort-dropdown")) {
+        setShowSortDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
     <main className="p-4 overflow-auto lg:p-6 bg-white pb-6">
@@ -77,10 +104,56 @@ export default function MainLeads() {
               <Filter className="w-4 h-4" />
               <span className="hidden sm:inline">Filter</span>
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
-              <ArrowUpDown className="w-4 h-4" />
-              <span className="hidden sm:inline">Sort</span>
-            </button>
+
+            {/* SORT BUTTON + DROPDOWN */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSortDropdown(!showSortDropdown)}
+                className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
+              >
+                <ArrowUpDown className="w-4 h-4" />
+                <span className="hidden sm:inline">Sort</span>
+              </button>
+
+              {showSortDropdown && (
+                <div className="absolute z-50 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg sort-dropdown">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 pr-10 border-b border-gray-100 text-sm focus:outline-none"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600 bg-white p-0.5 rounded z-20 pointer-events-auto"
+                        aria-label="Clear search"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <ul className="max-h-60 overflow-y-auto">
+                    {filteredSortOptions.map((option) => (
+                      <li
+                        key={option}
+                        className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          console.log("Sort by:", option);
+                          setShowSortDropdown(false);
+                          setSearchTerm("");
+                        }}
+                      >
+                        {option}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
             <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
               <Columns className="w-4 h-4" />
               <span className="hidden sm:inline">Columns</span>
@@ -131,7 +204,7 @@ export default function MainLeads() {
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                         <User className="w-4 h-4 text-blue-600" />
                       </div>
-                      <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                      <div className="text-sm font-medium text-gray-900">{lead.fullname}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">{lead.company}</td>
@@ -204,7 +277,7 @@ export default function MainLeads() {
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
           <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">3</span> of{' '}
+            Showing <span className="font-medium">1</span> to <span className="font-medium">3</span> of{" "}
             <span className="font-medium">3</span> results
           </div>
           <div className="flex items-center gap-2">
@@ -220,12 +293,10 @@ export default function MainLeads() {
           </div>
         </div>
 
-        {/* Action bar component */}
         <SelectedActionBar
           selectedCount={selectedLeads.length}
           onClearSelection={() => setSelectedLeads([])}
         />
-
       </div>
     </main>
   );

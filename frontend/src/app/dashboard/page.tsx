@@ -3,8 +3,10 @@
 import Sidebar from "@/components/Sidebar"
 import dynamic from "next/dynamic"
 import ActivityTable from "./components/ActivityTable"
+import useUser from "../../../hooks/useUser"
 
 export default function Dashboard() {
+    const { user, loading } = useUser()
 
     const BarChart = dynamic(() => import("./components/BarChart"), { ssr: false })
 
@@ -38,7 +40,7 @@ export default function Dashboard() {
             <div className="flex flex-1 flex-col bg-slate-100">
                 <header className="bg-slate-800 text-white p-8 text-right">
                     <p className="text-xl">
-                        Hi, <span>User</span>
+                        Hi, <span>{loading ? "..." : user?.name || "User"}</span>
                     </p>
                 </header>
 

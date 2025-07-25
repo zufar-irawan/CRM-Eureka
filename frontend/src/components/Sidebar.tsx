@@ -22,6 +22,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import useUser from "../../hooks/useUser";
 
 const menuItems = [
   { icon: Bell, label: "Notifications", path: "/notifications" },
@@ -39,6 +40,7 @@ const Sidebar = () => {
   const pathname = usePathname();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { user, loading } = useUser();
 
   const menuItems = [
     { icon: Bell, label: "Notifications", link: "#" },

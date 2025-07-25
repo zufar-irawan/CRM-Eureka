@@ -129,9 +129,10 @@ const KanbanLead = () => {
 
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
     const [currentContainerId, setCurrentContainerId] = useState<UniqueIdentifier>()
-    const [containerName, setContainerName] = useState('')
+    const [itemCompany, setItemCompany] = useState('')
     const [itemName, setItemName] = useState('')
-    const [showAddContainerModal, setShowAddContainerModal] = useState(false)
+    const [itemEmail, setItemEmail] = useState('')
+    const [itemMobile, setItemMobile] = useState('')
     const [showAddItemModal, setShowAddItemModal] = useState(false)
 
     const findValueOfItems = (id: UniqueIdentifier | undefined, type: string) => {
@@ -192,7 +193,7 @@ const KanbanLead = () => {
     }
 
     const onAddItem = () => {
-        if (!itemName) return
+        if (!itemName && !itemEmail && !itemCompany && !itemMobile) return
         const id = `item-${uuidv4()}`
         const container = containers.find((item) => item.id === currentContainerId)
 
@@ -200,9 +201,9 @@ const KanbanLead = () => {
         container.items.push({
             id,
             fullname: itemName,
-            organization: '',
-            email: '',
-            mobileno: ''
+            organization: itemCompany,
+            email: itemEmail,
+            mobileno: itemMobile
         })
         setContainers([...containers])
         setItemName('')
@@ -448,7 +449,13 @@ const KanbanLead = () => {
                         Add Item
                     </h1>
 
-                    <Input type="text" placeholder="Item Title" name="itemname" value={itemName} onChange={(e) => setItemName(e.target.value)} />
+                    <Input type="text" placeholder="Your Name" name="itemname" value={itemName} onChange={(e) => setItemName(e.target.value)} />
+
+                    <Input type="text" placeholder="Your Company" name="itemcompany" value={itemCompany} onChange={(e) => setItemCompany(e.target.value)} />
+
+                    <Input type="text" placeholder="Your Email" name="itememail" value={itemEmail} onChange={(e) => setItemEmail(e.target.value)} />
+
+                    <Input type="text" placeholder="Your Mobile Phone" name="itemmobile" value={itemMobile} onChange={(e) => setItemMobile(e.target.value)} />
 
                     <Button onClick={onAddItem}>
                         Add Item
@@ -513,20 +520,7 @@ const KanbanLead = () => {
                             ))}
                         </SortableContext>
 
-                        <DragOverlay adjustScale={false}>
-                            {/* Drag Overlay For item Item */}
-                            {activeId && activeId.toString().includes('item') && (
-                                <Items id={activeId} fullname={findItemTitle(activeId)} organization={findItemCompany(activeId)} email={findItemEmail(activeId)} mobileno={findItemMobile(activeId)} />
-                            )}
-                            {/* Drag Overlay For Container */}
-                            {activeId && activeId.toString().includes('container') && (
-                                <Container id={activeId} icon={findContainerIcons(activeId)} title={findContainerTitle(activeId)}>
-                                    {findContainerItems(activeId).map((i) => (
-                                        <Items key={i.id} fullname={i.fullname} id={i.id} organization={i.organization} email={i.email} mobileno={i.mobileno} />
-                                    ))}
-                                </Container>
-                            )}
-                        </DragOverlay>
+
                     </DndContext>
                 </div>
             </div>

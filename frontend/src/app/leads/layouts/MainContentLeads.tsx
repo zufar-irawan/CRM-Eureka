@@ -64,7 +64,7 @@ export default function MainLeads() {
   // Bulk Delete Handler
   const handleBulkDelete = async (ids: string[]) => {
     if (!window.confirm(`Are you sure you want to delete ${ids.length} lead(s)?`)) return;
-    
+
     try {
       const deletePromises = ids.map(async (id) => {
         const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
@@ -73,17 +73,17 @@ export default function MainLeads() {
             "Content-Type": "application/json",
           },
         });
-        
+
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || `Failed to delete lead ${id}`);
         }
-        
+
         return response.json();
       });
 
       await Promise.all(deletePromises);
-      
+
       // Remove deleted leads from state
       setLeads((prev) => prev.filter((lead) => !ids.includes(lead.id.toString())));
       setSelectedLeads([]);
@@ -122,7 +122,7 @@ export default function MainLeads() {
       };
 
       const apiField = fieldMap[field] || field.toLowerCase().replace(/ /g, "_");
-      
+
       const updatePromises = ids.map(async (id) => {
         const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
           method: "PUT",
@@ -131,17 +131,17 @@ export default function MainLeads() {
           },
           body: JSON.stringify({ [apiField]: value }),
         });
-        
+
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || `Failed to update lead ${id}`);
         }
-        
+
         return response.json();
       });
 
       await Promise.all(updatePromises);
-      
+
       // Refresh leads after update
       await fetchLeads();
       setSelectedLeads([]);
@@ -166,17 +166,17 @@ export default function MainLeads() {
             deal_stage: dealStage
           }),
         });
-        
+
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || `Failed to convert lead ${id}`);
         }
-        
+
         return response.json();
       });
 
       await Promise.all(convertPromises);
-      
+
       // Refresh leads after conversion
       await fetchLeads();
       setSelectedLeads([]);
@@ -223,15 +223,15 @@ export default function MainLeads() {
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex flex-wrap gap-2">
-            <button 
+            <button
               onClick={fetchLeads}
               className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
             >
-              <RotateCcw className="w-4 h-4" />
-              <span className="hidden sm:inline">Refresh</span>
+              <RotateCcw className="w-3 h-3" />
+              {/* <span className="hidden sm:inline">Refresh</span> */}
             </button>
             <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
-              <Filter className="w-4 h-4" />
+              <Filter className="w-3 h-3" />
               <span className="hidden sm:inline">Filter</span>
             </button>
 
@@ -241,7 +241,7 @@ export default function MainLeads() {
                 onClick={() => setShowSortDropdown(!showSortDropdown)}
                 className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
               >
-                <ArrowUpDown className="w-4 h-4" />
+                <ArrowUpDown className="w-3 h-3" />
                 <span className="hidden sm:inline">Sort</span>
               </button>
 
@@ -285,11 +285,11 @@ export default function MainLeads() {
             </div>
 
             <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
-              <Columns className="w-4 h-4" />
+              <Columns className="w-3 h-3" />
               <span className="hidden sm:inline">Columns</span>
             </button>
             <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
-              <MoreHorizontal className="w-4 h-4" />
+              <MoreHorizontal className="w-3 h-3" />
             </button>
           </div>
         </div>
@@ -331,29 +331,29 @@ export default function MainLeads() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <User className="w-4 h-4 text-blue-600" />
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <User className="w-3 h-3 text-blue-600" />
                       </div>
-                      <div className="text-sm font-medium text-gray-900">{lead.fullname}</div>
+                      <div className="text-xs font-medium text-gray-900">{lead.fullname}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{lead.company}</td>
+                  <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {lead.stage}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{lead.mobile}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
+                  <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
+                  <td className="px-6 py-4 text- text-gray-500">
                     {new Date(lead.updated_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric'
                     })}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    <button className="text-gray-400 hover:text-gray-600">
+                  <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                    <button className="text-gray-400 hover:text-gray-600 mx-auto">
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
                   </td>

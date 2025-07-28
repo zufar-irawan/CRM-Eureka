@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import SelectedActionBar from "../components/SelectedActionBar";
+import { Edit, Trash2 } from "lucide-react";
 
 export default function MainLeads() {
   const [leads, setLeads] = useState<any[]>([]);
@@ -21,6 +22,7 @@ export default function MainLeads() {
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
 
   const sortOptions = [
     "Owner", "Company", "Title", "First Name", "Last Name", "Fullname",
@@ -196,6 +198,24 @@ export default function MainLeads() {
     );
   };
 
+  // FIXED: Improved event listener for closing dropdowns
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Jika klik bukan di dalam sort dropdown atau action menu
+      if (!target.closest(".sort-dropdown") && 
+          !target.closest(".action-menu") && 
+          !target.closest("[data-action-menu]")) {
+        setShowSortDropdown(false);
+        setActionMenuOpenId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const isAllSelected =
     leads.length > 0 && selectedLeads.length === leads.length;
 
@@ -207,19 +227,8 @@ export default function MainLeads() {
     }
   };
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest(".sort-dropdown")) {
-        setShowSortDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
   return (
-    <main className="p-4 overflow-auto lg:p-6 bg-white pb-6">
+    <main className="p-4 overflow-visible lg:p-6 bg-white pb-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -296,74 +305,132 @@ export default function MainLeads() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={toggleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
-              ) : leads.length === 0 ? (
-                <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
-              ) : leads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
+        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="w-full relative">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedLeads.includes(lead.id.toString())}
-                      onChange={() => toggleSelectLead(lead.id.toString())}
+                      checked={isAllSelected}
+                      onChange={toggleSelectAll}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <User className="w-3 h-3 text-blue-600" />
-                      </div>
-                      <div className="text-xs font-medium text-gray-900">{lead.title + " " + lead.fullname}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {lead.stage}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
-                  <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
-                  <td className="px-6 py-4 text- text-gray-500">
-                    {new Date(lead.updated_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 text-center">
-                    <button className="text-gray-400 hover:text-gray-600 mx-auto">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </td>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile No</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
+                ) : leads.length === 0 ? (
+                  <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
+                ) : leads.map((lead) => (
+                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.includes(lead.id.toString())}
+                        onChange={() => toggleSelectLead(lead.id.toString())}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                          <User className="w-3 h-3 text-blue-600" />
+                        </div>
+                        <div className="text-xs font-medium text-gray-900">{lead.title + " " + lead.fullname}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {lead.stage}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
+                    <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
+                    <td className="px-6 py-4 text-xs text-gray-500">
+                      {new Date(lead.updated_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </td>
+                    {/* FIXED: Improved action menu with smart positioning */}
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      <div className="relative" data-action-menu>
+                        <button
+                          className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                          }}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+
+                        {actionMenuOpenId === lead.id.toString() && (
+                          <>
+                            {/* Backdrop to close menu */}
+                            <div 
+                              className="fixed inset-0 z-40" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActionMenuOpenId(null);
+                              }}
+                            />
+                            
+                            {/* Dropdown menu with smart positioning */}
+                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
+                              leads.indexOf(lead) >= leads.length - 2 
+                                ? 'bottom-full mb-1' 
+                                : 'top-full mt-1'
+                            }`}>
+                              <div className="py-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    alert(`Edit lead ${lead.id}`);
+                                    setActionMenuOpenId(null);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" /> 
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm('Are you sure you want to delete this lead?')) {
+                                      handleBulkDelete([lead.id.toString()]);
+                                    }
+                                    setActionMenuOpenId(null);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" /> 
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Mobile Cards */}
@@ -397,9 +464,66 @@ export default function MainLeads() {
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     {lead.stage}
                   </span>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
+                  
+                  {/* FIXED: Mobile action menu with smart positioning */}
+                  <div className="relative" data-action-menu>
+                    <button 
+                      className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                      }}
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+
+                    {actionMenuOpenId === lead.id.toString() && (
+                      <>
+                        {/* Backdrop */}
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenId(null);
+                          }}
+                        />
+                        
+                        {/* Dropdown menu with smart positioning */}
+                        <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
+                          leads.indexOf(lead) >= leads.length - 2 
+                            ? 'bottom-full mb-1' 
+                            : 'top-full mt-1'
+                        }`}>
+                          <div className="py-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                alert(`Edit lead ${lead.id}`);
+                                setActionMenuOpenId(null);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" /> 
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Are you sure you want to delete this lead?')) {
+                                  handleBulkDelete([lead.id.toString()]);
+                                }
+                                setActionMenuOpenId(null);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" /> 
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 

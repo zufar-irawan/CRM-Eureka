@@ -162,4 +162,4 @@ export default function BulkEditModal({ onClose, selectedCount, onUpdate, type }
       </div>
     </div>
   );
-}
+} 

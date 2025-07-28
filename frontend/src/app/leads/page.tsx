@@ -23,7 +23,7 @@ export default function Leads() {
 
       <div className="flex-1 flex flex-col bg-white">
         {/* Header */}
-        <header className="p-4 pl-8 flex flex-row shadow-sm border-b border-gray-200">
+        <header className="p-4 pl-8 flex flex-row shadow-sm border-b border-gray-200 relative overflow-visible z-20">
           <div className="flex flex-1 items-center relative">
             <h2 className="text-md text-gray-500 mr-2">Leads /</h2>
             <button
@@ -41,7 +41,7 @@ export default function Leads() {
 
             {/* Dropdown */}
             {isOpen && (
-              <div className="absolute top-10 left-28 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-md z-10">
+              <div className="absolute top-10 left-28 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-md z-50">
                 <ul className="text-sm text-gray-700">
                   <li>
                     <button
@@ -78,9 +78,11 @@ export default function Leads() {
           </button>
         </header>
 
-        {/* Content Toggle */}
+        <div className="flex-1 overflow-y-auto">
         {selectedView === "List" && <MainLeads />}
         {selectedView === "Kanban" && <KanbanLead />}
+      </div>
+
 
         {/* Modal */}
         {isModalOpen && (

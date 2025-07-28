@@ -36,7 +36,7 @@ const Container = ({
                 transform: CSS.Translate.toString(transform),
             }}
             className={clsx(
-                'w-full h-full rounded-xl hover:bg-gray-100 bg-gray-50 flex flex-col',
+                'w-full h-full rounded-xl hover:bg-gray-50 bg-white flex flex-col',
                 isDragging && 'opacity-50',
             )}
         >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation";
@@ -50,6 +50,8 @@ export default function Login() {
     }
   };
 
+  const passwordRef = useRef<HTMLInputElement>(null)
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLoginData((prev) => ({
@@ -57,6 +59,18 @@ export default function Login() {
       [name]: value,
     }));
   };
+
+  const handleEmailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      passwordRef.current?.focus()
+    }
+  }
+
+  const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSubmit()
+    }
+  }
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -129,6 +143,7 @@ export default function Login() {
                     type="email"
                     id="email"
                     name="email"
+                    onKeyDown={handleEmailKeyDown}
                     value={loginData.email}
                     onChange={handleInputChange}
                     className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 text-sm sm:text-base"
@@ -151,6 +166,8 @@ export default function Login() {
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
+                    ref={passwordRef}
+                    onKeyDown={handlePasswordKeyDown}
                     name="password"
                     value={loginData.password}
                     onChange={handleInputChange}

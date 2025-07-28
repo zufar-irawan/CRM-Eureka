@@ -1,16 +1,14 @@
 "use client"
 
-import { closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragOverlay, DragStartEvent, KeyboardSensor, PointerSensor, UniqueIdentifier, useSensor, useSensors } from "@dnd-kit/core"
+import { closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, KeyboardSensor, PointerSensor, UniqueIdentifier, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import { Filter, Kanban, RotateCcw } from "lucide-react"
-import { act, JSX, useEffect, useState } from "react"
+import { JSX, useEffect, useState } from "react"
 import Container from "./Container/Container"
 import Items from "./Item/Item"
 import { v4 as uuidv4 } from 'uuid'
-import Modal from "./Modal/Modal"
-import Input from "./Input/Input"
-import { Button } from "./Button/Button"
 import axios from "axios"
+import CreateLeadModal from "../add/page"
 
 
 type DNDType = {
@@ -72,14 +70,6 @@ const KanbanLead = () => {
             title: 'Unqualified',
             items: []
         },
-        {
-            id: `container-${uuidv4()}`,
-            icon: <div className="w-4 h-4 rounded-full bg-pink-500 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>,
-            title: 'Junk',
-            items: []
-        },
     ])
 
     useEffect(() => {
@@ -129,10 +119,7 @@ const KanbanLead = () => {
 
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
     const [currentContainerId, setCurrentContainerId] = useState<UniqueIdentifier>()
-    const [containerName, setContainerName] = useState('')
-    const [itemName, setItemName] = useState('')
-    const [showAddContainerModal, setShowAddContainerModal] = useState(false)
-    const [showAddItemModal, setShowAddItemModal] = useState(false)
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const findValueOfItems = (id: UniqueIdentifier | undefined, type: string) => {
         if (type === 'container') {
@@ -142,71 +129,6 @@ const KanbanLead = () => {
         if (type === 'item') {
             return containers.find((container) => container.items.find((item) => item.id === id))
         }
-    }
-
-    const findItemTitle = (id: UniqueIdentifier | undefined) => {
-        const container = findValueOfItems(id, 'item');
-        if (!container) return '';
-        const item = container.items.find((item) => item.id === id);
-        if (!item) return '';
-        return item.fullname;
-    };
-    const findItemCompany = (id: UniqueIdentifier | undefined) => {
-        const container = findValueOfItems(id, 'item');
-        if (!container) return '';
-        const item = container.items.find((item) => item.id === id);
-        if (!item) return '';
-        return item.organization;
-    };
-    const findItemEmail = (id: UniqueIdentifier | undefined) => {
-        const container = findValueOfItems(id, 'item');
-        if (!container) return '';
-        const item = container.items.find((item) => item.id === id);
-        if (!item) return '';
-        return item.email;
-    };
-    const findItemMobile = (id: UniqueIdentifier | undefined) => {
-        const container = findValueOfItems(id, 'item');
-        if (!container) return '';
-        const item = container.items.find((item) => item.id === id);
-        if (!item) return '';
-        return item.mobileno;
-    };
-
-    const findContainerTitle = (id: UniqueIdentifier | undefined) => {
-        const container = findValueOfItems(id, 'container');
-        if (!container) return '';
-        return container.title;
-    };
-
-    const findContainerItems = (id: UniqueIdentifier | undefined) => {
-        const container = findValueOfItems(id, 'container');
-        if (!container) return [];
-        return container.items;
-    }
-
-    const findContainerIcons = (id: UniqueIdentifier | undefined) => {
-        const container = findValueOfItems(id, 'container')
-        if (!container) return <></>
-        return container.icon
-    }
-
-    const onAddItem = () => {
-        if (!itemName) return
-        const id = `item-${uuidv4()}`
-        const container = containers.find((item) => item.id === currentContainerId)
-
-        if (!container) return
-        container.items.push({
-            id,
-            fullname: itemName,
-            organization: '',
-            email: '',
-            mobileno: ''
-        })
-        setContainers([...containers])
-        setItemName('')
-        setShowAddItemModal(false)
     }
 
     const sensors = useSensors(
@@ -437,25 +359,7 @@ const KanbanLead = () => {
 
 
     return (
-       <main className="p-4 overflow-auto lg:p-6 bg-white">
-            {/* Add Modal */}
-            <Modal
-                showModal={showAddItemModal}
-                setShowModal={setShowAddItemModal}
-            >
-                <div className="flex flex-col w-full items-start gap-y-4">
-                    <h1 className="text-gray-800 text-3xl font-bold">
-                        Add Item
-                    </h1>
-
-                    <Input type="text" placeholder="Item Title" name="itemname" value={itemName} onChange={(e) => setItemName(e.target.value)} />
-
-                    <Button onClick={onAddItem}>
-                        Add Item
-                    </Button>
-                </div>
-            </Modal>
-
+        <main className="p-4 overflow-auto lg:p-6 bg-white">
             <div className="mx-auto">
                 {/* Header Controls */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -478,7 +382,7 @@ const KanbanLead = () => {
             </div>
 
             <div className="mt-8">
-                <div className="grid grid-cols-6">
+                <div className="grid grid-cols-5">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCorners}
@@ -496,7 +400,7 @@ const KanbanLead = () => {
                                     icon={container.icon}
                                     id={container.id}
                                     onAddItem={() => {
-                                        setShowAddItemModal(true)
+                                        setIsModalOpen(true)
                                         setCurrentContainerId(container.id)
                                     }}
                                 >
@@ -513,23 +417,15 @@ const KanbanLead = () => {
                             ))}
                         </SortableContext>
 
-                        <DragOverlay adjustScale={false}>
-                            {/* Drag Overlay For item Item */}
-                            {activeId && activeId.toString().includes('item') && (
-                                <Items id={activeId} fullname={findItemTitle(activeId)} organization={findItemCompany(activeId)} email={findItemEmail(activeId)} mobileno={findItemMobile(activeId)} />
-                            )}
-                            {/* Drag Overlay For Container */}
-                            {activeId && activeId.toString().includes('container') && (
-                                <Container id={activeId} icon={findContainerIcons(activeId)} title={findContainerTitle(activeId)}>
-                                    {findContainerItems(activeId).map((i) => (
-                                        <Items key={i.id} fullname={i.fullname} id={i.id} organization={i.organization} email={i.email} mobileno={i.mobileno} />
-                                    ))}
-                                </Container>
-                            )}
-                        </DragOverlay>
+
                     </DndContext>
                 </div>
             </div>
+
+            {/* Modal */}
+            {isModalOpen && (
+                <CreateLeadModal onClose={() => setIsModalOpen(false)} />
+            )}
         </main>
     )
 }

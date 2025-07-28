@@ -116,6 +116,13 @@ export const Leads = sequelize.define('Lead', {
   description: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  // ADDED: Status kolom untuk tracking conversion
+  status: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: '0 = belum diconvert, 1 = sudah diconvert'
   }
 }, {
   tableName: 'leads',

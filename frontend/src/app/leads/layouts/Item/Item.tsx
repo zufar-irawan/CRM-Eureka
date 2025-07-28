@@ -39,8 +39,9 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
                 'px-2 py-1 bg-white rounded-xl w-full border border-gray-200 cursor-pointer',
                 isDragging && 'opacity-50',
             )}
+            {...listeners}
         >
-            <div className="flex pl-1.5 py-2 text-md items-center justify-between" {...listeners}>
+            <div className="flex pl-1.5 py-2 text-md items-center justify-between">
                 {fullname}
                 {/* <button
                     className="p-2 hover:bg-gray-100 rounded-xl group text-gray-500"

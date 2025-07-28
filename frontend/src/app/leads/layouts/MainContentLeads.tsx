@@ -13,6 +13,8 @@ import {
   User,
   Building2,
   X,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import SelectedActionBar from "../components/SelectedActionBar";
 
@@ -553,8 +555,8 @@ export default function MainLeads() {
 
                             {/* Dropdown menu with smart positioning */}
                             <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
-                                ? 'bottom-full mb-1'
-                                : 'top-full mt-1'
+                              ? 'bottom-full mb-1'
+                              : 'top-full mt-1'
                               }`}>
                               <div className="py-1">
                                 <button
@@ -651,8 +653,8 @@ export default function MainLeads() {
 
                         {/* Dropdown menu with smart positioning */}
                         <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
-                            ? 'bottom-full mb-1'
-                            : 'top-full mt-1'
+                          ? 'bottom-full mb-1'
+                          : 'top-full mt-1'
                           }`}>
                           <div className="py-1">
                             <button

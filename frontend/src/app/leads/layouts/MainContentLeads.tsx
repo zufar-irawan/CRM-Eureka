@@ -36,6 +36,14 @@ export default function MainLeads() {
 
   useEffect(() => {
     fetchLeads();
+    
+    // Set up interval untuk refresh data setiap 5 detik
+    // Ini akan membantu sinkronisasi dengan perubahan dari kanban
+    const interval = setInterval(() => {
+      fetchLeads();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchLeads = async () => {
@@ -54,12 +62,24 @@ export default function MainLeads() {
       }
 
       const data = await res.json();
-      setLeads(data.leads);
+      
+      // Update leads only if there are actual changes to prevent unnecessary re-renders
+      setLeads(prevLeads => {
+        if (JSON.stringify(prevLeads) !== JSON.stringify(data.leads)) {
+          return data.leads;
+        }
+        return prevLeads;
+      });
     } catch (err: any) {
-      alert(err.message);
+      console.error("Error fetching leads:", err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Manual refresh function
+  const handleRefresh = async () => {
+    await fetchLeads();
   };
 
   // Bulk Delete Handler
@@ -164,7 +184,7 @@ export default function MainLeads() {
           body: JSON.stringify({
             deal_title: dealTitle,
             deal_value: dealValue,
-            deal_stage: dealStage
+            deal_stage: dealStage || 'negotiation' // Default to negotiation as requested
           }),
         });
 
@@ -181,7 +201,7 @@ export default function MainLeads() {
       // UPDATED: After conversion, remove converted leads from current view since they now have status=1
       setLeads((prev) => prev.filter((lead) => !selectedLeads.includes(lead.id.toString())));
       setSelectedLeads([]);
-      alert(`Successfully converted ${selectedLeads.length} lead(s) to deal(s)`);
+      alert(`Successfully converted ${selectedLeads.length} lead(s) to deal(s) with negotiation stage`);
     } catch (err: any) {
       alert("Failed to convert leads: " + err.message);
       throw err; // Re-throw to let the modal handle loading state
@@ -218,6 +238,24 @@ export default function MainLeads() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Function to get stage badge color
+  const getStageColor = (stage: string) => {
+    switch(stage) {
+      case 'New':
+        return 'bg-gray-100 text-gray-800';
+      case 'Contacted':
+        return 'bg-blue-100 text-blue-800';
+      case 'Qualification':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Converted':
+        return 'bg-green-100 text-green-800';
+      case 'Unqualified':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <main className="p-4 overflow-auto lg:p-6 bg-white pb-6">
       <div className="max-w-7xl mx-auto">
@@ -225,10 +263,11 @@ export default function MainLeads() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={fetchLeads}
+              onClick={handleRefresh}
               className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
+              disabled={loading}
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
               {/* <span className="hidden sm:inline">Refresh</span> */}
             </button>
             <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
@@ -342,13 +381,13 @@ export default function MainLeads() {
                   </td>
                   <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
                       {lead.stage}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
                   <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
-                  <td className="px-6 py-4 text- text-gray-500">
+                  <td className="px-6 py-4 text-xs text-gray-500">
                     {new Date(lead.updated_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
@@ -394,7 +433,7 @@ export default function MainLeads() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
                     {lead.stage}
                   </span>
                   <button className="text-gray-400 hover:text-gray-600">
@@ -444,6 +483,7 @@ export default function MainLeads() {
               Next
             </button>
           </div>
+          
         </div>
 
         <SelectedActionBar

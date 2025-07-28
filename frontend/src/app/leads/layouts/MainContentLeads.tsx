@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   RotateCcw,
   Filter,
@@ -14,6 +15,15 @@ import {
   X,
 } from "lucide-react";
 import SelectedActionBar from "../components/SelectedActionBar";
+
+// Create axios instance with default configuration
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 10000, // 10 seconds timeout
+});
 
 export default function MainLeads() {
   const [leads, setLeads] = useState<any[]>([]);
@@ -49,29 +59,14 @@ export default function MainLeads() {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      // UPDATED: Add status=0 query parameter to only fetch unconverted leads
-      const res = await fetch("http://localhost:5000/api/leads/?status=0", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      // Using axios to fetch unconverted leads
+      const response = await api.get("/leads/", {
+        params: { status: 0 }
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to fetch leads");
-      }
-
-      const data = await res.json();
-      
-      // Update leads only if there are actual changes to prevent unnecessary re-renders
-      setLeads(prevLeads => {
-        if (JSON.stringify(prevLeads) !== JSON.stringify(data.leads)) {
-          return data.leads;
-        }
-        return prevLeads;
-      });
+      setLeads(response.data.leads);
     } catch (err: any) {
-      console.error("Error fetching leads:", err.message);
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -82,39 +77,61 @@ export default function MainLeads() {
     await fetchLeads();
   };
 
-  // Bulk Delete Handler
+  // Bulk Delete Handler with axios
   const handleBulkDelete = async (ids: string[]) => {
     if (!window.confirm(`Are you sure you want to delete ${ids.length} lead(s)?`)) return;
 
     try {
+      // Use Promise.allSettled to handle partial failures better
       const deletePromises = ids.map(async (id) => {
-        const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || `Failed to delete lead ${id}`);
+        try {
+          const response = await api.delete(`/leads/${id}`);
+          return { success: true, id, data: response.data };
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.message || error.message || `Failed to delete lead ${id}`;
+          return { success: false, id, error: errorMessage };
         }
-
-        return response.json();
       });
 
-      await Promise.all(deletePromises);
+      const results = await Promise.allSettled(deletePromises);
 
-      // Remove deleted leads from state
-      setLeads((prev) => prev.filter((lead) => !ids.includes(lead.id.toString())));
-      setSelectedLeads([]);
-      alert(`Successfully deleted ${ids.length} lead(s)`);
+      // Process results
+      const successful: string[] = [];
+      const failed: { id: string; error: string }[] = [];
+
+      results.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          const value = result.value;
+          if (value.success) {
+            successful.push(value.id);
+          } else {
+            failed.push({ id: value.id, error: value.error });
+          }
+        }
+      });
+
+      // Remove successfully deleted leads from state
+      if (successful.length > 0) {
+        setLeads((prev) => prev.filter((lead) => !successful.includes(lead.id.toString())));
+        setSelectedLeads([]);
+      }
+
+      // Show appropriate message
+      if (failed.length === 0) {
+        alert(`Successfully deleted ${successful.length} lead(s)`);
+      } else if (successful.length === 0) {
+        alert(`Failed to delete all leads: ${failed.map(f => f.error).join(', ')}`);
+      } else {
+        alert(`Partially successful: ${successful.length} deleted, ${failed.length} failed`);
+      }
     } catch (err: any) {
-      alert("Failed to delete leads: " + err.message);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to delete leads";
+      alert("Failed to delete leads: " + errorMessage);
+      console.error("Bulk delete error:", err);
     }
   };
 
-  // Bulk Update Handler
+  // Bulk Update Handler with axios
   const handleBulkUpdate = async (ids: string[], field: string, value: string) => {
     try {
       const fieldMap: { [key: string]: string } = {
@@ -144,66 +161,83 @@ export default function MainLeads() {
 
       const apiField = fieldMap[field] || field.toLowerCase().replace(/ /g, "_");
 
+      // Use Promise.allSettled for better error handling
       const updatePromises = ids.map(async (id) => {
-        const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ [apiField]: value }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || `Failed to update lead ${id}`);
+        try {
+          const response = await api.put(`/leads/${id}`, {
+            [apiField]: value
+          });
+          return { success: true, id, data: response.data };
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.message || error.message || `Failed to update lead ${id}`;
+          return { success: false, id, error: errorMessage };
         }
-
-        return response.json();
       });
 
-      await Promise.all(updatePromises);
+      const results = await Promise.allSettled(updatePromises);
+
+      // Process results
+      const successful: string[] = [];
+      const failed: { id: string; error: string }[] = [];
+
+      results.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          const value = result.value;
+          if (value.success) {
+            successful.push(value.id);
+          } else {
+            failed.push({ id: value.id, error: value.error });
+          }
+        }
+      });
 
       // Refresh leads after update
       await fetchLeads();
       setSelectedLeads([]);
-      alert(`Successfully updated ${ids.length} lead(s)`);
+
+      // Show appropriate message
+      if (failed.length === 0) {
+        alert(`Successfully updated ${successful.length} lead(s)`);
+      } else if (successful.length === 0) {
+        alert(`Failed to update all leads: ${failed.map(f => f.error).join(', ')}`);
+      } else {
+        alert(`Partially successful: ${successful.length} updated, ${failed.length} failed`);
+      }
     } catch (err: any) {
-      alert("Failed to update leads: " + err.message);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to update leads";
+      alert("Failed to update leads: " + errorMessage);
+      console.error("Bulk update error:", err);
     }
   };
 
-  // UPDATED: Bulk Convert Handler - After successful conversion, leads will be filtered out automatically
+  // Bulk Convert Handler with axios
   const handleBulkConvert = async (dealTitle: string, dealValue: number, dealStage: string) => {
     try {
+      // Use Promise.allSettled for better error handling
       const convertPromises = selectedLeads.map(async (id) => {
-        const response = await fetch(`http://localhost:5000/api/leads/${id}/convert`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        try {
+          const response = await api.post(`/leads/${id}/convert`, {
             deal_title: dealTitle,
             deal_value: dealValue,
             deal_stage: dealStage || 'negotiation' // Default to negotiation as requested
-          }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || `Failed to convert lead ${id}`);
+          });
+          return { success: true, id, data: response.data };
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.message || error.message || `Failed to convert lead ${id}`;
+          return { success: false, id, error: errorMessage };
         }
-
-        return response.json();
       });
 
-      await Promise.all(convertPromises);
+      const results = await Promise.allSettled(convertPromises);
 
       // UPDATED: After conversion, remove converted leads from current view since they now have status=1
       setLeads((prev) => prev.filter((lead) => !selectedLeads.includes(lead.id.toString())));
       setSelectedLeads([]);
-      alert(`Successfully converted ${selectedLeads.length} lead(s) to deal(s) with negotiation stage`);
+      alert(`Successfully converted ${selectedLeads.length} lead(s) to deal(s)`);
     } catch (err: any) {
-      alert("Failed to convert leads: " + err.message);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to convert leads";
+      alert("Failed to convert leads: " + errorMessage);
+      console.error("Bulk convert error:", err);
       throw err; // Re-throw to let the modal handle loading state
     }
   };

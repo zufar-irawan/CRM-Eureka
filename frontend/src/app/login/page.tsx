@@ -41,8 +41,7 @@ export default function Login() {
 
       localStorage.setItem("token", data.token);
 
-      alert("Login berhasil!");
-      router.push("/leads");
+      router.push("/dashboard");
     } catch (err: any) {
       alert(err.message);
     } finally {

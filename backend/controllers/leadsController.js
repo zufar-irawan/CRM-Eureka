@@ -1,7 +1,7 @@
 import { Leads } from "../models/leads/leadsModel.js";
 import { LeadComments } from "../models/leads/leadsCommentModel.js";
 import { Tasks } from "../models/tasks/tasksModel.js";
-import { Deals } from "../models/deals/dealsModel.js"; // Import Deals model
+import { Deals } from "../models/deals/dealsModel.js"; 
 import { Op } from 'sequelize';
 
 export const getLeads = async (req, res) => {
@@ -13,14 +13,11 @@ export const getLeads = async (req, res) => {
             rating, 
             owner, 
             search, 
-            status = 0 // ADDED: Default filter untuk leads yang belum diconvert
+            status = 0 
         } = req.query;
         
         const offset = (page - 1) * limit;
         let whereClause = {};
-        
-        // ADDED: Filter berdasarkan status conversion
-        // status = 0 (belum diconvert), status = 1 (sudah diconvert)
         if (status !== undefined && status !== '') {
             whereClause.status = status === '1' || status === 'true' || status === true;
         }
@@ -130,7 +127,7 @@ export const createLead = async (req, res) => {
             postal_code,
             country,
             description,
-            status: false // ADDED: Default status belum diconvert
+            status: false 
         });
         
         res.status(201).json({
@@ -247,36 +244,32 @@ export const deleteLead = async (req, res) => {
     }
 };
 
-// UPDATED: Convert Lead - sekarang mengupdate status menjadi true (1)
 export const convertLead = async (req, res) => {
     try {
         const leadId = parseInt(req.params.id);
-        const { deal_title, deal_value, deal_stage = 'proposal_sent', owner } = req.body;
+        const { deal_title, deal_value, deal_stage = 'negotiation', owner } = req.body; 
 
         const lead = await Leads.findByPk(leadId);
         if (!lead) {
             return res.status(404).json({ message: "Lead not found" });
         }
 
-        // Cek apakah lead sudah pernah diconvert
         if (lead.status === true) {
             return res.status(400).json({ 
                 message: "Lead has already been converted to deal" 
             });
         }
 
-        // Update lead stage to Converted dan status menjadi true (1)
         await lead.update({ 
             stage: 'Converted',
-            status: true // ADDED: Set status menjadi true (sudah diconvert)
+            status: true 
         });
 
-        // Create deal in database
         const newDeal = await Deals.create({
             lead_id: leadId,
-            title: deal_title || `Deal from Lead Conversion`,
+            title: deal_title || `Deal from ${lead.fullname || 'Lead Conversion'}`,
             value: deal_value || 0,
-            stage: deal_stage,
+            stage: deal_stage, // Will be 'negotiation' by default
             owner: owner || lead.owner || 0,
             id_contact: 0,
             id_company: 0,
@@ -315,6 +308,13 @@ export const updateLeadStage = async (req, res) => {
         const lead = await Leads.findByPk(leadId);
         if (!lead) {
             return res.status(404).json({ message: "Lead not found" });
+        }
+
+        // Cek apakah lead sudah diconvert, jika sudah tidak bisa diubah stagenya
+        if (lead.status === true) {
+            return res.status(400).json({ 
+                message: "Cannot update stage of converted lead" 
+            });
         }
 
         await lead.update({ stage });

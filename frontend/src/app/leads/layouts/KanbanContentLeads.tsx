@@ -17,6 +17,7 @@ type DNDType = {
     icon: JSX.Element
     items: {
         id: UniqueIdentifier
+        leadId: number 
         fullname: string
         organization: string
         email: string
@@ -72,50 +73,98 @@ const KanbanLead = () => {
         },
     ])
 
+    // Fetch leads data
+    const fetchLeads = async () => {
+        try {
+            const response = await axios.get("http://localhost:5000/api/leads/?status=0");
+            const fetchLeads = response.data.leads;
+            setLeads(fetchLeads);
+
+            // Group leads by stage
+            const groupedLeads: { [key: string]: any[] } = {};
+
+            fetchLeads.forEach((lead: any) => {
+                const stage = lead.stage || 'New'
+                if (!groupedLeads[stage]) {
+                    groupedLeads[stage] = [];
+                }
+                groupedLeads[stage].push(lead);
+            });
+
+            // Update containers based on stage
+            setContainers((prevContainers) =>
+                prevContainers.map((container) => {
+                    const containerStage = container.title;
+                    const leadsForStage = groupedLeads[containerStage] || [];
+
+                    const items = leadsForStage.map((lead) => ({
+                        id: `item-${lead.id}`,
+                        leadId: lead.id, // Store actual lead ID
+                        fullname: lead.fullname,
+                        organization: lead.company,
+                        email: lead.email,
+                        mobileno: lead.mobile
+                    }));
+
+                    return { ...container, items };
+                })
+            );
+
+            console.log("Grouped leads:", groupedLeads);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     useEffect(() => {
         const delay = setTimeout(() => {
-            axios.get("http://localhost:5000/api/leads/")
-                .then((response) => {
-                    const fetchLeads = response.data.leads;
-                    setLeads(fetchLeads);
-
-                    // Kelompokkan lead berdasarkan stage
-                    const groupedLeads: { [key: string]: any[] } = {};
-
-                    fetchLeads.forEach((lead: any) => {
-                        const stage = lead.stage || 'New'
-                        if (!groupedLeads[stage]) {
-                            groupedLeads[stage] = [];
-                        }
-                        groupedLeads[stage].push(lead);
-                    });
-
-                    // Ubah state container berdasarkan stage
-                    setContainers((prevContainers) =>
-                        prevContainers.map((container) => {
-                            const containerStage = container.title;
-                            const leadsForStage = groupedLeads[containerStage] || [];
-
-                            const items = leadsForStage.map((lead) => ({
-                                id: `item-${lead.id}`,
-                                fullname: lead.fullname,
-                                organization: lead.company,
-                                email: lead.email,
-                                mobileno: lead.mobile
-                            }));
-
-                            return { ...container, items };
-                        })
-                    );
-
-                    console.log("Grouped leads:", groupedLeads);
-                })
-                .catch((error) => console.log(error));
+            fetchLeads();
         }, 400);
 
         return () => clearTimeout(delay);
     }, []);
 
+    const updateLeadStage = async (leadId: number, newStage: string) => {
+        try {
+            await axios.put(`http://localhost:5000/api/leads/${leadId}/stage`, {
+                stage: newStage
+            });
+            console.log(`Lead ${leadId} updated to stage: ${newStage}`);
+        } catch (error) {
+            console.error("Error updating lead stage:", error);
+            throw error;
+        }
+    };
+
+    // Function to convert lead to deal
+    const convertLeadToDeal = async (leadId: number, leadData: any) => {
+        try {
+            await axios.post(`http://localhost:5000/api/leads/${leadId}/convert`, {
+                deal_title: `Deal from ${leadData.fullname}`,
+                deal_value: 0,
+                deal_stage: 'negotiation' 
+            });
+            console.log(`Lead ${leadId} converted to deal successfully`);
+        } catch (error) {
+            console.error("Error converting lead to deal:", error);
+            throw error;
+        }
+    };
+
+    // Function to handle stage change and conversion
+    const handleStageChange = async (leadId: number, newStage: string, leadData: any) => {
+        try {
+            if (newStage === 'Converted') {
+                await convertLeadToDeal(leadId, leadData);
+            } else {
+                await updateLeadStage(leadId, newStage);
+            }
+        } catch (error) {
+            console.error("Error handling stage change:", error);
+            fetchLeads();
+            alert("Error updating lead stage. Please try again.");
+        }
+    };
 
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
     const [currentContainerId, setCurrentContainerId] = useState<UniqueIdentifier>()
@@ -275,20 +324,16 @@ const KanbanLead = () => {
             over &&
             active.id !== over.id
         ) {
-            // Find the active and over container
             const activeContainer = findValueOfItems(active.id, 'item');
             const overContainer = findValueOfItems(over.id, 'item');
 
-            // If the active or over container is not found, return
             if (!activeContainer || !overContainer) return;
-            // Find the index of the active and over container
             const activeContainerIndex = containers.findIndex(
                 (container) => container.id === activeContainer.id,
             );
             const overContainerIndex = containers.findIndex(
                 (container) => container.id === overContainer.id,
             );
-            // Find the index of the active and over item
             const activeitemIndex = activeContainer.items.findIndex(
                 (item) => item.id === active.id,
             );
@@ -296,7 +341,8 @@ const KanbanLead = () => {
                 (item) => item.id === over.id,
             );
 
-            // In the same container
+            const movedItem = activeContainer.items[activeitemIndex];
+            const newStage = overContainer.title;
             if (activeContainerIndex === overContainerIndex) {
                 let newItems = [...containers];
                 newItems[activeContainerIndex].items = arrayMove(
@@ -306,7 +352,6 @@ const KanbanLead = () => {
                 );
                 setContainers(newItems);
             } else {
-                // In different containers
                 let newItems = [...containers];
                 const [removeditem] = newItems[activeContainerIndex].items.splice(
                     activeitemIndex,
@@ -318,9 +363,9 @@ const KanbanLead = () => {
                     removeditem,
                 );
                 setContainers(newItems);
+                handleStageChange(movedItem.leadId, newStage, movedItem);
             }
         }
-        // Handling item dropping into Container
         if (
             active.id.toString().includes('item') &&
             over?.id.toString().includes('container') &&
@@ -328,23 +373,21 @@ const KanbanLead = () => {
             over &&
             active.id !== over.id
         ) {
-            // Find the active and over container
             const activeContainer = findValueOfItems(active.id, 'item');
             const overContainer = findValueOfItems(over.id, 'container');
-
-            // If the active or over container is not found, return
             if (!activeContainer || !overContainer) return;
-            // Find the index of the active and over container
             const activeContainerIndex = containers.findIndex(
                 (container) => container.id === activeContainer.id,
             );
             const overContainerIndex = containers.findIndex(
                 (container) => container.id === overContainer.id,
             );
-            // Find the index of the active and over item
             const activeitemIndex = activeContainer.items.findIndex(
                 (item) => item.id === active.id,
             );
+
+            const movedItem = activeContainer.items[activeitemIndex];
+            const newStage = overContainer.title;
 
             let newItems = [...containers];
             const [removeditem] = newItems[activeContainerIndex].items.splice(
@@ -353,18 +396,23 @@ const KanbanLead = () => {
             );
             newItems[overContainerIndex].items.push(removeditem);
             setContainers(newItems);
+            handleStageChange(movedItem.leadId, newStage, movedItem);
         }
         setActiveId(null);
     }
-
+    const handleRefresh = () => {
+        fetchLeads();
+    };
 
     return (
         <main className="p-4 overflow-auto lg:p-6 bg-white">
             <div className="mx-auto">
-                {/* Header Controls */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="flex flex-wrap gap-2">
-                        <button className="flex items-center gap-2 px-2.5 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
+                        <button 
+                            onClick={handleRefresh}
+                            className="flex items-center gap-2 px-2.5 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
+                        >
                             <RotateCcw className="w-3 h-3" />
                         </button>
 
@@ -409,22 +457,31 @@ const KanbanLead = () => {
                                     >
                                         <div className="flex items-start flex-col gap-y-4">
                                             {container.items.map((item) => (
-                                                <Items key={item.id} id={item.id} fullname={item.fullname} organization={item.organization} email={item.email} mobileno={item.mobileno} />
+                                                <Items 
+                                                    key={item.id} 
+                                                    id={item.id} 
+                                                    fullname={item.fullname} 
+                                                    organization={item.organization} 
+                                                    email={item.email} 
+                                                    mobileno={item.mobileno} 
+                                                />
                                             ))}
                                         </div>
                                     </SortableContext>
                                 </Container>
                             ))}
                         </SortableContext>
-
-
                     </DndContext>
                 </div>
             </div>
 
-            {/* Modal */}
             {isModalOpen && (
-                <CreateLeadModal onClose={() => setIsModalOpen(false)} />
+                <CreateLeadModal 
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        fetchLeads();
+                    }} 
+                />
             )}
         </main>
     )

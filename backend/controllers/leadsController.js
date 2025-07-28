@@ -6,10 +6,25 @@ import { Op } from 'sequelize';
 
 export const getLeads = async (req, res) => {
     try {
-        const { page = 1, limit = 10, stage, rating, owner, search } = req.query;
+        const { 
+            page = 1, 
+            limit = 10, 
+            stage, 
+            rating, 
+            owner, 
+            search, 
+            status = 0 // ADDED: Default filter untuk leads yang belum diconvert
+        } = req.query;
+        
         const offset = (page - 1) * limit;
-
         let whereClause = {};
+        
+        // ADDED: Filter berdasarkan status conversion
+        // status = 0 (belum diconvert), status = 1 (sudah diconvert)
+        if (status !== undefined && status !== '') {
+            whereClause.status = status === '1' || status === 'true' || status === true;
+        }
+        
         if (stage) {
             whereClause.stage = stage;
         }
@@ -114,7 +129,8 @@ export const createLead = async (req, res) => {
             state,
             postal_code,
             country,
-            description
+            description,
+            status: false // ADDED: Default status belum diconvert
         });
         
         res.status(201).json({
@@ -231,7 +247,7 @@ export const deleteLead = async (req, res) => {
     }
 };
 
-// FIXED: Convert Lead - sekarang benar-benar membuat deal di database
+// UPDATED: Convert Lead - sekarang mengupdate status menjadi true (1)
 export const convertLead = async (req, res) => {
     try {
         const leadId = parseInt(req.params.id);
@@ -242,8 +258,18 @@ export const convertLead = async (req, res) => {
             return res.status(404).json({ message: "Lead not found" });
         }
 
-        // Update lead stage to Converted
-        await lead.update({ stage: 'Converted' });
+        // Cek apakah lead sudah pernah diconvert
+        if (lead.status === true) {
+            return res.status(400).json({ 
+                message: "Lead has already been converted to deal" 
+            });
+        }
+
+        // Update lead stage to Converted dan status menjadi true (1)
+        await lead.update({ 
+            stage: 'Converted',
+            status: true // ADDED: Set status menjadi true (sudah diconvert)
+        });
 
         // Create deal in database
         const newDeal = await Deals.create({
@@ -271,7 +297,8 @@ export const convertLead = async (req, res) => {
                     value: newDeal.value,
                     stage: newDeal.stage,
                     owner: newDeal.owner,
-                    created_by: newDeal.created_by
+                    created_by: newDeal.created_by,
+                    status: newDeal.status
                 }
             }
         });
@@ -356,6 +383,102 @@ export const deleteLeadComment = async (req, res) => {
         await comment.destroy();
         res.status(200).json({
             message: "Comment deleted successfully"
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ADDED: Get leads yang belum diconvert (status = 0)
+export const getUnconvertedLeads = async (req, res) => {
+    try {
+        const { page = 1, limit = 10, stage, rating, owner, search } = req.query;
+        const offset = (page - 1) * limit;
+        let whereClause = {
+            status: false // Filter hanya leads yang belum diconvert
+        };
+        
+        if (stage) {
+            whereClause.stage = stage;
+        }
+        
+        if (rating) {
+            whereClause.rating = rating;
+        }
+        if (owner) {
+            whereClause.owner = owner;
+        }
+        if (search) {
+            whereClause[Op.or] = [
+                { company: { [Op.like]: `%${search}%` } },
+                { fullname: { [Op.like]: `%${search}%` } },
+                { email: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows } = await Leads.findAndCountAll({
+            where: whereClause,
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+            order: [['created_at', 'DESC']]
+        });
+
+        res.status(200).json({
+            leads: rows,
+            pagination: {
+                total: count,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ADDED: Get leads yang sudah diconvert (status = 1)
+export const getConvertedLeads = async (req, res) => {
+    try {
+        const { page = 1, limit = 10, stage, rating, owner, search } = req.query;
+        const offset = (page - 1) * limit;
+        let whereClause = {
+            status: true
+        };
+        
+        if (stage) {
+            whereClause.stage = stage;
+        }
+        
+        if (rating) {
+            whereClause.rating = rating;
+        }
+        if (owner) {
+            whereClause.owner = owner;
+        }
+        if (search) {
+            whereClause[Op.or] = [
+                { company: { [Op.like]: `%${search}%` } },
+                { fullname: { [Op.like]: `%${search}%` } },
+                { email: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows } = await Leads.findAndCountAll({
+            where: whereClause,
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+            order: [['created_at', 'DESC']]
+        });
+
+        res.status(200).json({
+            leads: rows,
+            pagination: {
+                total: count,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(count / limit)
+            }
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

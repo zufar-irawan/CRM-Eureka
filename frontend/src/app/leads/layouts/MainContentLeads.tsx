@@ -41,7 +41,8 @@ export default function MainLeads() {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/leads/", {
+      // UPDATED: Add status=0 query parameter to only fetch unconverted leads
+      const res = await fetch("http://localhost:5000/api/leads/?status=0", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -151,7 +152,7 @@ export default function MainLeads() {
     }
   };
 
-  // Bulk Convert Handler - Updated to accept deal parameters
+  // UPDATED: Bulk Convert Handler - After successful conversion, leads will be filtered out automatically
   const handleBulkConvert = async (dealTitle: string, dealValue: number, dealStage: string) => {
     try {
       const convertPromises = selectedLeads.map(async (id) => {
@@ -177,8 +178,8 @@ export default function MainLeads() {
 
       await Promise.all(convertPromises);
 
-      // Refresh leads after conversion
-      await fetchLeads();
+      // UPDATED: After conversion, remove converted leads from current view since they now have status=1
+      setLeads((prev) => prev.filter((lead) => !selectedLeads.includes(lead.id.toString())));
       setSelectedLeads([]);
       alert(`Successfully converted ${selectedLeads.length} lead(s) to deal(s)`);
     } catch (err: any) {
@@ -319,6 +320,8 @@ export default function MainLeads() {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
+              ) : leads.length === 0 ? (
+                <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
               ) : leads.map((lead) => (
                 <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
@@ -367,6 +370,8 @@ export default function MainLeads() {
         <div className="lg:hidden space-y-4">
           {loading ? (
             <p className="text-2xl">Loading...</p>
+          ) : leads.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No unconverted leads found</p>
           ) : leads.map((lead) => (
             <div key={lead.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-start justify-between mb-3">

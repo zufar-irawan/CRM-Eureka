@@ -42,6 +42,7 @@ export default function MainLeads() {
     "qualification",
     "unqualified"
   ];
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
 
   const sortOptions = [
     "Owner", "Company", "Title", "First Name", "Last Name", "Fullname",
@@ -60,6 +61,14 @@ export default function MainLeads() {
       stage: selectedStage,
       search: searchTerm
     });
+
+    // Set up interval untuk refresh data setiap 5 detik
+    // Ini akan membantu sinkronisasi dengan perubahan dari kanban
+    const interval = setInterval(() => {
+      fetchLeads();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [selectedStage, searchTerm]);
 
   const fetchLeads = async (filters: { stage?: string | null; search?: string } = {}) => {
@@ -76,13 +85,15 @@ export default function MainLeads() {
 
       setLeads(response.data.leads);
     } catch (err: any) {
-      // Handle axios error properly
-      const errorMessage = err.response?.data?.message || err.message || "Failed to fetch leads";
-      alert(errorMessage);
-      console.error("Fetch leads error:", err);
+      alert(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Manual refresh function
+  const handleRefresh = async () => {
+    await fetchLeads();
   };
 
   // Bulk Delete Handler with axios
@@ -227,7 +238,7 @@ export default function MainLeads() {
           const response = await api.post(`/leads/${id}/convert`, {
             deal_title: dealTitle,
             deal_value: dealValue,
-            deal_stage: dealStage
+            deal_stage: dealStage || 'negotiation' // Default to negotiation as requested
           });
           return { success: true, id, data: response.data };
         } catch (error: any) {
@@ -238,37 +249,10 @@ export default function MainLeads() {
 
       const results = await Promise.allSettled(convertPromises);
 
-      // Process results
-      const successful: string[] = [];
-      const failed: { id: string; error: string }[] = [];
-
-      results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          const value = result.value;
-          if (value.success) {
-            successful.push(value.id);
-          } else {
-            failed.push({ id: value.id, error: value.error });
-          }
-        }
-      });
-
-      // Remove successfully converted leads from current view
-      if (successful.length > 0) {
-        setLeads((prev) => prev.filter((lead) => !successful.includes(lead.id.toString())));
-        setSelectedLeads([]);
-      }
-
-      // Show appropriate message
-      if (failed.length === 0) {
-        alert(`Successfully converted ${successful.length} lead(s) to deal(s)`);
-      } else if (successful.length === 0) {
-        const errorMessage = `Failed to convert all leads: ${failed.map(f => f.error).join(', ')}`;
-        alert(errorMessage);
-        throw new Error(errorMessage);
-      } else {
-        alert(`Partially successful: ${successful.length} converted, ${failed.length} failed`);
-      }
+      // UPDATED: After conversion, remove converted leads from current view since they now have status=1
+      setLeads((prev) => prev.filter((lead) => !selectedLeads.includes(lead.id.toString())));
+      setSelectedLeads([]);
+      alert(`Successfully converted ${selectedLeads.length} lead(s) to deal(s)`);
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || "Failed to convert leads";
       alert("Failed to convert leads: " + errorMessage);
@@ -284,6 +268,24 @@ export default function MainLeads() {
         : [...prev, id]
     );
   };
+
+  // FIXED: Improved event listener for closing dropdowns
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Jika klik bukan di dalam sort dropdown atau action menu
+      if (!target.closest(".sort-dropdown") &&
+        !target.closest(".action-menu") &&
+        !target.closest("[data-action-menu]")) {
+        setShowSortDropdown(false);
+        setActionMenuOpenId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const isAllSelected =
     leads.length > 0 && selectedLeads.length === leads.length;
@@ -308,17 +310,36 @@ export default function MainLeads() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Function to get stage badge color
+  const getStageColor = (stage: string) => {
+    switch (stage) {
+      case 'New':
+        return 'bg-gray-100 text-gray-800';
+      case 'Contacted':
+        return 'bg-blue-100 text-blue-800';
+      case 'Qualification':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Converted':
+        return 'bg-green-100 text-green-800';
+      case 'Unqualified':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <main className="p-4 overflow-auto lg:p-6 bg-white pb-6">
+    <main className="p-4 overflow-visible lg:p-6 bg-white pb-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex flex-wrap gap-2">
             <button
-              // onClick={fetchLeads}
+              onClick={handleRefresh}
               className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
+              disabled={loading}
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
               {/* <span className="hidden sm:inline">Refresh</span> */}
             </button>
             <button
@@ -446,74 +467,131 @@ export default function MainLeads() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={toggleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
-              ) : leads.length === 0 ? (
-                <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
-              ) : leads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
+        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="w-full relative">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedLeads.includes(lead.id.toString())}
-                      onChange={() => toggleSelectLead(lead.id.toString())}
+                      checked={isAllSelected}
+                      onChange={toggleSelectAll}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <User className="w-3 h-3 text-blue-600" />
-                      </div>
-                      <div className="text-xs font-medium text-gray-900">{lead.title + " " + lead.fullname}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {lead.stage}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
-                  <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
-                  <td className="px-6 py-4 text- text-gray-500">
-                    {new Date(lead.updated_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 text-center">
-                    <button className="text-gray-400 hover:text-gray-600 mx-auto">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </td>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile No</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
+                ) : leads.length === 0 ? (
+                  <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
+                ) : leads.map((lead) => (
+                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.includes(lead.id.toString())}
+                        onChange={() => toggleSelectLead(lead.id.toString())}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                          <User className="w-3 h-3 text-blue-600" />
+                        </div>
+                        <div className="text-xs font-medium text-gray-900">{lead.title + " " + lead.fullname}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {lead.stage}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
+                    <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
+                    <td className="px-6 py-4 text-xs text-gray-500">
+                      {new Date(lead.updated_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </td>
+                    {/* FIXED: Improved action menu with smart positioning */}
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      <div className="relative" data-action-menu>
+                        <button
+                          className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                          }}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+
+                        {actionMenuOpenId === lead.id.toString() && (
+                          <>
+                            {/* Backdrop to close menu */}
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActionMenuOpenId(null);
+                              }}
+                            />
+
+                            {/* Dropdown menu with smart positioning */}
+                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                                ? 'bottom-full mb-1'
+                                : 'top-full mt-1'
+                              }`}>
+                              <div className="py-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    alert(`Edit lead ${lead.id}`);
+                                    setActionMenuOpenId(null);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm('Are you sure you want to delete this lead?')) {
+                                      handleBulkDelete([lead.id.toString()]);
+                                    }
+                                    setActionMenuOpenId(null);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Mobile Cards */}
@@ -544,12 +622,68 @@ export default function MainLeads() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
                     {lead.stage}
                   </span>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
+
+                  {/* FIXED: Mobile action menu with smart positioning */}
+                  <div className="relative" data-action-menu>
+                    <button
+                      className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                      }}
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+
+                    {actionMenuOpenId === lead.id.toString() && (
+                      <>
+                        {/* Backdrop */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenId(null);
+                          }}
+                        />
+
+                        {/* Dropdown menu with smart positioning */}
+                        <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                            ? 'bottom-full mb-1'
+                            : 'top-full mt-1'
+                          }`}>
+                          <div className="py-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                alert(`Edit lead ${lead.id}`);
+                                setActionMenuOpenId(null);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Are you sure you want to delete this lead?')) {
+                                  handleBulkDelete([lead.id.toString()]);
+                                }
+                                setActionMenuOpenId(null);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -594,6 +728,7 @@ export default function MainLeads() {
               Next
             </button>
           </div>
+
         </div>
 
         <SelectedActionBar

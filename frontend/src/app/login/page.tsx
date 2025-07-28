@@ -42,7 +42,7 @@ export default function Login() {
       localStorage.setItem("token", data.token);
 
       alert("Login berhasil!");
-      router.push("/dashboard");
+      router.push("/leads");
     } catch (err: any) {
       alert(err.message);
     } finally {

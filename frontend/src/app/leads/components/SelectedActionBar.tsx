@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MoreHorizontal, X } from "lucide-react";
-import BulkEditModal from "./BulkEditModal";
+import BulkEditModal from "./EditLeadModal";
 import ConvertToDealModal from "./ConvertToDealModal";
 import DeleteLeadModal from "./DeleteLeadModal";
 import ModalPortal from "./ModalPortal";

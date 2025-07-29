@@ -435,7 +435,7 @@ const KanbanLead = () => {
       </div>
 
       <div className="mt-8">
-        <div className="grid grid-cols-4">
+        <div className="flex grid-cols-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}

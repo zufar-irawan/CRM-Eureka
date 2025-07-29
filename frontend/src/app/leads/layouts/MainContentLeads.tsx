@@ -278,19 +278,18 @@ export default function MainLeads() {
   };
 
   const getStageColor = (stage: string) => {
-    switch (stage) {
-      case 'New':
-        return 'bg-gray-100 text-gray-800';
-      case 'Contacted':
-        return 'bg-blue-100 text-blue-800';
-      case 'Qualification':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Converted':
-        return 'bg-green-100 text-green-800';
-      case 'Unqualified':
-        return 'bg-red-100 text-red-800';
+    const normalizedStage = stage.toLowerCase();
+    switch (normalizedStage) {
+      case 'new':
+        return 'bg-gray-100 text-gray-700';
+      case 'contacted':
+        return 'bg-blue-100 text-blue-700';
+      case 'qualification':
+        return 'bg-red-100 text-red-700';
+      case 'unqualified':
+        return 'bg-gray-900 text-white';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -491,7 +490,7 @@ export default function MainLeads() {
                     </td>
                     <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
                         {lead.stage}
                       </span>
                     </td>

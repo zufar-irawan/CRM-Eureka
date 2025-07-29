@@ -25,9 +25,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import useUser from "../../hooks/useUser";
 
-const Sidebar = () => {
+type sidebarProps = {
+  isMinimized: boolean;
+  setIsMinimized: (val: boolean) => void;
+}
+
+const Sidebar = ({ isMinimized, setIsMinimized }: sidebarProps) => {
   const pathname = usePathname();
-  const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { user, loading } = useUser();
 
@@ -45,7 +49,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className={`${isMinimized ? 'w-16' : 'w-50 pr-8 pl-2 '} pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 relative`}>
+    <div className={`${isMinimized ? 'w-16' : 'w-50 pr-8 pl-2 '} z-50 pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 fixed`}>
       {/* Toggle Button */}
       <button
         onClick={() => {

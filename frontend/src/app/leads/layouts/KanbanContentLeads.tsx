@@ -17,7 +17,7 @@ type DNDType = {
     icon: JSX.Element
     items: {
         id: UniqueIdentifier
-        leadId: number 
+        leadId: number
         fullname: string
         organization: string
         email: string
@@ -142,7 +142,7 @@ const KanbanLead = () => {
             await axios.post(`http://localhost:5000/api/leads/${leadId}/convert`, {
                 deal_title: `Deal from ${leadData.fullname}`,
                 deal_value: 0,
-                deal_stage: 'negotiation' 
+                deal_stage: 'negotiation'
             });
             console.log(`Lead ${leadId} converted to deal successfully`);
         } catch (error) {
@@ -409,7 +409,7 @@ const KanbanLead = () => {
             <div className="mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="flex flex-wrap gap-2">
-                        <button 
+                        <button
                             onClick={handleRefresh}
                             className="flex items-center gap-2 px-2.5 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
                         >
@@ -429,8 +429,8 @@ const KanbanLead = () => {
                 </div>
             </div>
 
-            <div className="mt-8">
-                <div className="grid grid-cols-5">
+            <div className="mt-8 overflow-x-auto">
+                <div className="flex gap-4 w-max">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCorners}
@@ -457,13 +457,13 @@ const KanbanLead = () => {
                                     >
                                         <div className="flex items-start flex-col gap-y-4">
                                             {container.items.map((item) => (
-                                                <Items 
-                                                    key={item.id} 
-                                                    id={item.id} 
-                                                    fullname={item.fullname} 
-                                                    organization={item.organization} 
-                                                    email={item.email} 
-                                                    mobileno={item.mobileno} 
+                                                <Items
+                                                    key={item.id}
+                                                    id={item.id}
+                                                    fullname={item.fullname}
+                                                    organization={item.organization}
+                                                    email={item.email}
+                                                    mobileno={item.mobileno}
                                                 />
                                             ))}
                                         </div>
@@ -476,11 +476,11 @@ const KanbanLead = () => {
             </div>
 
             {isModalOpen && (
-                <CreateLeadModal 
+                <CreateLeadModal
                     onClose={() => {
                         setIsModalOpen(false);
                         fetchLeads();
-                    }} 
+                    }}
                 />
             )}
         </main>

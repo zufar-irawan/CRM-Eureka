@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
   RotateCcw,
@@ -18,7 +19,6 @@ import {
 } from "lucide-react";
 import EditLeadModal from "../components/EditLeadModal";
 
-// Delete Modal Component
 interface DeleteLeadModalProps {
   selectedCount: number;
   selectedIds: string[];
@@ -97,28 +97,24 @@ const api = axios.create({
 });
 
 export default function MainLeads() {
+  const router = useRouter();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<string>("")
-  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC")
+  const [sortBy, setSortBy] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
-  const stages = [
-    "new",
-    "contacted",
-    "qualification",
-    "unqualified"
-  ];
   const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false); 
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLead, setCurrentLead] = useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leadsToDelete, setLeadsToDelete] = useState<string[]>([]);
 
+  const stages = ["new", "contacted", "qualification", "unqualified"];
+  
   const sortOptions = [
     "Owner", "Company", "Title", "First Name", "Last Name", "Fullname",
     "Job Position", "Email", "Phone", "Mobile", "Fax", "Website",
@@ -139,34 +135,30 @@ export default function MainLeads() {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [selectedStage, searchTerm]);
+  }, [selectedStage, searchTerm, sortBy, sortOrder]);
 
-
-  const fetchLeads = async (filters: {
-    stage?: string | null
-    search?: string
-    sortBy?: string
-    sortOrder?: "ASC" | "DESC"
-  } = {}) => {
+  const fetchLeads = async () => {
     try {
       setLoading(true);
-     
       const response = await api.get("/leads/", {
         params: {
           status: 0,
-          ...(filters.stage ? { stage: filters.stage } : {}),
-          ...(filters.search ? { search: filters.search } : {}),
-          ...(filters.sortBy ? { sortBy: filters.sortBy } : {}),
-          ...(filters.sortOrder ? { sortOrder: filters.sortOrder } : {})
+          ...(selectedStage ? { stage: selectedStage } : {}),
+          ...(searchTerm ? { search: searchTerm } : {}),
+          ...(sortBy ? { sortBy } : {}),
+          ...(sortOrder ? { sortOrder } : {})
         }
       });
-
       setLeads(response.data.leads);
     } catch (err: any) {
       alert(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRowClick = (leadId: string) => {
+    router.push(`/leads/detail/${leadId}`);
   };
 
   const handleRefresh = async () => {
@@ -176,7 +168,7 @@ export default function MainLeads() {
   const handleEditLead = (lead: any) => {
     setCurrentLead(lead);
     setEditModalOpen(true);
-    setActionMenuOpenId(null); 
+    setActionMenuOpenId(null);
   };
 
   const handleSaveLead = (updatedLead: any) => {
@@ -273,8 +265,7 @@ export default function MainLeads() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isAllSelected =
-    leads.length > 0 && selectedLeads.length === leads.length;
+  const isAllSelected = leads.length > 0 && selectedLeads.length === leads.length;
 
   const toggleSelectAll = () => {
     if (isAllSelected) {
@@ -284,19 +275,6 @@ export default function MainLeads() {
     }
   };
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest(".sort-dropdown")) {
-        setShowSortDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  // Function to get stage badge color
   const getStageColor = (stage: string) => {
     switch (stage) {
       case 'New':
@@ -315,7 +293,7 @@ export default function MainLeads() {
   };
 
   return (
-    <main className="p-4 overflow-visible lg:p-6 bg-white pb-6">
+    <main className="p-4 overflow-visible lg:p-6 bg-white pb-6 relative">
       <div className="max-w-7xl mx-auto">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -336,7 +314,6 @@ export default function MainLeads() {
 
             {showFilterDropdown && (
               <div className="absolute z-50 mt-12 w-72 bg-white border border-gray-200 rounded-md shadow-lg">
-                {/* Stage Filter */}
                 <div className="border-b border-gray-100 px-4 py-3">
                   <p className="text-sm font-semibold text-gray-700 mb-1">Stage</p>
                   <ul className="max-h-40 overflow-y-auto space-y-1">
@@ -355,7 +332,6 @@ export default function MainLeads() {
                   </ul>
                 </div>
 
-                {/* Owner Filter */}
                 <div className="px-4 py-3">
                   <p className="text-sm font-semibold text-gray-700 mb-1">Owner</p>
                   <div className="relative mt-2">
@@ -388,11 +364,9 @@ export default function MainLeads() {
                     Clear Filters
                   </button>
                 </div>
-
               </div>
             )}
 
-            {/* SORT BUTTON + DROPDOWN */}
             <div className="relative">
               <button
                 onClick={() => setShowSortDropdown(!showSortDropdown)}
@@ -486,8 +460,12 @@ export default function MainLeads() {
                 ) : leads.length === 0 ? (
                   <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
                 ) : leads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
+                  <tr 
+                    key={lead.id} 
+                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => handleRowClick(lead.id)}
+                  >
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedLeads.includes(lead.id.toString())}
@@ -509,7 +487,7 @@ export default function MainLeads() {
                         {lead.stage}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
+                    <td className="px-6 py-4 text-xs text-blue-600 hover:underline">{lead.email}</td>
                     <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
                     <td className="px-6 py-4 text-xs text-gray-500">
                       {new Date(lead.updated_at).toLocaleDateString('en-US', {
@@ -518,7 +496,7 @@ export default function MainLeads() {
                         day: 'numeric'
                       })}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-gray-500" onClick={(e) => e.stopPropagation()}>
                       <div className="relative" data-action-menu>
                         <button
                           className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -586,7 +564,11 @@ export default function MainLeads() {
           ) : leads.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No unconverted leads found</p>
           ) : leads.map((lead) => (
-            <div key={lead.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div 
+              key={lead.id} 
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer"
+              onClick={() => handleRowClick(lead.id)}
+            >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center">
                   <input
@@ -594,6 +576,7 @@ export default function MainLeads() {
                     checked={selectedLeads.includes(lead.id.toString())}
                     onChange={() => toggleSelectLead(lead.id.toString())}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                     <User className="w-5 h-5 text-blue-600" />
@@ -611,7 +594,7 @@ export default function MainLeads() {
                     {lead.stage}
                   </span>
                   
-                  <div className="relative" data-action-menu>
+                  <div className="relative" data-action-menu onClick={(e) => e.stopPropagation()}>
                     <button
                       className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
                       onClick={(e) => {

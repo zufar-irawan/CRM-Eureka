@@ -1,6 +1,9 @@
 "use client";
 
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import ConvertToDealModal from "../../components/ConvertToDealModal";
 import {
   Mail,
   Link2,
@@ -16,12 +19,56 @@ import {
   Database,
   StickyNote
 } from "lucide-react";
-import { useState } from "react";
 
-export default function LeadDetailLayout() {
+interface Lead {
+  id: string | number;
+  title?: string | null;
+  fullname?: string | null;
+  company?: string | null;
+  email?: string | null;
+  mobile?: string | null;
+  industry?: string | null;
+  job_position?: string | null;
+  website?: string | null;
+  owner?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  stage?: string | null;
+  updated_at?: string | null;
+}
+
+export default function LeadDetailPage() {
+  const { id } = useParams();
+  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [activeTab, setActiveTab] = useState("Notes");
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [lead, setLead] = useState<Lead | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Modal state
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
+
+  // Utility function untuk safe string operations
+  const safeString = (value: any): string => {
+    if (value === null || value === undefined) return '';
+    return String(value);
+  };
+
+  // Utility function untuk get first character safely
+  const getFirstChar = (value: any, fallback: string = ''): string => {
+    const str = safeString(value);
+    return str.length > 0 ? str.charAt(0).toUpperCase() : fallback;
+  };
+
+  // Utility function untuk display value with fallback
+  const displayValue = (value: any, fallback: string = 'Not specified'): string => {
+    const str = safeString(value);
+    return str.length > 0 ? str : fallback;
+  };
 
   const statusOptions = [
     { name: "New", color: "bg-gray-500" },
@@ -43,8 +90,225 @@ export default function LeadDetailLayout() {
     { name: "Attachments", icon: Paperclip }
   ];
 
-  // Function to render content based on active tab
+  // Handle convert to deal
+  const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
+    if (!lead) return;
+
+    setIsConverting(true);
+    try {
+      console.log('[DEBUG] Converting lead to deal:', {
+        leadId: lead.id,
+        dealTitle,
+        dealValue,
+        dealStage
+      });
+
+      const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/convert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dealTitle,
+          dealValue,
+          dealStage,
+          leadData: {
+            fullname: lead.fullname,
+            company: lead.company,
+            email: lead.email,
+            mobile: lead.mobile,
+            industry: lead.industry,
+            job_position: lead.job_position,
+            website: lead.website
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('[DEBUG] Conversion successful:', result);
+
+      // Show success message
+      alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}"!`);
+      
+      // Close modal
+      setShowConvertModal(false);
+      
+      // Optionally redirect to deals page or refresh lead data
+      // router.push('/deals');
+      
+    } catch (error: unknown) {
+      console.error('[ERROR] Failed to convert lead:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!id) {
+      setError("Invalid lead ID");
+      setLoading(false);
+      return;
+    }
+
+    const fetchLead = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log(`[DEBUG] Fetching lead with ID: ${id}`);
+        console.log(`[DEBUG] Current window.location:`, window.location.href);
+        
+        // Test multiple API endpoints
+        const possibleEndpoints = [
+          `http://localhost:5000/api/leads/${id}`,
+          `http://localhost:5000/leads/${id}`,
+          `/api/leads/${id}` // Relative URL
+        ];
+        
+        let response;
+        let usedEndpoint = '';
+        
+        // Try each endpoint
+        for (const endpoint of possibleEndpoints) {
+          try {
+            console.log(`[DEBUG] Trying endpoint: ${endpoint}`);
+            
+            response = await fetch(endpoint, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              mode: 'cors', // Explicitly set CORS mode
+            });
+            
+            usedEndpoint = endpoint;
+            console.log(`[DEBUG] Response from ${endpoint}:`, {
+              status: response.status,
+              statusText: response.statusText,
+              ok: response.ok,
+              headers: Object.fromEntries(response.headers.entries())
+            });
+            
+            if (response.ok) {
+              break; // Success, exit loop
+            }
+            
+          } catch (fetchError: unknown) {
+            console.log(`[DEBUG] Fetch failed for ${endpoint}:`, fetchError);
+            continue; // Try next endpoint
+          }
+        }
+        
+        if (!response || !response.ok) {
+          // Check if it's a network error
+          if (!response) {
+            throw new Error("Network error: Could not connect to server. Please check if the backend server is running on localhost:5000");
+          }
+          
+          if (response.status === 404) {
+            throw new Error(`Lead with ID ${id} not found`);
+          }
+          
+          if (response.status === 0 || response.status >= 500) {
+            throw new Error("Server error: Please check if the backend server is running");
+          }
+          
+          const errorData = await response.json().catch(() => null);
+          const errorMsg = errorData?.message || 
+                         `HTTP ${response.status}: ${response.statusText}`;
+          throw new Error(errorMsg);
+        }
+        
+        const data = await response.json();
+        console.log('[DEBUG] Successfully received data from:', usedEndpoint);
+        console.log('[DEBUG] Data structure:', {
+          type: typeof data,
+          keys: Object.keys(data || {}),
+          data: data
+        });
+        
+        if (!data || typeof data !== 'object') {
+          throw new Error("Invalid data format received from server");
+        }
+        
+        setLead(data);
+        
+      } catch (err: unknown) {
+        let errorMessage = 'An unexpected error occurred';
+        
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          errorMessage = 'Network error: Unable to connect to server. Please check:\n' +
+                        '1. Backend server is running on localhost:5000\n' +
+                        '2. CORS is properly configured\n' +
+                        '3. Network connection is stable';
+        } else if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+        
+        console.error('[ERROR] Fetch failed:', {
+          error: err,
+          message: err instanceof Error ? err.message : 'Unknown error',
+          stack: err instanceof Error ? err.stack : undefined,
+          leadId: id
+        });
+        
+        setError(errorMessage);
+        
+        // Only redirect on 404 errors after a delay
+        if (err instanceof Error && err.message.includes('not found')) {
+          setTimeout(() => router.push('/leads'), 3000);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLead();
+  }, [id, router]);
+
+  // Test API connectivity function
+  const testApiConnectivity = async () => {
+    try {
+      console.log('[DEBUG] Testing API connectivity...');
+      const response = await fetch('http://localhost:5000/api/leads', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+      });
+      
+      console.log('[DEBUG] API connectivity test result:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[DEBUG] API is accessible, sample data:', data);
+        alert('API connection successful! Check console for details.');
+      } else {
+        alert(`API connection failed: ${response.status} ${response.statusText}`);
+      }
+    } catch (error: unknown) {
+      console.error('[DEBUG] API connectivity test failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`API connection failed: ${errorMessage}`);
+    }
+  };
+
   const renderTabContent = () => {
+    if (!lead) return null;
+
     switch (activeTab) {
       case "Activity":
         return (
@@ -60,203 +324,150 @@ export default function LeadDetailLayout() {
               <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
                 <BarChart3 className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Activities</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                Activity for {displayValue(lead.fullname, 'this lead')}
+              </h3>
               <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                 Create Activity
               </button>
             </div>
           </div>
         );
-
-      case "Emails":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Emails</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>Compose Email</span>
-              </button>
-            </div>
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Mail className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Emails</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Send Email
-              </button>
-            </div>
-          </div>
-        );
-
-      case "Comments":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Comments</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>Add Comment</span>
-              </button>
-            </div>
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <MessageSquare className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Comments</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Add Comment
-              </button>
-            </div>
-          </div>
-        );
-
-      case "Data":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Data</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>Add Data</span>
-              </button>
-            </div>
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Database className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Data</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Import Data
-              </button>
-            </div>
-          </div>
-        );
-
-      case "Calls":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Calls</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>Log Call</span>
-              </button>
-            </div>
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Phone className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Calls</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Make Call
-              </button>
-            </div>
-          </div>
-        );
-
-      case "Tasks":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Tasks</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>New Task</span>
-              </button>
-            </div>
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <CheckSquare className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Tasks</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Create Task
-              </button>
-            </div>
-          </div>
-        );
-
-      case "Notes":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Notes</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>New Note</span>
-              </button>
-            </div>
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Notes</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Create Note
-              </button>
-            </div>
-          </div>
-        );
-
-      case "Attachments":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Attachments</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>Upload File</span>
-              </button>
-            </div>
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Paperclip className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">No Attachments</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Upload File
-              </button>
-            </div>
-          </div>
-        );
-
       default:
-        return null;
+        return (
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900">
+              {activeTab} content for {displayValue(lead.fullname, 'this lead')}
+            </h3>
+          </div>
+        );
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
+        <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex items-center justify-center`}>
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+            <p className="text-gray-600">Loading lead details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
+        <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex items-center justify-center`}>
+          <div className="text-center p-6 bg-red-50 rounded-lg max-w-2xl">
+            <h3 className="text-lg font-medium text-red-800 mb-4">Error Loading Lead</h3>
+            <div className="text-red-600 mb-4 whitespace-pre-line text-left bg-red-100 p-3 rounded text-sm">
+              {error}
+            </div>
+            <div className="mt-4 space-y-2 text-sm text-gray-600 bg-gray-100 p-3 rounded">
+              <p><strong>Debug Info:</strong></p>
+              <p>Lead ID: {id}</p>
+              <p>Current URL: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
+              <p>Attempted endpoints:</p>
+              <ul className="list-disc list-inside ml-4">
+                <li>http://localhost:5000/api/leads/{id}</li>
+                <li>http://localhost:5000/leads/{id}</li>
+                <li>/api/leads/{id}</li>
+              </ul>
+            </div>
+            <div className="flex gap-3 mt-6 justify-center">
+              <button 
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+              >
+                Retry
+              </button>
+              <button 
+                onClick={testApiConnectivity}
+                className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+              >
+                Test API
+              </button>
+              <button 
+                onClick={() => router.push('/leads')}
+                className="px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200"
+              >
+                Back to Leads List
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!lead) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
+        <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex items-center justify-center`}>
+          <div className="text-center">
+            <h3 className="text-lg font-medium mb-2">Lead not found</h3>
+            <p className="text-gray-600 mb-4">ID: {id}</p>
+            <button 
+              onClick={() => router.push('/leads')}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Back to Leads
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar />
+      <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
-      {/* Main Content */}
-      <div className="flex-1 flex">
-        {/* Content Area */}
+      <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex`}>
+        {/* Main content area */}
         <div className="flex-1 bg-white">
-          {/* Header */}
+          {/* Header section */}
           <div className="border-b border-gray-200 p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center space-x-2 text-gray-600 text-sm">
                 <span>Leads</span>
                 <span>/</span>
-                <span className="text-gray-900">Mr parji pajri</span>
+                <span className="text-gray-900">
+                  {displayValue(lead.title)} {displayValue(lead.fullname)}
+                </span>
               </div>
-              
               <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">CRM-LEAD-2025-00002</div>
+                <div className="text-sm text-gray-500">CRM-LEAD-{lead.id}</div>
               </div>
             </div>
 
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-semibold text-gray-900">Mr parji pajri</h1>
+                <h1 className="text-2xl font-semibold text-gray-900">
+                  {displayValue(lead.title)} {displayValue(lead.fullname)}
+                </h1>
                 <div className="flex items-center space-x-2">
-                  <Mail className="w-5 h-5 text-gray-400" />
-                  <Link2 className="w-5 h-5 text-gray-400" />
-                  <Paperclip className="w-5 h-5 text-gray-400" />
+                  {safeString(lead.email) && (
+                    <a href={`mailto:${safeString(lead.email)}`}>
+                      <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                    </a>
+                  )}
+                  {safeString(lead.website) && (
+                    <a 
+                      href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                    </a>
+                  )}
+                  <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                 </div>
               </div>
               
@@ -294,14 +505,25 @@ export default function LeadDetailLayout() {
                     </div>
                   )}
                 </div>
-                <button className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800">
-                  Convert to Deal
+                <button 
+                  onClick={() => setShowConvertModal(true)}
+                  disabled={isConverting}
+                  className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isConverting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Converting...</span>
+                    </>
+                  ) : (
+                    <span>Convert to Deal</span>
+                  )}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Tabs */}
+          {/* Tabs navigation */}
           <div className="border-b border-gray-200">
             <div className="flex space-x-0 px-6">
               {tabs.map((tab) => (
@@ -321,96 +543,153 @@ export default function LeadDetailLayout() {
             </div>
           </div>
 
-          {/* Dynamic Content Based on Active Tab */}
+          {/* Tab content */}
           {renderTabContent()}
         </div>
 
-        {/* Right Sidebar */}
+        {/* Right sidebar */}
         <div className="w-80 bg-white border-l border-gray-200 p-6">
-          {/* Header Icons */}
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-              <span className="text-lg font-semibold text-gray-700">M</span>
+              <span className="text-lg font-semibold text-gray-700">
+                {getFirstChar(lead.fullname) || getFirstChar(lead.company) || 'L'}
+              </span>
             </div>
             <div className="flex space-x-2">
-              <Mail className="w-5 h-5 text-gray-400" />
-              <Link2 className="w-5 h-5 text-gray-400" />
-              <Paperclip className="w-5 h-5 text-gray-400" />
+              {safeString(lead.email) && (
+                <a href={`mailto:${safeString(lead.email)}`}>
+                  <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                </a>
+              )}
+              {safeString(lead.website) && (
+                <a 
+                  href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                </a>
+              )}
+              <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
             </div>
           </div>
 
-          {/* Details Section */}
+          {/* Details section */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-semibold text-gray-900">Details</h3>
-              <Edit className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" />
+              <button onClick={() => console.log('Edit details')}>
+                <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              </button>
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Organization</span>
-                <span className="text-sm text-gray-900 font-medium">solution</span>
+                <span className="text-sm text-gray-900 font-medium">
+                  {displayValue(lead.company)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Website</span>
-                <span className="text-sm text-gray-400 cursor-pointer hover:text-gray-600">Add Website...</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Territory</span>
-                <span className="text-sm text-gray-400 cursor-pointer hover:text-gray-600">Add Territory...</span>
+                {safeString(lead.website) ? (
+                  <a 
+                    href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    {safeString(lead.website)}
+                  </a>
+                ) : (
+                  <span className="text-sm text-gray-400">Not specified</span>
+                )}
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Industry</span>
-                <span className="text-sm text-gray-900 font-medium">Technology</span>
+                <span className="text-sm text-gray-900 font-medium">
+                  {displayValue(lead.industry)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Job Title</span>
-                <span className="text-sm text-gray-400 cursor-pointer hover:text-gray-600">Add Job Title...</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Source</span>
-                <span className="text-sm text-gray-400 cursor-pointer hover:text-gray-600">Add Source...</span>
+                <span className="text-sm text-gray-900 font-medium">
+                  {displayValue(lead.job_position)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Lead Owner</span>
                 <div className="flex items-center space-x-2">
-                  <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">A</span>
-                  <span className="text-sm text-gray-900 font-medium">Administrator</span>
+                  <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
+                    {getFirstChar(lead.owner, 'A')}
+                  </span>
+                  <span className="text-sm text-gray-900 font-medium">
+                    {displayValue(lead.owner, 'Administrator')}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Person Section */}
+          {/* Person section */}
           <div>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-semibold text-gray-900">Person</h3>
-              <Edit className="w-4 h-4 text-gray-400 cursor-pointer hover:text-gray-600" />
+              <button onClick={() => console.log('Edit person')}>
+                <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              </button>
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Salutation</span>
-                <span className="text-sm text-gray-900 font-medium">Mr</span>
+                <span className="text-sm text-gray-900 font-medium">
+                  {displayValue(lead.title)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">First Name</span>
-                <span className="text-sm text-gray-900 font-medium">parji</span>
+                <span className="text-sm text-gray-900 font-medium">
+                  {displayValue(lead.first_name)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Last Name</span>
-                <span className="text-sm text-gray-900 font-medium">pajri</span>
+                <span className="text-sm text-gray-900 font-medium">
+                  {displayValue(lead.last_name)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Email</span>
-                <span className="text-sm text-blue-600 cursor-pointer hover:text-blue-700">parji@gmail.com</span>
+                {safeString(lead.email) ? (
+                  <a 
+                    href={`mailto:${safeString(lead.email)}`}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    {safeString(lead.email)}
+                  </a>
+                ) : (
+                  <span className="text-sm text-gray-400">Not specified</span>
+                )}
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Mobile No</span>
-                <span className="text-sm text-gray-900 font-medium">083393933</span>
+                <span className="text-sm text-gray-900 font-medium">
+                  {displayValue(lead.mobile)}
+                </span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Convert to Deal Modal */}
+      {showConvertModal && lead && (
+        <ConvertToDealModal
+          onClose={() => setShowConvertModal(false)}
+          onConfirm={handleConvertToDeal}
+          selectedCount={1}
+          selectedIds={[String(lead.id)]}
+        />
+      )}
     </div>
   );
 }

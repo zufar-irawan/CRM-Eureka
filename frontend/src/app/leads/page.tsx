@@ -8,9 +8,9 @@ import CreateLeadModal from "./add/page";
 import KanbanLead from "./layouts/KanbanContentLeads";
 
 export default function Leads() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [selectedView, setSelectedView] = useState<"List" | "Kanban">("List");
 
   const handleSelect = (view: "List" | "Kanban") => {
@@ -84,8 +84,7 @@ export default function Leads() {
           {selectedView === "Kanban" && <KanbanLead />}
         </div>
 
-
-        {/* Modal */}
+        {/* Modal Create Lead */}
         {isModalOpen && (
           <CreateLeadModal onClose={() => setIsModalOpen(false)} />
         )}

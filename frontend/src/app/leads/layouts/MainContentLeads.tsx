@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
   RotateCcw,
@@ -99,7 +98,6 @@ const api = axios.create({
 
 export default function MainLeads() {
   const router = useRouter();
-  const router = useRouter();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
@@ -107,12 +105,9 @@ export default function MainLeads() {
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
-  const [sortBy, setSortBy] = useState<string>("");
-  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLead, setCurrentLead] = useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);

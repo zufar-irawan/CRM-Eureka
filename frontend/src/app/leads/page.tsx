@@ -8,8 +8,9 @@ import CreateLeadModal from "./add/page";
 import KanbanLead from "./layouts/KanbanContentLeads";
 
 export default function Leads() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
   const [selectedView, setSelectedView] = useState<"List" | "Kanban">("List");
 
   const handleSelect = (view: "List" | "Kanban") => {
@@ -19,9 +20,9 @@ export default function Leads() {
 
   return (
     <div className="flex h-screen">
-      <Sidebar />
+      <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
-      <div className="flex-1 flex flex-col bg-white">
+      <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex flex-col bg-white transition-all duration-300`}>
         {/* Header */}
         <header className="p-4 pl-8 flex flex-row shadow-sm border-b border-gray-200 relative overflow-visible z-20">
           <div className="flex flex-1 items-center relative">
@@ -79,9 +80,9 @@ export default function Leads() {
         </header>
 
         <div className="flex-1 overflow-y-auto">
-        {selectedView === "List" && <MainLeads />}
-        {selectedView === "Kanban" && <KanbanLead />}
-      </div>
+          {selectedView === "List" && <MainLeads />}
+          {selectedView === "Kanban" && <KanbanLead />}
+        </div>
 
 
         {/* Modal */}

@@ -33,8 +33,8 @@ export default function MainLeads() {
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
-  // const [showOwnerSearch, setShowOwnerSearch] = useState(false);
-  // const [ownerSearchTerm, setOwnerSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<string>("")
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC")
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -61,19 +61,32 @@ export default function MainLeads() {
   useEffect(() => {
     fetchLeads({
       stage: selectedStage,
-      search: searchTerm
+      search: searchTerm,
+      sortBy,
+      sortOrder
     });
 
     // Set up interval untuk refresh data setiap 5 detik
     // Ini akan membantu sinkronisasi dengan perubahan dari kanban
     const interval = setInterval(() => {
-      fetchLeads();
+      fetchLeads({
+        stage: selectedStage,
+        search: searchTerm,
+        sortBy,
+        sortOrder
+      });
     }, 5000);
 
     return () => clearInterval(interval);
   }, [selectedStage, searchTerm]);
 
-  const fetchLeads = async (filters: { stage?: string | null; search?: string } = {}) => {
+
+  const fetchLeads = async (filters: {
+    stage?: string | null
+    search?: string
+    sortBy?: string
+    sortOrder?: "ASC" | "DESC"
+  } = {}) => {
     try {
       setLoading(true);
       // Using axios to fetch unconverted leads
@@ -82,6 +95,8 @@ export default function MainLeads() {
           status: 0,
           ...(filters.stage ? { stage: filters.stage } : {}),
           ...(filters.search ? { search: filters.search } : {}),
+          ...(filters.sortBy ? { sortBy: filters.sortBy } : {}),
+          ...(filters.sortOrder ? { sortOrder: filters.sortOrder } : {})
         }
       });
 
@@ -445,7 +460,12 @@ export default function MainLeads() {
                         key={option}
                         className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                         onClick={() => {
-                          console.log("Sort by:", option);
+                          if (sortBy === option.toLowerCase().replace(/ /g, "_")) {
+                            setSortOrder(sortOrder === "ASC" ? "DESC" : "ASC");
+                          } else {
+                            setSortBy(option.toLowerCase().replace(/ /g, "_"));
+                            setSortOrder("ASC");
+                          }
                           setShowSortDropdown(false);
                           setSearchTerm("");
                         }}
@@ -491,6 +511,7 @@ export default function MainLeads() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
+
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
@@ -529,7 +550,7 @@ export default function MainLeads() {
                         day: 'numeric'
                       })}
                     </td>
-                    {/* FIXED: Improved action menu with smart positioning */}
+
                     <td className="px-6 py-4 text-sm text-gray-500">
                       <div className="relative" data-action-menu>
                         <button

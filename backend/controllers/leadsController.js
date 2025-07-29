@@ -1,31 +1,33 @@
 import { Leads } from "../models/leads/leadsModel.js";
 import { LeadComments } from "../models/leads/leadsCommentModel.js";
 import { Tasks } from "../models/tasks/tasksModel.js";
-import { Deals } from "../models/deals/dealsModel.js"; 
+import { Deals } from "../models/deals/dealsModel.js";
 import { Op } from 'sequelize';
 
 export const getLeads = async (req, res) => {
     try {
-        const { 
-            page = 1, 
-            limit = 10, 
-            stage, 
-            rating, 
-            owner, 
-            search, 
-            status = 0 
+        const {
+            page = 1,
+            limit = 10,
+            stage,
+            rating,
+            owner,
+            search,
+            sortBy,
+            sortOrder,
+            status = 0
         } = req.query;
-        
+
         const offset = (page - 1) * limit;
         let whereClause = {};
         if (status !== undefined && status !== '') {
             whereClause.status = status === '1' || status === 'true' || status === true;
         }
-        
+
         if (stage) {
             whereClause.stage = stage;
         }
-        
+
         if (rating) {
             whereClause.rating = rating;
         }
@@ -40,11 +42,16 @@ export const getLeads = async (req, res) => {
             ];
         }
 
+        const order = []
+        if (sortBy) {
+            order.push([sortBy, sortOrder?.toUpperCase() === "DESC" ? "DESC" : "ASC"])
+        }
+
         const { count, rows } = await Leads.findAndCountAll({
             where: whereClause,
             limit: parseInt(limit),
             offset: parseInt(offset),
-            order: [['created_at', 'DESC']]
+            order: order.length ? order : [['created_at', 'DESC']]
         });
 
         res.status(200).json({
@@ -81,31 +88,31 @@ export const createLead = async (req, res) => {
     try {
         const {
             owner,
-            company,  
+            company,
             title,
             first_name,
             last_name,
             job_position,
-            email, 
+            email,
             phone,
-            mobile, 
-            fax, 
+            mobile,
+            fax,
             website,
             industry,
             number_of_employees,
             lead_source,
-            stage, 
-            rating, 
+            stage,
+            rating,
             street,
             city,
-            state, 
+            state,
             postal_code,
             country,
             description
         } = req.body;
 
         const newLead = await Leads.create({
-            owner, 
+            owner,
             company,
             title: title || 'Mr',
             first_name,
@@ -127,15 +134,15 @@ export const createLead = async (req, res) => {
             postal_code,
             country,
             description,
-            status: false 
+            status: false
         });
-        
+
         res.status(201).json({
             message: "Lead created successfully",
             lead: newLead
         });
     } catch (error) {
-        if (error.name === 'SequelizeValidationError'){
+        if (error.name === 'SequelizeValidationError') {
             const validationErrors = error.errors.map(err => ({
                 field: err.path,
                 message: err.message
@@ -223,7 +230,7 @@ export const updateLead = async (req, res) => {
                 errors: validationErrors
             });
         }
-        
+
         res.status(500).json({ message: error.message });
     }
 };
@@ -247,7 +254,7 @@ export const deleteLead = async (req, res) => {
 export const convertLead = async (req, res) => {
     try {
         const leadId = parseInt(req.params.id);
-        const { deal_title, deal_value, deal_stage = 'negotiation', owner } = req.body; 
+        const { deal_title, deal_value, deal_stage = 'negotiation', owner } = req.body;
 
         const lead = await Leads.findByPk(leadId);
         if (!lead) {
@@ -255,14 +262,14 @@ export const convertLead = async (req, res) => {
         }
 
         if (lead.status === true) {
-            return res.status(400).json({ 
-                message: "Lead has already been converted to deal" 
+            return res.status(400).json({
+                message: "Lead has already been converted to deal"
             });
         }
 
-        await lead.update({ 
+        await lead.update({
             stage: 'Converted',
-            status: true 
+            status: true
         });
 
         const newDeal = await Deals.create({
@@ -304,7 +311,7 @@ export const updateLeadStage = async (req, res) => {
     try {
         const leadId = parseInt(req.params.id);
         const { stage } = req.body;
-        
+
         const lead = await Leads.findByPk(leadId);
         if (!lead) {
             return res.status(404).json({ message: "Lead not found" });
@@ -312,13 +319,13 @@ export const updateLeadStage = async (req, res) => {
 
         // Cek apakah lead sudah diconvert, jika sudah tidak bisa diubah stagenya
         if (lead.status === true) {
-            return res.status(400).json({ 
-                message: "Cannot update stage of converted lead" 
+            return res.status(400).json({
+                message: "Cannot update stage of converted lead"
             });
         }
 
         await lead.update({ stage });
-        
+
         res.status(200).json({
             message: "Lead stage updated successfully",
             lead: lead
@@ -331,7 +338,7 @@ export const updateLeadStage = async (req, res) => {
 export const getLeadComments = async (req, res) => {
     try {
         const leadId = parseInt(req.params.id);
-        
+
         const lead = await Leads.findByPk(leadId);
         if (!lead) {
             return res.status(404).json({ message: "Lead not found" });
@@ -397,11 +404,11 @@ export const getUnconvertedLeads = async (req, res) => {
         let whereClause = {
             status: false // Filter hanya leads yang belum diconvert
         };
-        
+
         if (stage) {
             whereClause.stage = stage;
         }
-        
+
         if (rating) {
             whereClause.rating = rating;
         }
@@ -445,11 +452,11 @@ export const getConvertedLeads = async (req, res) => {
         let whereClause = {
             status: true
         };
-        
+
         if (stage) {
             whereClause.stage = stage;
         }
-        
+
         if (rating) {
             whereClause.rating = rating;
         }

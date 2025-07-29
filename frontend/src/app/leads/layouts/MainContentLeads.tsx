@@ -15,8 +15,6 @@ import {
   X,
   Edit,
   Trash2,
-  Edit,
-  Trash2,
 } from "lucide-react";
 import EditLeadModal from "../components/EditLeadModal";
 

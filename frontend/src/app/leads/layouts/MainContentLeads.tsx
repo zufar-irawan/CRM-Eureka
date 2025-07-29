@@ -15,8 +15,6 @@ import {
   X,
   Edit,
   Trash2,
-  Edit,
-  Trash2,
 } from "lucide-react";
 import EditLeadModal from "../components/EditLeadModal";
 
@@ -95,7 +93,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, 
+  timeout: 10000,
 });
 
 export default function MainLeads() {
@@ -116,7 +114,7 @@ export default function MainLeads() {
     "unqualified"
   ];
   const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false); 
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLead, setCurrentLead] = useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leadsToDelete, setLeadsToDelete] = useState<string[]>([]);
@@ -135,7 +133,7 @@ export default function MainLeads() {
 
   useEffect(() => {
     fetchLeads();
-  
+
     const interval = setInterval(() => {
       fetchLeads();
     }, 30000);
@@ -152,7 +150,7 @@ export default function MainLeads() {
   } = {}) => {
     try {
       setLoading(true);
-     
+
       const response = await api.get("/leads/", {
         params: {
           status: 0,
@@ -178,11 +176,11 @@ export default function MainLeads() {
   const handleEditLead = (lead: any) => {
     setCurrentLead(lead);
     setEditModalOpen(true);
-    setActionMenuOpenId(null); 
+    setActionMenuOpenId(null);
   };
 
   const handleSaveLead = (updatedLead: any) => {
-    setLeads(prev => prev.map(lead => 
+    setLeads(prev => prev.map(lead =>
       lead.id === updatedLead.id ? updatedLead : lead
     ));
     setEditModalOpen(false);
@@ -262,10 +260,10 @@ export default function MainLeads() {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      
-      if (!target.closest(".sort-dropdown") && 
-          !target.closest(".action-menu") && 
-          !target.closest("[data-action-menu]")) {
+
+      if (!target.closest(".sort-dropdown") &&
+        !target.closest(".action-menu") &&
+        !target.closest("[data-action-menu]")) {
         setShowSortDropdown(false);
         setActionMenuOpenId(null);
       }
@@ -534,19 +532,18 @@ export default function MainLeads() {
 
                         {actionMenuOpenId === lead.id.toString() && (
                           <>
-                            <div 
-                              className="fixed inset-0 z-40" 
+                            <div
+                              className="fixed inset-0 z-40"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActionMenuOpenId(null);
                               }}
                             />
-                            
-                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
-                              leads.indexOf(lead) >= leads.length - 2 
-                                ? 'bottom-full mb-1' 
+
+                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                                ? 'bottom-full mb-1'
                                 : 'top-full mt-1'
-                            }`}>
+                              }`}>
                               <div className="py-1">
                                 <button
                                   onClick={(e) => {
@@ -612,7 +609,7 @@ export default function MainLeads() {
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
                     {lead.stage}
                   </span>
-                  
+
                   <div className="relative" data-action-menu>
                     <button
                       className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -626,19 +623,18 @@ export default function MainLeads() {
 
                     {actionMenuOpenId === lead.id.toString() && (
                       <>
-                        <div 
-                          className="fixed inset-0 z-40" 
+                        <div
+                          className="fixed inset-0 z-40"
                           onClick={(e) => {
                             e.stopPropagation();
                             setActionMenuOpenId(null);
                           }}
                         />
-                        
-                        <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
-                          leads.indexOf(lead) >= leads.length - 2 
-                            ? 'bottom-full mb-1' 
+
+                        <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                            ? 'bottom-full mb-1'
                             : 'top-full mt-1'
-                        }`}>
+                          }`}>
                           <div className="py-1">
                             <button
                               onClick={(e) => {

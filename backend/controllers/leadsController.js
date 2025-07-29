@@ -3,6 +3,7 @@ import { LeadComments } from "../models/leads/leadsCommentModel.js";
 import { Tasks } from "../models/tasks/tasksModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
 import { Op } from 'sequelize';
+import { sequelize } from '../config/db.js'; // Import sequelize instance for transactions
 
 export const getLeads = async (req, res) => {
     try {
@@ -20,6 +21,7 @@ export const getLeads = async (req, res) => {
 
         const offset = (page - 1) * limit;
         let whereClause = {};
+        
         if (status !== undefined && status !== '') {
             whereClause.status = status === '1' || status === 'true' || status === true;
         }
@@ -64,27 +66,39 @@ export const getLeads = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Error fetching leads:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
 export const getLeadById = async (req, res) => {
     try {
+        const leadId = parseInt(req.params.id);
+        
+        if (isNaN(leadId)) {
+            return res.status(400).json({ message: "Invalid lead ID" });
+        }
+
         const response = await Leads.findOne({
             where: {
-                id: parseInt(req.params.id)
+                id: leadId
             }
         });
+        
         if (!response) {
             return res.status(404).json({ message: "Lead not found" });
         }
+        
         res.status(200).json(response);
     } catch (error) {
+        console.error('Error fetching lead by ID:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
 export const createLead = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
         const {
             owner,
@@ -135,14 +149,20 @@ export const createLead = async (req, res) => {
             country,
             description,
             status: false
-        });
-
+        }, { transaction });
+        
+        await transaction.commit();
+        
         res.status(201).json({
             message: "Lead created successfully",
             lead: newLead
         });
     } catch (error) {
-        if (error.name === 'SequelizeValidationError') {
+        await transaction.rollback();
+        
+        console.error('Error creating lead:', error);
+        
+        if (error.name === 'SequelizeValidationError'){
             const validationErrors = error.errors.map(err => ({
                 field: err.path,
                 message: err.message
@@ -157,10 +177,19 @@ export const createLead = async (req, res) => {
 }
 
 export const updateLead = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
         const leadId = parseInt(req.params.id);
-        const lead = await Leads.findByPk(leadId);
+        
+        if (isNaN(leadId)) {
+            await transaction.rollback();
+            return res.status(400).json({ message: "Invalid lead ID" });
+        }
+
+        const lead = await Leads.findByPk(leadId, { transaction });
         if (!lead) {
+            await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
         }
 
@@ -212,7 +241,9 @@ export const updateLead = async (req, res) => {
             postal_code: postal_code !== undefined ? postal_code : lead.postal_code,
             country: country !== undefined ? country : lead.country,
             description: description !== undefined ? description : lead.description
-        });
+        }, { transaction });
+
+        await transaction.commit();
 
         const updatedLead = await Leads.findByPk(leadId);
         res.status(200).json({
@@ -220,6 +251,10 @@ export const updateLead = async (req, res) => {
             lead: updatedLead
         });
     } catch (error) {
+        await transaction.rollback();
+        
+        console.error('Error updating lead:', error);
+        
         if (error.name === 'SequelizeValidationError') {
             const validationErrors = error.errors.map(err => ({
                 field: err.path,
@@ -236,54 +271,87 @@ export const updateLead = async (req, res) => {
 };
 
 export const deleteLead = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
         const leadId = parseInt(req.params.id);
-        const lead = await Leads.findByPk(leadId);
+        
+        if (isNaN(leadId)) {
+            await transaction.rollback();
+            return res.status(400).json({ message: "Invalid lead ID" });
+        }
+
+        const lead = await Leads.findByPk(leadId, { transaction });
         if (!lead) {
+            await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
         }
-        await lead.destroy();
+        
+        await lead.destroy({ transaction });
+        await transaction.commit();
+        
         res.status(200).json({
             message: "Lead deleted successfully"
         });
     } catch (error) {
+        await transaction.rollback();
+        console.error('Error deleting lead:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
+// IMPROVED: Convert Lead with better transaction handling
 export const convertLead = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
         const leadId = parseInt(req.params.id);
-        const { deal_title, deal_value, deal_stage = 'negotiation', owner } = req.body;
+        
+        if (isNaN(leadId)) {
+            await transaction.rollback();
+            return res.status(400).json({ message: "Invalid lead ID" });
+        }
 
-        const lead = await Leads.findByPk(leadId);
+        const { deal_title, deal_value, deal_stage = 'proposal_sent', owner } = req.body;
+
+        const lead = await Leads.findByPk(leadId, { 
+            transaction,
+            lock: true // Add row-level locking to prevent concurrent modifications
+        });
+        
         if (!lead) {
+            await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
         }
 
+        // Check if lead is already converted
         if (lead.status === true) {
-            return res.status(400).json({
-                message: "Lead has already been converted to deal"
+            await transaction.rollback();
+            return res.status(400).json({ 
+                message: "Lead has already been converted to deal" 
             });
         }
 
-        await lead.update({
+        // Update lead stage to Converted and status to true
+        await lead.update({ 
             stage: 'Converted',
             status: true
-        });
+        }, { transaction });
 
+        // Create deal in database
         const newDeal = await Deals.create({
             lead_id: leadId,
-            title: deal_title || `Deal from ${lead.fullname || 'Lead Conversion'}`,
+            title: deal_title || `Deal from Lead Conversion`,
             value: deal_value || 0,
-            stage: deal_stage, // Will be 'negotiation' by default
+            stage: deal_stage,
             owner: owner || lead.owner || 0,
             id_contact: 0,
             id_company: 0,
             created_by: req.user?.id || 1,
-            created_at: new Date(),
-            updated_at: new Date()
-        });
+            status: 'active'
+        }, { transaction });
+
+        await transaction.commit();
 
         res.status(200).json({
             success: true,
@@ -303,34 +371,95 @@ export const convertLead = async (req, res) => {
             }
         });
     } catch (error) {
+        await transaction.rollback();
+        console.error('Error converting lead:', error);
         res.status(500).json({ message: error.message });
     }
 }
 
+// IMPROVED: Update Lead Stage with better validation and locking
 export const updateLeadStage = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
         const leadId = parseInt(req.params.id);
-        const { stage } = req.body;
+        
+        if (isNaN(leadId)) {
+            await transaction.rollback();
+            return res.status(400).json({ message: "Invalid lead ID" });
+        }
 
-        const lead = await Leads.findByPk(leadId);
+        const { stage } = req.body;
+        
+        // Validate stage
+        const validStages = ['New', 'Contacted', 'Qualification', 'Converted', 'Unqualified'];
+        if (!stage || !validStages.includes(stage)) {
+            await transaction.rollback();
+            return res.status(400).json({ 
+                message: "Invalid stage. Valid stages are: " + validStages.join(', ')
+            });
+        }
+        
+        // Find lead with row-level locking
+        const lead = await Leads.findByPk(leadId, { 
+            transaction,
+            lock: true
+        });
+        
         if (!lead) {
+            await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
         }
 
-        // Cek apakah lead sudah diconvert, jika sudah tidak bisa diubah stagenya
-        if (lead.status === true) {
-            return res.status(400).json({
-                message: "Cannot update stage of converted lead"
+        // Prevent direct conversion through stage update
+        if (stage === 'Converted') {
+            await transaction.rollback();
+            return res.status(400).json({ 
+                message: "Cannot update stage to 'Converted' directly. Use convert endpoint instead." 
             });
         }
 
-        await lead.update({ stage });
+        // Prevent updating already converted leads
+        if (lead.status === true) {
+            await transaction.rollback();
+            return res.status(400).json({ 
+                message: "Cannot update stage of converted lead" 
+            });
+        }
 
+        const oldStage = lead.stage;
+        
+        // Only update if stage actually changed
+        if (oldStage === stage) {
+            await transaction.rollback();
+            return res.status(200).json({
+                message: "No stage change detected",
+                data: {
+                    lead_id: leadId,
+                    stage: stage,
+                    updated_at: lead.updated_at
+                }
+            });
+        }
+
+        await lead.update({ stage }, { transaction });
+        await transaction.commit();
+
+        console.log(`✅ Lead ${leadId} stage updated from "${oldStage}" to "${stage}"`);
+        
         res.status(200).json({
+            success: true,
             message: "Lead stage updated successfully",
-            lead: lead
+            data: {
+                lead_id: leadId,
+                old_stage: oldStage,
+                new_stage: stage,
+                updated_at: new Date()
+            }
         });
     } catch (error) {
+        await transaction.rollback();
+        console.error('Error updating lead stage:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -338,6 +467,10 @@ export const updateLeadStage = async (req, res) => {
 export const getLeadComments = async (req, res) => {
     try {
         const leadId = parseInt(req.params.id);
+        
+        if (isNaN(leadId)) {
+            return res.status(400).json({ message: "Invalid lead ID" });
+        }
 
         const lead = await Leads.findByPk(leadId);
         if (!lead) {
@@ -351,16 +484,32 @@ export const getLeadComments = async (req, res) => {
 
         res.status(200).json(comments);
     } catch (error) {
+        console.error('Error fetching lead comments:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
 export const addLeadComment = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
         const leadId = parseInt(req.params.id);
+        
+        if (isNaN(leadId)) {
+            await transaction.rollback();
+            return res.status(400).json({ message: "Invalid lead ID" });
+        }
+
         const { message, user_id, user_name } = req.body;
-        const lead = await Leads.findByPk(leadId);
+        
+        if (!message || !message.trim()) {
+            await transaction.rollback();
+            return res.status(400).json({ message: "Comment message is required" });
+        }
+
+        const lead = await Leads.findByPk(leadId, { transaction });
         if (!lead) {
+            await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
         }
 
@@ -368,41 +517,58 @@ export const addLeadComment = async (req, res) => {
             lead_id: leadId,
             user_id,
             user_name,
-            message,
-            created_at: new Date()
-        });
+            message: message.trim()
+        }, { transaction });
+        
+        await transaction.commit();
+        
         res.status(201).json({
-            message: "comment added successfully",
+            message: "Comment added successfully",
             comment: comment
         });
     } catch (error) {
+        await transaction.rollback();
+        console.error('Error adding lead comment:', error);
         res.status(500).json({ message: error.message });
     }
 }
 
 export const deleteLeadComment = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
         const commentId = parseInt(req.params.commentId);
-        const comment = await LeadComments.findByPk(commentId);
+        
+        if (isNaN(commentId)) {
+            await transaction.rollback();
+            return res.status(400).json({ message: "Invalid comment ID" });
+        }
+
+        const comment = await LeadComments.findByPk(commentId, { transaction });
         if (!comment) {
+            await transaction.rollback();
             return res.status(404).json({ message: "Comment not found" });
         }
-        await comment.destroy();
+        
+        await comment.destroy({ transaction });
+        await transaction.commit();
+        
         res.status(200).json({
             message: "Comment deleted successfully"
         });
     } catch (error) {
+        await transaction.rollback();
+        console.error('Error deleting lead comment:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
-// ADDED: Get leads yang belum diconvert (status = 0)
 export const getUnconvertedLeads = async (req, res) => {
     try {
         const { page = 1, limit = 10, stage, rating, owner, search } = req.query;
         const offset = (page - 1) * limit;
         let whereClause = {
-            status: false // Filter hanya leads yang belum diconvert
+            status: false 
         };
 
         if (stage) {
@@ -440,11 +606,11 @@ export const getUnconvertedLeads = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Error fetching unconverted leads:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
-// ADDED: Get leads yang sudah diconvert (status = 1)
 export const getConvertedLeads = async (req, res) => {
     try {
         const { page = 1, limit = 10, stage, rating, owner, search } = req.query;
@@ -488,6 +654,7 @@ export const getConvertedLeads = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Error fetching converted leads:', error);
         res.status(500).json({ message: error.message });
     }
 };

@@ -77,8 +77,7 @@ export default function MainContentDeals() {
       });
 
       await Promise.all(deletePromises);
-      
-      // Remove deleted deals from state
+
       setDeals((prev) => prev.filter((deal) => !ids.includes(deal.id)));
       setSelectedDeals([]);
       alert(`Successfully deleted ${ids.length} deal(s)`);

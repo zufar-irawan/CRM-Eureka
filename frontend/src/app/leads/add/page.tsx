@@ -245,7 +245,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     <label className="block text-sm font-medium text-gray-600">Website</label>
                     <input 
                       name="website" 
-                      type="url"
+                      type="text"
                       placeholder="Enter website URL" 
                       value={form.website} 
                       onChange={handleChange} 

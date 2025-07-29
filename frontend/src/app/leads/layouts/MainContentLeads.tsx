@@ -12,15 +12,111 @@ import {
   User,
   Building2,
   X,
+  Edit,
+  Trash2,
 } from "lucide-react";
-import SelectedActionBar from "../components/SelectedActionBar";
+import EditLeadModal from "../components/EditLeadModal";
+
+// Delete Modal Component
+interface DeleteLeadModalProps {
+  selectedCount: number;
+  selectedIds: string[];
+  onClose: () => void;
+  onConfirm: () => void;
+  type: "leads" | "deals";
+}
+
+function DeleteLeadModal({
+  selectedCount,
+  selectedIds,
+  onClose,
+  onConfirm,
+  type,
+}: DeleteLeadModalProps) {
+  const itemType = type === "leads" ? "Lead" : "Deal";
+  const itemTypePlural = type === "leads" ? "Leads" : "Deals";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+        <h2 className="text-xl font-bold mb-4">Delete {selectedCount > 1 ? itemTypePlural : itemType}</h2>
+
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-black"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <p className="text-sm text-gray-700 mb-6">
+          {selectedCount === 1 ? (
+            <>
+              Are you sure you want to delete this {itemType.toLowerCase()}?
+            </>
+          ) : (
+            <>
+              Are you sure you want to delete <strong>{selectedCount}</strong> {itemTypePlural.toLowerCase()}?
+            </>
+          )}
+        </p>
+
+        {selectedCount <= 5 && (
+          <div className="mb-4 text-xs text-gray-500">
+            <p className="font-medium mb-1">Selected IDs:</p>
+            <p className="break-all">{selectedIds.join(", ")}</p>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm transition"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 10000,
+});
 
 export default function MainLeads() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>("")
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC")
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const stages = [
+    "new",
+    "contacted",
+    "qualification",
+    "unqualified"
+  ];
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [currentLead, setCurrentLead] = useState<any>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [leadsToDelete, setLeadsToDelete] = useState<string[]>([]);
 
   const sortOptions = [
     "Owner", "Company", "Title", "First Name", "Last Name", "Fullname",
@@ -37,35 +133,36 @@ export default function MainLeads() {
   useEffect(() => {
     fetchLeads();
     
+    // Set up interval untuk refresh data setiap 5 detik
+    // Ini akan membantu sinkronisasi dengan perubahan dari kanban
     const interval = setInterval(() => {
       fetchLeads();
-    }, 30000); 
+    }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedStage, searchTerm]);
 
-  const fetchLeads = async () => {
+
+  const fetchLeads = async (filters: {
+    stage?: string | null
+    search?: string
+    sortBy?: string
+    sortOrder?: "ASC" | "DESC"
+  } = {}) => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/leads/?status=0", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+
+      const response = await api.get("/leads/", {
+        params: {
+          status: 0,
+          ...(filters.stage ? { stage: filters.stage } : {}),
+          ...(filters.search ? { search: filters.search } : {}),
+          ...(filters.sortBy ? { sortBy: filters.sortBy } : {}),
+          ...(filters.sortOrder ? { sortOrder: filters.sortOrder } : {})
+        }
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to fetch leads");
-      }
-
-      const data = await res.json();
-      setLeads(data.leads);
-      
-      setSelectedLeads(prev => 
-        prev.filter(selectedId => 
-          data.leads.some((lead: any) => lead.id.toString() === selectedId)
-        )
-      );
+      setLeads(response.data.leads);
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -73,160 +170,54 @@ export default function MainLeads() {
     }
   };
 
-  const getStageColor = (stage: string) => {
-    switch (stage) {
-      case 'New':
-        return 'bg-gray-100 text-gray-800';
-      case 'Contacted':
-        return 'bg-blue-100 text-blue-800';
-      case 'Qualification':
-        return 'bg-red-100 text-red-800';
-      case 'Unqualified':
-        return 'bg-gray-800 text-white';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  // Manual refresh function
+  const handleRefresh = async () => {
+    await fetchLeads();
   };
 
+  // Bulk Delete Handler with axios
   const handleBulkDelete = async (ids: string[]) => {
-    if (!window.confirm(`Are you sure you want to delete ${ids.length} lead(s)?`)) return;
-
     try {
       const deletePromises = ids.map(async (id) => {
-        const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || `Failed to delete lead ${id}`);
+        try {
+          const response = await api.delete(`/leads/${id}`);
+          return { success: true, id, data: response.data };
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.message || error.message || `Failed to delete lead ${id}`;
+          return { success: false, id, error: errorMessage };
         }
-
-        return response.json();
       });
 
-      await Promise.all(deletePromises);
+      const results = await Promise.allSettled(deletePromises);
 
-      setLeads((prev) => prev.filter((lead) => !ids.includes(lead.id.toString())));
-      setSelectedLeads([]);
-      alert(`Successfully deleted ${ids.length} lead(s)`);
-    } catch (err: any) {
-      alert("Failed to delete leads: " + err.message);
-    }
-  };
+      const successful: string[] = [];
+      const failed: { id: string; error: string }[] = [];
 
-  const handleBulkUpdate = async (ids: string[], field: string, value: string) => {
-    try {
-      const fieldMap: { [key: string]: string } = {
-        "Owner": "owner",
-        "Company": "company",
-        "Title": "title",
-        "First Name": "first_name",
-        "Last Name": "last_name",
-        "Job Position": "job_position",
-        "Email": "email",
-        "Phone": "phone",
-        "Mobile": "mobile",
-        "Fax": "fax",
-        "Website": "website",
-        "Industry": "industry",
-        "Number Of Employees": "number_of_employees",
-        "Lead Source": "lead_source",
-        "Stage": "stage",
-        "Rating": "rating",
-        "Street": "street",
-        "City": "city",
-        "State": "state",
-        "Postal Code": "postal_code",
-        "Country": "country",
-        "Description": "description"
-      };
-
-      const apiField = fieldMap[field] || field.toLowerCase().replace(/ /g, "_");
-
-      if (apiField === "stage") {
-        const updatePromises = ids.map(async (id) => {
-          const response = await fetch(`http://localhost:5000/api/leads/${id}/stage`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ stage: value }),
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to update lead ${id}`);
+      results.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          const value = result.value;
+          if (value.success) {
+            successful.push(value.id);
+          } else {
+            failed.push({ id: value.id, error: value.error });
           }
+        }
+      });
 
-          return response.json();
-        });
-
-        await Promise.all(updatePromises);
-      } else {
-        const updatePromises = ids.map(async (id) => {
-          const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ [apiField]: value }),
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to update lead ${id}`);
-          }
-
-          return response.json();
-        });
-
-        await Promise.all(updatePromises);
+      if (successful.length > 0) {
+        setLeads((prev) => prev.filter((lead) => !successful.includes(lead.id.toString())));
+        setSelectedLeads([]);
       }
 
-      await fetchLeads();
-      setSelectedLeads([]);
-      alert(`Successfully updated ${ids.length} lead(s)`);
+      if (failed.length === 0) {
+        alert(`Successfully deleted ${successful.length} lead(s)`);
+      } else if (successful.length === 0) {
+        alert(`Failed to delete all leads: ${failed.map(f => f.error).join(', ')}`);
+      } else {
+        alert(`Partially successful: ${successful.length} deleted, ${failed.length} failed`);
+      }
     } catch (err: any) {
-      alert("Failed to update leads: " + err.message);
-    }
-  };
-
-  const handleBulkConvert = async (dealTitle: string, dealValue: number, dealStage: string) => {
-    try {
-      const convertPromises = selectedLeads.map(async (id) => {
-        const response = await fetch(`http://localhost:5000/api/leads/${id}/convert`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            deal_title: dealTitle,
-            deal_value: dealValue,
-            deal_stage: dealStage
-          }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || `Failed to convert lead ${id}`);
-        }
-
-        return response.json();
-      });
-
-      await Promise.all(convertPromises);
-
-      // UPDATED: After conversion, remove converted leads from current view since they now have status=1
-      setLeads((prev) => prev.filter((lead) => !selectedLeads.includes(lead.id.toString())));
-      setSelectedLeads([]);
-      alert(`Successfully converted ${selectedLeads.length} lead(s) to deal(s)`);
-    } catch (err: any) {
-      alert("Failed to convert leads: " + err.message);
-      throw err; // Re-throw to let the modal handle loading state
+      alert("Failed to delete leads: " + err.message);
     }
   };
 
@@ -237,6 +228,22 @@ export default function MainLeads() {
         : [...prev, id]
     );
   };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      if (!target.closest(".sort-dropdown") &&
+        !target.closest(".action-menu") &&
+        !target.closest("[data-action-menu]")) {
+        setShowSortDropdown(false);
+        setActionMenuOpenId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const isAllSelected =
     leads.length > 0 && selectedLeads.length === leads.length;
@@ -256,12 +263,31 @@ export default function MainLeads() {
         setShowSortDropdown(false);
       }
     };
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Function to get stage badge color
+  const getStageColor = (stage: string) => {
+    switch(stage) {
+      case 'New':
+        return 'bg-gray-100 text-gray-800';
+      case 'Contacted':
+        return 'bg-blue-100 text-blue-800';
+      case 'Qualification':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Converted':
+        return 'bg-green-100 text-green-800';
+      case 'Unqualified':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <main className="p-4 overflow-auto lg:p-6 bg-white pb-6">
+    <main className="p-4 overflow-visible lg:p-6 bg-white pb-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -271,13 +297,73 @@ export default function MainLeads() {
               className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
               title="Refresh leads data"
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
               {/* <span className="hidden sm:inline">Refresh</span> */}
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
               <Filter className="w-3 h-3" />
               <span className="hidden sm:inline">Filter</span>
             </button>
+
+            {showFilterDropdown && (
+              <div className="absolute z-50 mt-12 w-72 bg-white border border-gray-200 rounded-md shadow-lg">
+                {/* Stage Filter */}
+                <div className="border-b border-gray-100 px-4 py-3">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Stage</p>
+                  <ul className="max-h-40 overflow-y-auto space-y-1">
+                    {stages.map((stage) => (
+                      <li
+                        key={stage}
+                        onClick={() => setSelectedStage(stage)}
+                        className={`text-sm px-2 py-1 rounded cursor-pointer ${selectedStage === stage
+                          ? "bg-blue-100 text-blue-700"
+                          : "hover:bg-gray-100"
+                          }`}
+                      >
+                        {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Owner Filter */}
+                <div className="px-4 py-3">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Owner</p>
+                  <div className="relative mt-2">
+                    <input
+                      type="text"
+                      placeholder="Search by owner"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600 bg-white p-0.5 rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      setSelectedStage(null);
+                      setSearchTerm("");
+                    }}
+                    className="text-sm text-red-500 hover:underline"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+
+              </div>
+            )}
 
             {/* SORT BUTTON + DROPDOWN */}
             <div className="relative">
@@ -315,7 +401,12 @@ export default function MainLeads() {
                         key={option}
                         className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                         onClick={() => {
-                          console.log("Sort by:", option);
+                          if (sortBy === option.toLowerCase().replace(/ /g, "_")) {
+                            setSortOrder(sortOrder === "ASC" ? "DESC" : "ASC");
+                          } else {
+                            setSortBy(option.toLowerCase().replace(/ /g, "_"));
+                            setSortOrder("ASC");
+                          }
                           setShowSortDropdown(false);
                           setSearchTerm("");
                         }}
@@ -339,75 +430,125 @@ export default function MainLeads() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={toggleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
-              ) : leads.length === 0 ? (
-                <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
-              ) : leads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
+        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="overflow-x-auto">
+            <table className="w-full relative">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedLeads.includes(lead.id.toString())}
-                      onChange={() => toggleSelectLead(lead.id.toString())}
+                      checked={isAllSelected}
+                      onChange={toggleSelectAll}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <User className="w-3 h-3 text-blue-600" />
-                      </div>
-                      <div className="text-xs font-medium text-gray-900">{lead.title + " " + lead.fullname}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
-                  <td className="px-6 py-4">
-                    {/* UPDATED: Dynamic stage color based on stage */}
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
-                      {lead.stage}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
-                  <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
-                  <td className="px-6 py-4 text-xs text-gray-500">
-                    {new Date(lead.updated_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 text-center">
-                    <button className="text-gray-400 hover:text-gray-600 mx-auto">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </td>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile No</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
+                ) : leads.length === 0 ? (
+                  <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
+                ) : leads.map((lead) => (
+                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedLeads.includes(lead.id.toString())}
+                        onChange={() => toggleSelectLead(lead.id.toString())}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                          <User className="w-3 h-3 text-blue-600" />
+                        </div>
+                        <div className="text-xs font-medium text-gray-900">{lead.title + " " + lead.fullname}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {lead.stage}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-xs text-blue-600 hover:underline cursor-pointer">{lead.email}</td>
+                    <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
+                    <td className="px-6 py-4 text-xs text-gray-500">
+                      {new Date(lead.updated_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      <div className="relative" data-action-menu>
+                        <button
+                          className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                          }}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+
+                        {actionMenuOpenId === lead.id.toString() && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActionMenuOpenId(null);
+                              }}
+                            />
+
+                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                                ? 'bottom-full mb-1'
+                                : 'top-full mt-1'
+                              }`}>
+                              <div className="py-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditLead(lead);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openDeleteModal([lead.id.toString()]);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Mobile Cards */}
@@ -442,9 +583,58 @@ export default function MainLeads() {
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
                     {lead.stage}
                   </span>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
+
+                  <div className="relative" data-action-menu>
+                    <button
+                      className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                      }}
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+
+                    {actionMenuOpenId === lead.id.toString() && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenId(null);
+                          }}
+                        />
+
+                        <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                            ? 'bottom-full mb-1'
+                            : 'top-full mt-1'
+                          }`}>
+                          <div className="py-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditLead(lead);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openDeleteModal([lead.id.toString()]);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -491,15 +681,26 @@ export default function MainLeads() {
           </div>
         </div>
 
-        <SelectedActionBar
-          selectedCount={selectedLeads.length}
-          selectedIds={selectedLeads}
-          onClearSelection={() => setSelectedLeads([])}
-          onDelete={handleBulkDelete}
-          onUpdate={handleBulkUpdate}
-          onConvert={handleBulkConvert}
-          type="leads"
-        />
+        {/* Edit Lead Modal */}
+        {currentLead && (
+          <EditLeadModal
+            lead={currentLead}
+            isOpen={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            onSave={handleSaveLead}
+          />
+        )}
+
+        {/* Delete Lead Modal */}
+        {deleteModalOpen && (
+          <DeleteLeadModal
+            selectedCount={leadsToDelete.length}
+            selectedIds={leadsToDelete}
+            onClose={closeDeleteModal}
+            onConfirm={confirmDelete}
+            type="leads"
+          />
+        )}
       </div>
     </main>
   );

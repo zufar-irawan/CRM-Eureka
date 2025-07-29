@@ -7,27 +7,29 @@ import { sequelize } from '../config/db.js'; // Import sequelize instance for tr
 
 export const getLeads = async (req, res) => {
     try {
-        const { 
-            page = 1, 
-            limit = 10, 
-            stage, 
-            rating, 
-            owner, 
-            search, 
+        const {
+            page = 1,
+            limit = 10,
+            stage,
+            rating,
+            owner,
+            search,
+            sortBy,
+            sortOrder,
             status = 0
         } = req.query;
-        
+
         const offset = (page - 1) * limit;
         let whereClause = {};
         
         if (status !== undefined && status !== '') {
             whereClause.status = status === '1' || status === 'true' || status === true;
         }
-        
+
         if (stage) {
             whereClause.stage = stage;
         }
-        
+
         if (rating) {
             whereClause.rating = rating;
         }
@@ -42,11 +44,16 @@ export const getLeads = async (req, res) => {
             ];
         }
 
+        const order = []
+        if (sortBy) {
+            order.push([sortBy, sortOrder?.toUpperCase() === "DESC" ? "DESC" : "ASC"])
+        }
+
         const { count, rows } = await Leads.findAndCountAll({
             where: whereClause,
             limit: parseInt(limit),
             offset: parseInt(offset),
-            order: [['created_at', 'DESC']]
+            order: order.length ? order : [['created_at', 'DESC']]
         });
 
         res.status(200).json({
@@ -95,31 +102,31 @@ export const createLead = async (req, res) => {
     try {
         const {
             owner,
-            company,  
+            company,
             title,
             first_name,
             last_name,
             job_position,
-            email, 
+            email,
             phone,
-            mobile, 
-            fax, 
+            mobile,
+            fax,
             website,
             industry,
             number_of_employees,
             lead_source,
-            stage, 
-            rating, 
+            stage,
+            rating,
             street,
             city,
-            state, 
+            state,
             postal_code,
             country,
             description
         } = req.body;
 
         const newLead = await Leads.create({
-            owner, 
+            owner,
             company,
             title: title || 'Mr',
             first_name,
@@ -258,7 +265,7 @@ export const updateLead = async (req, res) => {
                 errors: validationErrors
             });
         }
-        
+
         res.status(500).json({ message: error.message });
     }
 };
@@ -563,11 +570,11 @@ export const getUnconvertedLeads = async (req, res) => {
         let whereClause = {
             status: false 
         };
-        
+
         if (stage) {
             whereClause.stage = stage;
         }
-        
+
         if (rating) {
             whereClause.rating = rating;
         }
@@ -611,11 +618,11 @@ export const getConvertedLeads = async (req, res) => {
         let whereClause = {
             status: true
         };
-        
+
         if (stage) {
             whereClause.stage = stage;
         }
-        
+
         if (rating) {
             whereClause.rating = rating;
         }

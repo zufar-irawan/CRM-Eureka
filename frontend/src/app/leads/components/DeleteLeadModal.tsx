@@ -50,7 +50,6 @@ export default function DeleteLeadModal({
             <p className="break-all">{selectedIds.join(", ")}</p>
           </div>
         )}
-
         <div className="flex gap-2">
           <button
             onClick={onClose}

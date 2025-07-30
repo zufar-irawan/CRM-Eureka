@@ -24,7 +24,6 @@ export default function MainContentDeals() {
     fetchDeals();
   }, []);
 
-  // Di MainContentDeals - bagian fetchDeals function
 const fetchDeals = async () => {
   try {
     setLoading(true);

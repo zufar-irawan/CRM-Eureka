@@ -13,6 +13,8 @@ type fetchDataProps = {
     organization: string;
     email: string;
     mobileno: string;
+    value?: number;
+    stage?: string;
   };
 };
 
@@ -24,8 +26,19 @@ export default async function fetchKanbanData({
   mapItem,
 }: fetchDataProps) {
   try {
-    const response = await axios.get(url);
-    const rawData = response.data.data;
+    console.log("Fetching data from:", url);
+
+    let rawData;
+    if (url.includes('/api/deals')) {
+      const response = await fetch(url);
+      const result = await response.json();
+      
+      if (!result.success) throw new Error(result.message);
+      rawData = result.data;
+    } else {
+      const response = await axios.get(url);
+      rawData = response.data.data || response.data;
+    }
 
     console.log("Fetched data:", rawData);
 
@@ -34,7 +47,7 @@ export default async function fetchKanbanData({
       return;
     }
 
-    setData(rawData); // Simpan data mentah
+    setData(rawData); 
 
     const grouped: { [key: string]: any[] } = {};
 
@@ -55,5 +68,6 @@ export default async function fetchKanbanData({
     console.log("Grouped by", groupBy, ":", grouped);
   } catch (error) {
     console.error("Failed to fetch data:", error);
+    throw error; 
   }
 }

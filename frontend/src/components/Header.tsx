@@ -18,6 +18,8 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
         title = "Deals"
     } else if (pathname === "/leads" || pathname === "/leads/kanban") {
         title = "Leads"
+    } else if (pathname === "/tasks" || pathname === "/tasks/kanban") {
+        title = "Tasks"
     }
 
     return (

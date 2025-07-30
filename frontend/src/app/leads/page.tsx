@@ -85,10 +85,12 @@ export default function Leads() {
         </div>
 
         {/* Modal Create Lead */}
-        {isModalOpen && (
-          <CreateLeadModal onClose={() => setIsModalOpen(false)} />
-        )}
+
       </div>
+
+      {isModalOpen && (
+        <CreateLeadModal onClose={() => setIsModalOpen(false)} />
+      )}
     </div>
   );
 }

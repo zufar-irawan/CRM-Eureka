@@ -49,7 +49,7 @@ const Sidebar = ({ isMinimized, setIsMinimized }: sidebarProps) => {
   ];
 
   return (
-    <div className={`${isMinimized ? 'w-16' : 'w-50 pr-8 pl-2 '} z-50 pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 fixed`}>
+    <div className={`${isMinimized ? 'w-16' : 'w-50 pr-8 pl-2 '} z-30 pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 fixed`}>
       {/* Toggle Button */}
       <button
         onClick={() => {

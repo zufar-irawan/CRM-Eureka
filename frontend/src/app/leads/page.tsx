@@ -4,7 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import { AlignJustify, ChevronDown, Kanban } from "lucide-react";
 import { useState } from "react";
 import MainLeads from "./layouts/MainContentLeads";
-import CreateLeadModal from "./add/page";
+import CreateLeadModal from "./add/AddLeadModal";
 import KanbanLead from "./layouts/KanbanContentLeads";
 
 export default function Leads() {
@@ -85,10 +85,12 @@ export default function Leads() {
         </div>
 
         {/* Modal Create Lead */}
-        {isModalOpen && (
-          <CreateLeadModal onClose={() => setIsModalOpen(false)} />
-        )}
+
       </div>
+
+      {isModalOpen && (
+        <CreateLeadModal onClose={() => setIsModalOpen(false)} />
+      )}
     </div>
   );
 }

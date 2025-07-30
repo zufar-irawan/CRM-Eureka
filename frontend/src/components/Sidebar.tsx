@@ -42,14 +42,14 @@ const Sidebar = ({ isMinimized, setIsMinimized }: sidebarProps) => {
     { icon: Handshake, label: "Deals", link: "/deals" },
     { icon: CheckSquare, label: "Tasks", link: "/tasks" },
     { icon: Mail, label: "Contacts", link: "/contacts" },
-    { icon: Building, label: "Companies", link: "/company" },
+    { icon: Building, label: "Companies", link: "/companies" },
     { icon: FileText, label: "Quotations", link: "/quotations" },
     { icon: FileSignature, label: "Contracts", link: "/contracts" },
     { icon: LineChart, label: "Reports", link: "/reports" },
   ];
 
   return (
-    <div className={`${isMinimized ? 'w-16' : 'w-50 pr-8 pl-2 '} z-50 pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 fixed`}>
+    <div className={`${isMinimized ? 'w-16' : 'w-50 pr-8 pl-2 '} z-30 pt-2 bg-slate-800 text-white min-h-screen flex flex-col transition-all duration-300 fixed`}>
       {/* Toggle Button */}
       <button
         onClick={() => {

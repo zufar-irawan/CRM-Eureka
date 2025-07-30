@@ -104,15 +104,15 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
     <>
       {/* Transparent Backdrop */}
       <div
-        className="fixed inset-0 z-40"
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal Container - Positioned to center within main content area */}
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
         <div
-          className="bg-white w-full max-w-6xl rounded-xl shadow-2xl relative transform transition-all duration-300 scale-100 max-h-[90vh] overflow-hidden mx-4 pointer-events-auto"
-          style={{ marginLeft: 'max(1rem, calc((100vw - 64rem) / 2))' }}
+          className="bg-white w-full max-w-6xl rounded-xl shadow-2xl relative transform transition-all duration-300 max-h-[90vh] overflow-hidden pointer-events-auto"
+        // style={{ marginLeft: 'max(1rem, calc((100vw - 64rem) / 2))' }}
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">

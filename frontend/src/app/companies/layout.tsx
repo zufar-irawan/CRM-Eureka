@@ -1,13 +1,14 @@
 "use client"
 
-import Sidebar from "@/components/Sidebar"
-import { AlignJustify, ChevronDown, Kanban } from "lucide-react"
-import { useState } from "react"
-import { redirect, usePathname } from "next/navigation"
 import Header from "@/components/Header"
-import CreateDealsModal from "./add/AddDealsModal"
+import Sidebar from "@/components/Sidebar"
+import { usePathname } from "next/navigation"
+import { useState } from "react"
 
-export default function DealsLayout({ children }: { children: React.ReactNode }) {
+export default function CompaniesLayout(
+    { children }:
+        { children: React.ReactNode }
+) {
     const [isMinimized, setIsMinimized] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
@@ -31,10 +32,6 @@ export default function DealsLayout({ children }: { children: React.ReactNode })
                 </div>
 
             </div>
-
-            {isModalOpen ? (
-                <CreateDealsModal onClose={() => setIsModalOpen(false)} />
-            ) : ''}
         </div>
     )
 }

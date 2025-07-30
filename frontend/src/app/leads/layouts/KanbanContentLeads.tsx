@@ -23,7 +23,7 @@ import Container from "./Container/Container";
 import Items from "./Item/Item";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import CreateLeadModal from "../add/page";
+import CreateLeadModal from "../add/AddLeadModal";
 import ConvertToDealModal from "../components/ConvertToDealModal";
 
 interface Lead {
@@ -53,7 +53,7 @@ const KanbanLead = () => {
   const [leads, setLeads] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [draggedItem, setDraggedItem] = useState<any>(null);
-  
+
   // Convert modal states
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [convertingLeadId, setConvertingLeadId] = useState<number | null>(null);
@@ -121,7 +121,7 @@ const KanbanLead = () => {
       console.log("Fetching leads...");
       const response = await axios.get("http://localhost:5000/api/leads/?status=0");
       const fetchedLeads: Lead[] = response.data.leads;
-      
+
       console.log("Raw leads data:", fetchedLeads);
 
       const groupedLeads = fetchedLeads.reduce((acc: Record<string, Lead[]>, lead: Lead) => {
@@ -152,7 +152,7 @@ const KanbanLead = () => {
     } catch (error) {
       console.error("Fetch error:", error);
     }
-  };  
+  };
 
   const updateLeadStage = async (leadId: number, newStage: string) => {
     try {
@@ -174,7 +174,7 @@ const KanbanLead = () => {
       return response.data;
     } catch (error: any) {
       console.error("Failed to update lead stage:", error);
-      
+
       if (error.response) {
         console.error("Error response:", error.response.data);
         alert(`Failed to update: ${error.response.data.message || "Unknown error"}`);
@@ -182,7 +182,7 @@ const KanbanLead = () => {
         console.error("Network error:", error.message);
         alert(`Network error: ${error.message}`);
       }
-      
+
       throw error;
     } finally {
       setIsUpdating(false);
@@ -244,21 +244,21 @@ const KanbanLead = () => {
 
       // Show success message
       alert(`Successfully converted lead "${leadData.fullname}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
-      
+
       // Close modal
       setShowConvertModal(false);
       setConvertingLeadId(null);
-      
+
       // Refresh data to show updated status
       setTimeout(() => {
         fetchLeads();
       }, 500);
-      
+
     } catch (error: unknown) {
       console.error('[ERROR] Failed to convert lead:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
       alert(`Error: ${errorMessage}`);
-      
+
       // Revert UI changes by refetching data
       fetchLeads();
     } finally {
@@ -298,7 +298,7 @@ const KanbanLead = () => {
     const { active } = event;
     const { id } = active;
     setActiveId(id);
-    
+
     // Store the dragged item info
     const activeContainer = findValueOfItems(id, "item");
     if (activeContainer) {
@@ -529,7 +529,7 @@ const KanbanLead = () => {
                 <span>Updating stage...</span>
               </div>
             )}
-            
+
             {isConverting && (
               <div className="flex items-center gap-2 px-3 py-2 text-xs text-green-600 bg-green-50 rounded-md border border-green-200">
                 <div className="w-3 h-3 border border-green-600 border-t-transparent rounded-full animate-spin"></div>

@@ -4,9 +4,11 @@ import Sidebar from "@/components/Sidebar"
 import dynamic from "next/dynamic"
 import ActivityTable from "./components/ActivityTable"
 import useUser from "../../../hooks/useUser"
+import { useState } from "react"
 
 export default function Dashboard() {
     const { user, loading } = useUser()
+    const [isMinimized, setIsMinimized] = useState(false)
 
     const BarChart = dynamic(() => import("./components/BarChart"), { ssr: false })
 
@@ -35,9 +37,9 @@ export default function Dashboard() {
 
     return (
         <div className="flex min-h-screen">
-            <Sidebar />
+            <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
-            <div className="flex flex-1 flex-col bg-slate-100">
+            <div className={`flex ${isMinimized ? 'ml-16' : 'ml-50'} flex-1 flex-col bg-slate-100`}>
                 <header className="bg-slate-800 text-white p-8 text-right">
                     <p className="text-xl">
                         Hi, <span>{loading ? "..." : user?.name || "User"}</span>

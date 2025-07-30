@@ -20,26 +20,38 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
         title = "Leads"
     } else if (pathname === "/tasks" || pathname === "/tasks/kanban") {
         title = "Tasks"
+    } else if (pathname === "/companies" || pathname === "/companies/detail") {
+        title = "Companies"
     }
 
     return (
         <header className="px-6 py-4 flex flex-row shadow-sm border-b border-gray-200">
             <div className="flex flex-1 items-center relative">
                 <h2 className="text-md text-gray-500 mr-2">{title} /</h2>
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="flex cursor-pointer hover:scale-105 hover:-translate-y-0.5 transition-transform items-center"
-                >
-                    {pathname === "/deals" ? (
-                        <AlignJustify size={13} className="text-gray-500 mr-1.5" />
+                {title === "Companies" ?
+                    (
+                        <div className="flex items-center">
+                            <AlignJustify size={13} className="text-gray-500 mr-1.5" />
+                            <h2 className="text-md text-gray-900 mr-1">List</h2>
+                        </div>
                     ) : (
-                        <Kanban size={15} className="text-gray-500 mr-1" />
-                    )}
-                    <h2 className="text-md text-gray-900 mr-1">{pathname === "/deals" ? "List" : "Kanban"}</h2>
-                    <ChevronDown size={16} className="text-gray-500" />
-                </button>
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="flex cursor-pointer hover:scale-105 hover:-translate-y-0.5 transition-transform items-center"
+                        >
+                            {pathname === "/deals" || "/leads" || "/tasks" ? (
+                                <AlignJustify size={13} className="text-gray-500 mr-1.5" />
+                            ) : (
+                                <Kanban size={15} className="text-gray-500 mr-1" />
+                            )}
+                            <h2 className="text-md text-gray-900 mr-1">{pathname === "/deals" || "/leads" || "/tasks" ? "List" : "Kanban"}</h2>
+                            <ChevronDown size={16} className="text-gray-500" />
+                        </button>
 
-                {/* Dropdown */}
+                    )
+                }
+
+
                 {isOpen && (
                     <div className="absolute top-10 left-28 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-md z-50">
                         <ul className="text-sm text-gray-700">
@@ -70,17 +82,19 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                 )}
             </div>
 
-            <button
-                onClick={() => setIsModalOpen(true)}
-                className="relative inline-block group"
-            >
-                <span className="relative flex hover:scale-105 text-md bg-black rounded-md overflow-hidden transition-all px-3 py-1.5 text-white items-center">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    <span className="relative z-10 flex items-center">
-                        <span className="mr-1.5">+</span> Create
+            {title === "Companies" ? '' : (
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="relative inline-block group"
+                >
+                    <span className="relative flex hover:scale-105 text-md bg-black rounded-md overflow-hidden transition-all px-3 py-1.5 text-white items-center">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                        <span className="relative z-10 flex items-center">
+                            <span className="mr-1.5">+</span> Create
+                        </span>
                     </span>
-                </span>
-            </button>
+                </button>
+            )}
         </header>
     )
 }

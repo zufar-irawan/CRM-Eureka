@@ -5,6 +5,7 @@ import { AlignJustify, ChevronDown, Kanban } from "lucide-react"
 import { useState } from "react"
 import { redirect, usePathname } from "next/navigation"
 import Header from "@/components/Header"
+import CreateDealsModal from "./add/AddDealsModal"
 
 export default function DealsLayout({ children }: { children: React.ReactNode }) {
     const [isMinimized, setIsMinimized] = useState(false)
@@ -30,6 +31,10 @@ export default function DealsLayout({ children }: { children: React.ReactNode })
                 </div>
 
             </div>
+
+            {isModalOpen ? (
+                <CreateDealsModal onClose={() => setIsModalOpen(false)} />
+            ) : ''}
         </div>
     )
 }

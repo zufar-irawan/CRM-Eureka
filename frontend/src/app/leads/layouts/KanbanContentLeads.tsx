@@ -23,7 +23,7 @@ import Container from "./Container/Container";
 import Items from "./Item/Item";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import CreateLeadModal from "../add/page";
+import CreateLeadModal from "../add/AddLeadModal";
 
 interface Lead {
   id: number;
@@ -105,7 +105,7 @@ const KanbanLead = () => {
       console.log("Fetching leads...");
       const response = await axios.get("http://localhost:5000/api/leads/?status=0");
       const fetchedLeads: Lead[] = response.data.leads;
-      
+
       console.log("Raw leads data:", fetchedLeads);
 
       const groupedLeads = fetchedLeads.reduce((acc: Record<string, Lead[]>, lead: Lead) => {
@@ -136,7 +136,7 @@ const KanbanLead = () => {
     } catch (error) {
       console.error("Fetch error:", error);
     }
-  };  
+  };
 
   const updateLeadStage = async (leadId: number, newStage: string) => {
     try {
@@ -158,7 +158,7 @@ const KanbanLead = () => {
       return response.data;
     } catch (error: any) {
       console.error("Failed to update lead stage:", error);
-      
+
       if (error.response) {
         console.error("Error response:", error.response.data);
         alert(`Failed to update: ${error.response.data.message || "Unknown error"}`);
@@ -166,7 +166,7 @@ const KanbanLead = () => {
         console.error("Network error:", error.message);
         alert(`Network error: ${error.message}`);
       }
-      
+
       throw error; // Re-throw untuk handling di handleDragEnd
     } finally {
       setIsUpdating(false);
@@ -205,7 +205,7 @@ const KanbanLead = () => {
     const { active } = event;
     const { id } = active;
     setActiveId(id);
-    
+
     // Store the dragged item info
     const activeContainer = findValueOfItems(id, "item");
     if (activeContainer) {

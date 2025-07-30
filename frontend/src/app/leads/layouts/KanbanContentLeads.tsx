@@ -572,6 +572,7 @@ const KanbanLead = () => {
                           organization={item.organization}
                           email={item.email}
                           mobileno={item.mobileno}
+                          leadId={item.leadId} // Pass the leadId prop
                         />
                       ))}
                     </div>

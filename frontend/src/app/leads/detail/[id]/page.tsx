@@ -47,7 +47,6 @@ export default function LeadDetailPage() {
   const [activeTab, setActiveTab] = useState("Notes");
   const [isMinimized, setIsMinimized] = useState(false);
   const [lead, setLead] = useState<Lead | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Modal state
@@ -164,13 +163,11 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
   useEffect(() => {
     if (!id) {
       setError("Invalid lead ID");
-      setLoading(false);
       return;
     }
 
     const fetchLead = async () => {
       try {
-        setLoading(true);
         setError(null);
         
         console.log(`[DEBUG] Fetching lead with ID: ${id}`);
@@ -237,13 +234,42 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
         if (err instanceof Error && err.message.includes('not found')) {
           setTimeout(() => router.push('/leads'), 3000);
         }
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchLead();
   }, [id, router]);
+
+  const testApiConnectivity = async () => {
+    try {
+      console.log('[DEBUG] Testing API connectivity...');
+      const response = await fetch('http://localhost:5000/api/leads', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+      });
+      
+      console.log('[DEBUG] API connectivity test result:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[DEBUG] API is accessible, sample data:', data);
+        alert('API connection successful! Check console for details.');
+      } else {
+        alert(`API connection failed: ${response.status} ${response.statusText}`);
+      }
+    } catch (error: unknown) {
+      console.error('[DEBUG] API connectivity test failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`API connection failed: ${errorMessage}`);
+    }
+  };
 
   const renderTabContent = () => {
     if (!lead) return null;
@@ -283,20 +309,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-        <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex items-center justify-center`}>
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-gray-600">Loading lead details...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Jika ada error, tampilkan error page
   if (error) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -327,25 +340,23 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
     );
   }
 
-  if (!lead) {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-        <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex items-center justify-center`}>
-          <div className="text-center">
-            <h3 className="text-lg font-medium mb-2">Lead not found</h3>
-            <p className="text-gray-600 mb-4">ID: {id}</p>
-            <button 
-              onClick={() => router.push('/leads')}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Back to Leads
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Render halaman utama dengan placeholder data jika lead belum ada
+  const currentLead = lead || {
+    id: id || '',
+    title: '',
+    fullname: '',
+    company: '',
+    email: '',
+    mobile: '',
+    industry: '',
+    job_position: '',
+    website: '',
+    owner: '',
+    first_name: '',
+    last_name: '',
+    stage: 'new',
+    updated_at: new Date().toISOString()
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -361,28 +372,28 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
                 <span>Leads</span>
                 <span>/</span>
                 <span className="text-gray-900">
-                  {displayValue(lead.title)} {displayValue(lead.fullname)}
+                  {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
                 </span>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">CRM-LEAD-{lead.id}</div>
+                <div className="text-sm text-gray-500">CRM-LEAD-{currentLead.id}</div>
               </div>
             </div>
 
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-semibold text-gray-900">
-                  {displayValue(lead.title)} {displayValue(lead.fullname)}
+                  {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
                 </h1>
                 <div className="flex items-center space-x-2">
-                  {safeString(lead.email) && (
-                    <a href={`mailto:${safeString(lead.email)}`}>
+                  {safeString(currentLead.email) && (
+                    <a href={`mailto:${safeString(currentLead.email)}`}>
                       <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                     </a>
                   )}
-                  {safeString(lead.website) && (
+                  {safeString(currentLead.website) && (
                     <a 
-                      href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                      href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -429,7 +440,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
                 </div>
                 <button 
                   onClick={() => setShowConvertModal(true)}
-                  disabled={isConverting}
+                  disabled={isConverting || !lead}
                   className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   {isConverting ? (
@@ -474,18 +485,18 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
               <span className="text-lg font-semibold text-gray-700">
-                {getFirstChar(lead.fullname) || getFirstChar(lead.company) || 'L'}
+                {getFirstChar(currentLead.fullname) || getFirstChar(currentLead.company) || 'L'}
               </span>
             </div>
             <div className="flex space-x-2">
-              {safeString(lead.email) && (
-                <a href={`mailto:${safeString(lead.email)}`}>
+              {safeString(currentLead.email) && (
+                <a href={`mailto:${safeString(currentLead.email)}`}>
                   <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                 </a>
               )}
-              {safeString(lead.website) && (
+              {safeString(currentLead.website) && (
                 <a 
-                  href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                  href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -508,44 +519,46 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Organization</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.company)}
+                  {displayValue(currentLead.company)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Website</span>
-                {safeString(lead.website) ? (
+                {safeString(currentLead.website) ? (
                   <a 
-                    href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                    href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    {safeString(lead.website)}
+                    {safeString(currentLead.website)}
                   </a>
                 ) : (
                   <span className="text-sm text-gray-400">Not specified</span>
                 )}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Industry</span>
-                <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.industry)}
-                </span>
+              <div className="flex justify-between items-start">
+                <span className="text-sm text-gray-600 flex-shrink-0">Industry</span>
+                <div className="text-right max-w-48">
+                  <span className="text-sm text-gray-900 font-medium break-words">
+                    {displayValue(currentLead.industry)}
+                  </span>
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Job Title</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.job_position)}
+                  {displayValue(currentLead.job_position)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Lead Owner</span>
                 <div className="flex items-center space-x-2">
                   <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
-                    {getFirstChar(lead.owner, 'A')}
+                    {getFirstChar(currentLead.owner, 'A')}
                   </span>
                   <span className="text-sm text-gray-900 font-medium">
-                    {displayValue(lead.owner, 'Administrator')}
+                    {displayValue(currentLead.owner, 'Administrator')}
                   </span>
                 </div>
               </div>
@@ -564,29 +577,29 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Salutation</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.title)}
+                  {displayValue(currentLead.title)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">First Name</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.first_name)}
+                  {displayValue(currentLead.first_name)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Last Name</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.last_name)}
+                  {displayValue(currentLead.last_name)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Email</span>
-                {safeString(lead.email) ? (
+                {safeString(currentLead.email) ? (
                   <a 
-                    href={`mailto:${safeString(lead.email)}`}
+                    href={`mailto:${safeString(currentLead.email)}`}
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    {safeString(lead.email)}
+                    {safeString(currentLead.email)}
                   </a>
                 ) : (
                   <span className="text-sm text-gray-400">Not specified</span>
@@ -595,7 +608,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Mobile No</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.mobile)}
+                  {displayValue(currentLead.mobile)}
                 </span>
               </div>
             </div>

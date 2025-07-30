@@ -151,7 +151,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                 >
                     {/* Header */}
                     <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                        <h2 className="text-2xl font-semibold text-gray-800">Create Lead</h2>
+                        <h2 className="text-2xl font-semibold text-gray-800">Create Deals</h2>
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
@@ -259,7 +259,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                         disabled={isSubmitting}
                                         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {isSubmitting ? 'Creating...' : 'Create Lead'}
+                                        {isSubmitting ? 'Creating...' : 'Create Deal'}
                                     </button>
                                 </div>
 

@@ -1,9 +1,11 @@
+// Fixed page.tsx untuk lead detail
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import ConvertToDealModal from "../../components/ConvertToDealModal";
+
 import {
   Mail,
   Link2,
@@ -52,19 +54,17 @@ export default function LeadDetailPage() {
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
-  // Utility function untuk safe string operations
+  // Utility functions
   const safeString = (value: any): string => {
     if (value === null || value === undefined) return '';
     return String(value);
   };
 
-  // Utility function untuk get first character safely
   const getFirstChar = (value: any, fallback: string = ''): string => {
     const str = safeString(value);
     return str.length > 0 ? str.charAt(0).toUpperCase() : fallback;
   };
 
-  // Utility function untuk display value with fallback
   const displayValue = (value: any, fallback: string = 'Not specified'): string => {
     const str = safeString(value);
     return str.length > 0 ? str : fallback;
@@ -90,65 +90,76 @@ export default function LeadDetailPage() {
     { name: "Attachments", icon: Paperclip }
   ];
 
-  // Handle convert to deal
-  const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
-    if (!lead) return;
+  // Di LeadDetailPage - bagian handleConvertToDeal function
+// FIXED: handleConvertToDeal function di LeadDetailPage
+const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
+  if (!lead) return;
 
-    setIsConverting(true);
-    try {
-      console.log('[DEBUG] Converting lead to deal:', {
-        leadId: lead.id,
-        dealTitle,
-        dealValue,
-        dealStage
-      });
+  setIsConverting(true);
+  try {
+    console.log('[DEBUG] Converting lead to deal:', {
+      leadId: lead.id,
+      dealTitle,
+      dealValue,
+      dealValueType: typeof dealValue,
+      dealStage
+    });
 
-      const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/convert`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          dealTitle,
-          dealValue,
-          dealStage,
-          leadData: {
-            fullname: lead.fullname,
-            company: lead.company,
-            email: lead.email,
-            mobile: lead.mobile,
-            industry: lead.industry,
-            job_position: lead.job_position,
-            website: lead.website
-          }
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+    // FIX: Struktur request body yang sesuai dengan backend
+    const requestBody = {
+      dealTitle: dealTitle.trim(),
+      dealValue: parseFloat(dealValue.toString()), // Pastikan numeric
+      dealStage: dealStage,
+      leadData: {
+        fullname: lead.fullname,
+        company: lead.company,
+        email: lead.email,
+        mobile: lead.mobile,
+        industry: lead.industry,
+        job_position: lead.job_position,
+        website: lead.website
       }
+    };
 
-      const result = await response.json();
-      console.log('[DEBUG] Conversion successful:', result);
+    console.log('[DEBUG] Request body being sent:', requestBody);
 
-      // Show success message
-      alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}"!`);
-      
-      // Close modal
-      setShowConvertModal(false);
-      
-      // Optionally redirect to deals page or refresh lead data
-      // router.push('/deals');
-      
-    } catch (error: unknown) {
-      console.error('[ERROR] Failed to convert lead:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
-      alert(`Error: ${errorMessage}`);
-    } finally {
-      setIsConverting(false);
+    const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/convert`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
     }
-  };
+
+    const result = await response.json();
+    console.log('[DEBUG] Conversion successful:', result);
+  
+    if (result.data?.deal?.value) {
+      console.log('[DEBUG] Deal created with value:', result.data.deal.value);
+    }
+
+    // Show success message with value
+    alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
+    
+    // Close modal
+    setShowConvertModal(false);
+    
+    // Redirect ke deals page untuk melihat hasil
+    router.push('/deals');
+    
+  } catch (error: unknown) {
+    console.error('[ERROR] Failed to convert lead:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
+    alert(`Error: ${errorMessage}`);
+  } finally {
+    setIsConverting(false);
+  }
+};
 
   useEffect(() => {
     if (!id) {
@@ -163,77 +174,34 @@ export default function LeadDetailPage() {
         setError(null);
         
         console.log(`[DEBUG] Fetching lead with ID: ${id}`);
-        console.log(`[DEBUG] Current window.location:`, window.location.href);
         
-        // Test multiple API endpoints
-        const possibleEndpoints = [
-          `http://localhost:5000/api/leads/${id}`,
-          `http://localhost:5000/leads/${id}`,
-          `/api/leads/${id}` // Relative URL
-        ];
+        const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          mode: 'cors',
+        });
         
-        let response;
-        let usedEndpoint = '';
+        console.log(`[DEBUG] Response:`, {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
         
-        // Try each endpoint
-        for (const endpoint of possibleEndpoints) {
-          try {
-            console.log(`[DEBUG] Trying endpoint: ${endpoint}`);
-            
-            response = await fetch(endpoint, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-              mode: 'cors', // Explicitly set CORS mode
-            });
-            
-            usedEndpoint = endpoint;
-            console.log(`[DEBUG] Response from ${endpoint}:`, {
-              status: response.status,
-              statusText: response.statusText,
-              ok: response.ok,
-              headers: Object.fromEntries(response.headers.entries())
-            });
-            
-            if (response.ok) {
-              break; // Success, exit loop
-            }
-            
-          } catch (fetchError: unknown) {
-            console.log(`[DEBUG] Fetch failed for ${endpoint}:`, fetchError);
-            continue; // Try next endpoint
-          }
-        }
-        
-        if (!response || !response.ok) {
-          // Check if it's a network error
-          if (!response) {
-            throw new Error("Network error: Could not connect to server. Please check if the backend server is running on localhost:5000");
-          }
-          
+        if (!response.ok) {
           if (response.status === 404) {
             throw new Error(`Lead with ID ${id} not found`);
           }
           
-          if (response.status === 0 || response.status >= 500) {
-            throw new Error("Server error: Please check if the backend server is running");
-          }
-          
           const errorData = await response.json().catch(() => null);
-          const errorMsg = errorData?.message || 
-                         `HTTP ${response.status}: ${response.statusText}`;
+          const errorMsg = errorData?.message || `HTTP ${response.status}: ${response.statusText}`;
           throw new Error(errorMsg);
         }
         
         const data = await response.json();
-        console.log('[DEBUG] Successfully received data from:', usedEndpoint);
-        console.log('[DEBUG] Data structure:', {
-          type: typeof data,
-          keys: Object.keys(data || {}),
-          data: data
-        });
+        console.log('[DEBUG] Successfully received data:', data);
         
         if (!data || typeof data !== 'object') {
           throw new Error("Invalid data format received from server");
@@ -241,28 +209,31 @@ export default function LeadDetailPage() {
         
         setLead(data);
         
+        // Set initial status based on lead stage
+        if (data.stage) {
+          const normalizedStage = data.stage.toLowerCase();
+          const statusMap: { [key: string]: string } = {
+            'new': 'New',
+            'contacted': 'Contacted',
+            'qualification': 'Nurture',
+            'qualified': 'Qualified',
+            'unqualified': 'Unqualified'
+          };
+          setSelectedStatus(statusMap[normalizedStage] || 'New');
+        }
+        
       } catch (err: unknown) {
         let errorMessage = 'An unexpected error occurred';
         
         if (err instanceof TypeError && err.message.includes('fetch')) {
-          errorMessage = 'Network error: Unable to connect to server. Please check:\n' +
-                        '1. Backend server is running on localhost:5000\n' +
-                        '2. CORS is properly configured\n' +
-                        '3. Network connection is stable';
+          errorMessage = 'Network error: Unable to connect to server. Please check if backend server is running on localhost:5000';
         } else if (err instanceof Error) {
           errorMessage = err.message;
         }
         
-        console.error('[ERROR] Fetch failed:', {
-          error: err,
-          message: err instanceof Error ? err.message : 'Unknown error',
-          stack: err instanceof Error ? err.stack : undefined,
-          leadId: id
-        });
-        
+        console.error('[ERROR] Fetch failed:', err);
         setError(errorMessage);
         
-        // Only redirect on 404 errors after a delay
         if (err instanceof Error && err.message.includes('not found')) {
           setTimeout(() => router.push('/leads'), 3000);
         }
@@ -273,38 +244,6 @@ export default function LeadDetailPage() {
 
     fetchLead();
   }, [id, router]);
-
-  // Test API connectivity function
-  const testApiConnectivity = async () => {
-    try {
-      console.log('[DEBUG] Testing API connectivity...');
-      const response = await fetch('http://localhost:5000/api/leads', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      });
-      
-      console.log('[DEBUG] API connectivity test result:', {
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('[DEBUG] API is accessible, sample data:', data);
-        alert('API connection successful! Check console for details.');
-      } else {
-        alert(`API connection failed: ${response.status} ${response.statusText}`);
-      }
-    } catch (error: unknown) {
-      console.error('[DEBUG] API connectivity test failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`API connection failed: ${errorMessage}`);
-    }
-  };
 
   const renderTabContent = () => {
     if (!lead) return null;
@@ -368,29 +307,12 @@ export default function LeadDetailPage() {
             <div className="text-red-600 mb-4 whitespace-pre-line text-left bg-red-100 p-3 rounded text-sm">
               {error}
             </div>
-            <div className="mt-4 space-y-2 text-sm text-gray-600 bg-gray-100 p-3 rounded">
-              <p><strong>Debug Info:</strong></p>
-              <p>Lead ID: {id}</p>
-              <p>Current URL: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
-              <p>Attempted endpoints:</p>
-              <ul className="list-disc list-inside ml-4">
-                <li>http://localhost:5000/api/leads/{id}</li>
-                <li>http://localhost:5000/leads/{id}</li>
-                <li>/api/leads/{id}</li>
-              </ul>
-            </div>
             <div className="flex gap-3 mt-6 justify-center">
               <button 
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
               >
                 Retry
-              </button>
-              <button 
-                onClick={testApiConnectivity}
-                className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
-              >
-                Test API
               </button>
               <button 
                 onClick={() => router.push('/leads')}
@@ -681,7 +603,6 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      {/* Convert to Deal Modal */}
       {showConvertModal && lead && (
         <ConvertToDealModal
           onClose={() => setShowConvertModal(false)}

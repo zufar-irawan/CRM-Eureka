@@ -28,28 +28,56 @@ export default function ConvertToDealModal({
   const [dealStage, setDealStage] = useState("proposal");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!dealTitle.trim()) {
+    alert("Please enter a deal title");
+    return;
+  }
+
+  if (dealValue < 0) {
+    alert("Deal value cannot be negative");
+    return;
+  }
+
+  console.log('[DEBUG] Modal values before submit:', {
+    dealTitle,
+    dealValue,
+    dealValueType: typeof dealValue,
+    dealStage
+  });
+
+  setIsLoading(true);
+  try {
+    const numericValue = parseFloat(dealValue.toString());
+    if (isNaN(numericValue)) {
+      throw new Error("Invalid deal value");
+    }
     
-    if (!dealTitle.trim()) {
-      alert("Please enter a deal title");
-      return;
-    }
+    await onConfirm(dealTitle, numericValue, dealStage);
+  } catch (error) {
+    console.error("Error converting leads:", error);
+    alert("Error: " + (error instanceof Error ? error.message : "Unknown error"));
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-    if (dealValue < 0) {
-      alert("Deal value cannot be negative");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await onConfirm(dealTitle, dealValue, dealStage);
-    } catch (error) {
-      console.error("Error converting leads:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+<input
+  type="number"
+  value={dealValue || ''} 
+  onChange={(e) => {
+    const value = e.target.value;
+    const numValue = value === '' ? 0 : parseFloat(value);
+    setDealValue(isNaN(numValue) ? 0 : numValue);
+  }}
+  placeholder="0.00"
+  min="0"
+  step="0.01"
+  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  disabled={isLoading}
+/>
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">

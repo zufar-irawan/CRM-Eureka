@@ -1,4 +1,3 @@
-// Fixed page.tsx untuk lead detail
 "use client";
 
 import { useParams, useRouter } from "next/navigation";

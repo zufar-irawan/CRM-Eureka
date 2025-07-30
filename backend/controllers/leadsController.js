@@ -3,7 +3,7 @@ import { LeadComments } from "../models/leads/leadsCommentModel.js";
 import { Tasks } from "../models/tasks/tasksModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
 import { Op } from 'sequelize';
-import { sequelize } from '../config/db.js'; // Import sequelize instance for transactions
+import { sequelize } from '../config/db.js'; 
 
 export const getLeads = async (req, res) => {
     try {
@@ -300,7 +300,7 @@ export const deleteLead = async (req, res) => {
     }
 };
 
-// IMPROVED: Convert Lead with better transaction handling
+// FIXED: Convert Lead function di leadsController.js
 export const convertLead = async (req, res) => {
     const transaction = await sequelize.transaction();
     
@@ -312,11 +312,20 @@ export const convertLead = async (req, res) => {
             return res.status(400).json({ message: "Invalid lead ID" });
         }
 
-        const { deal_title, deal_value, deal_stage = 'proposal_sent', owner } = req.body;
+        // FIX: Gunakan parameter yang sesuai dengan frontend
+        const { dealTitle, dealValue, dealStage, leadData } = req.body;
+        
+        console.log('[DEBUG] Received convert request:', {
+            leadId,
+            dealTitle,
+            dealValue,
+            dealStage,
+            valueType: typeof dealValue
+        });
 
         const lead = await Leads.findByPk(leadId, { 
             transaction,
-            lock: true // Add row-level locking to prevent concurrent modifications
+            lock: true
         });
         
         if (!lead) {
@@ -338,13 +347,22 @@ export const convertLead = async (req, res) => {
             status: true
         }, { transaction });
 
+        // FIX: Pastikan value dikonversi dengan benar
+        const numericValue = dealValue ? parseFloat(dealValue.toString()) : 0;
+        
+        console.log('[DEBUG] Creating deal with value:', {
+            originalValue: dealValue,
+            numericValue,
+            isNaN: isNaN(numericValue)
+        });
+
         // Create deal in database
         const newDeal = await Deals.create({
             lead_id: leadId,
-            title: deal_title || `Deal from Lead Conversion`,
-            value: deal_value || 0,
-            stage: deal_stage,
-            owner: owner || lead.owner || 0,
+            title: dealTitle || `Deal from Lead Conversion - ${lead.fullname || lead.company}`,
+            value: numericValue, // FIX: Gunakan numeric value
+            stage: dealStage || 'proposal',
+            owner: lead.owner || 0,
             id_contact: 0,
             id_company: 0,
             created_by: req.user?.id || 1,
@@ -353,12 +371,18 @@ export const convertLead = async (req, res) => {
 
         await transaction.commit();
 
+        console.log('[DEBUG] Deal created successfully:', {
+            dealId: newDeal.id,
+            value: newDeal.value,
+            valueInDb: await Deals.findByPk(newDeal.id, { attributes: ['value'] })
+        });
+
         res.status(200).json({
             success: true,
             message: "Lead converted successfully",
             data: {
                 lead: lead,
-                deal_data: {
+                deal: {
                     id: newDeal.id,
                     lead_id: newDeal.lead_id,
                     title: newDeal.title,
@@ -373,7 +397,10 @@ export const convertLead = async (req, res) => {
     } catch (error) {
         await transaction.rollback();
         console.error('Error converting lead:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            success: false,
+            message: error.message 
+        });
     }
 }
 

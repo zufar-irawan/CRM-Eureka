@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import ConvertToDealModal from "../../components/ConvertToDealModal";
+
 import {
   Mail,
   Link2,
@@ -45,26 +46,23 @@ export default function LeadDetailPage() {
   const [activeTab, setActiveTab] = useState("Notes");
   const [isMinimized, setIsMinimized] = useState(false);
   const [lead, setLead] = useState<Lead | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Modal state
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
-  // Utility function untuk safe string operations
+  // Utility functions
   const safeString = (value: any): string => {
     if (value === null || value === undefined) return '';
     return String(value);
   };
 
-  // Utility function untuk get first character safely
   const getFirstChar = (value: any, fallback: string = ''): string => {
     const str = safeString(value);
     return str.length > 0 ? str.charAt(0).toUpperCase() : fallback;
   };
 
-  // Utility function untuk display value with fallback
   const displayValue = (value: any, fallback: string = 'Not specified'): string => {
     const str = safeString(value);
     return str.length > 0 ? str : fallback;
@@ -90,150 +88,116 @@ export default function LeadDetailPage() {
     { name: "Attachments", icon: Paperclip }
   ];
 
-  // Handle convert to deal
-  const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
-    if (!lead) return;
+  // Di LeadDetailPage - bagian handleConvertToDeal function
+// FIXED: handleConvertToDeal function di LeadDetailPage
+const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
+  if (!lead) return;
 
-    setIsConverting(true);
-    try {
-      console.log('[DEBUG] Converting lead to deal:', {
-        leadId: lead.id,
-        dealTitle,
-        dealValue,
-        dealStage
-      });
+  setIsConverting(true);
+  try {
+    console.log('[DEBUG] Converting lead to deal:', {
+      leadId: lead.id,
+      dealTitle,
+      dealValue,
+      dealValueType: typeof dealValue,
+      dealStage
+    });
 
-      const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/convert`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          dealTitle,
-          dealValue,
-          dealStage,
-          leadData: {
-            fullname: lead.fullname,
-            company: lead.company,
-            email: lead.email,
-            mobile: lead.mobile,
-            industry: lead.industry,
-            job_position: lead.job_position,
-            website: lead.website
-          }
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+    // FIX: Struktur request body yang sesuai dengan backend
+    const requestBody = {
+      dealTitle: dealTitle.trim(),
+      dealValue: parseFloat(dealValue.toString()), // Pastikan numeric
+      dealStage: dealStage,
+      leadData: {
+        fullname: lead.fullname,
+        company: lead.company,
+        email: lead.email,
+        mobile: lead.mobile,
+        industry: lead.industry,
+        job_position: lead.job_position,
+        website: lead.website
       }
+    };
 
-      const result = await response.json();
-      console.log('[DEBUG] Conversion successful:', result);
+    console.log('[DEBUG] Request body being sent:', requestBody);
 
-      // Show success message
-      alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}"!`);
-      
-      // Close modal
-      setShowConvertModal(false);
-      
-      // Optionally redirect to deals page or refresh lead data
-      // router.push('/deals');
-      
-    } catch (error: unknown) {
-      console.error('[ERROR] Failed to convert lead:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
-      alert(`Error: ${errorMessage}`);
-    } finally {
-      setIsConverting(false);
+    const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/convert`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
     }
-  };
+
+    const result = await response.json();
+    console.log('[DEBUG] Conversion successful:', result);
+  
+    if (result.data?.deal?.value) {
+      console.log('[DEBUG] Deal created with value:', result.data.deal.value);
+    }
+
+    // Show success message with value
+    alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
+    
+    // Close modal
+    setShowConvertModal(false);
+    
+    // Redirect ke deals page untuk melihat hasil
+    router.push('/deals');
+    
+  } catch (error: unknown) {
+    console.error('[ERROR] Failed to convert lead:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
+    alert(`Error: ${errorMessage}`);
+  } finally {
+    setIsConverting(false);
+  }
+};
 
   useEffect(() => {
     if (!id) {
       setError("Invalid lead ID");
-      setLoading(false);
       return;
     }
 
     const fetchLead = async () => {
       try {
-        setLoading(true);
         setError(null);
         
         console.log(`[DEBUG] Fetching lead with ID: ${id}`);
-        console.log(`[DEBUG] Current window.location:`, window.location.href);
         
-        // Test multiple API endpoints
-        const possibleEndpoints = [
-          `http://localhost:5000/api/leads/${id}`,
-          `http://localhost:5000/leads/${id}`,
-          `/api/leads/${id}` // Relative URL
-        ];
+        const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          mode: 'cors',
+        });
         
-        let response;
-        let usedEndpoint = '';
+        console.log(`[DEBUG] Response:`, {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
         
-        // Try each endpoint
-        for (const endpoint of possibleEndpoints) {
-          try {
-            console.log(`[DEBUG] Trying endpoint: ${endpoint}`);
-            
-            response = await fetch(endpoint, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-              mode: 'cors', // Explicitly set CORS mode
-            });
-            
-            usedEndpoint = endpoint;
-            console.log(`[DEBUG] Response from ${endpoint}:`, {
-              status: response.status,
-              statusText: response.statusText,
-              ok: response.ok,
-              headers: Object.fromEntries(response.headers.entries())
-            });
-            
-            if (response.ok) {
-              break; // Success, exit loop
-            }
-            
-          } catch (fetchError: unknown) {
-            console.log(`[DEBUG] Fetch failed for ${endpoint}:`, fetchError);
-            continue; // Try next endpoint
-          }
-        }
-        
-        if (!response || !response.ok) {
-          // Check if it's a network error
-          if (!response) {
-            throw new Error("Network error: Could not connect to server. Please check if the backend server is running on localhost:5000");
-          }
-          
+        if (!response.ok) {
           if (response.status === 404) {
             throw new Error(`Lead with ID ${id} not found`);
           }
           
-          if (response.status === 0 || response.status >= 500) {
-            throw new Error("Server error: Please check if the backend server is running");
-          }
-          
           const errorData = await response.json().catch(() => null);
-          const errorMsg = errorData?.message || 
-                         `HTTP ${response.status}: ${response.statusText}`;
+          const errorMsg = errorData?.message || `HTTP ${response.status}: ${response.statusText}`;
           throw new Error(errorMsg);
         }
         
         const data = await response.json();
-        console.log('[DEBUG] Successfully received data from:', usedEndpoint);
-        console.log('[DEBUG] Data structure:', {
-          type: typeof data,
-          keys: Object.keys(data || {}),
-          data: data
-        });
+        console.log('[DEBUG] Successfully received data:', data);
         
         if (!data || typeof data !== 'object') {
           throw new Error("Invalid data format received from server");
@@ -241,40 +205,40 @@ export default function LeadDetailPage() {
         
         setLead(data);
         
+        // Set initial status based on lead stage
+        if (data.stage) {
+          const normalizedStage = data.stage.toLowerCase();
+          const statusMap: { [key: string]: string } = {
+            'new': 'New',
+            'contacted': 'Contacted',
+            'qualification': 'Nurture',
+            'qualified': 'Qualified',
+            'unqualified': 'Unqualified'
+          };
+          setSelectedStatus(statusMap[normalizedStage] || 'New');
+        }
+        
       } catch (err: unknown) {
         let errorMessage = 'An unexpected error occurred';
         
         if (err instanceof TypeError && err.message.includes('fetch')) {
-          errorMessage = 'Network error: Unable to connect to server. Please check:\n' +
-                        '1. Backend server is running on localhost:5000\n' +
-                        '2. CORS is properly configured\n' +
-                        '3. Network connection is stable';
+          errorMessage = 'Network error: Unable to connect to server. Please check if backend server is running on localhost:5000';
         } else if (err instanceof Error) {
           errorMessage = err.message;
         }
         
-        console.error('[ERROR] Fetch failed:', {
-          error: err,
-          message: err instanceof Error ? err.message : 'Unknown error',
-          stack: err instanceof Error ? err.stack : undefined,
-          leadId: id
-        });
-        
+        console.error('[ERROR] Fetch failed:', err);
         setError(errorMessage);
         
-        // Only redirect on 404 errors after a delay
         if (err instanceof Error && err.message.includes('not found')) {
           setTimeout(() => router.push('/leads'), 3000);
         }
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchLead();
   }, [id, router]);
 
-  // Test API connectivity function
   const testApiConnectivity = async () => {
     try {
       console.log('[DEBUG] Testing API connectivity...');
@@ -344,20 +308,7 @@ export default function LeadDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-        <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex items-center justify-center`}>
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-gray-600">Loading lead details...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Jika ada error, tampilkan error page
   if (error) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -368,29 +319,12 @@ export default function LeadDetailPage() {
             <div className="text-red-600 mb-4 whitespace-pre-line text-left bg-red-100 p-3 rounded text-sm">
               {error}
             </div>
-            <div className="mt-4 space-y-2 text-sm text-gray-600 bg-gray-100 p-3 rounded">
-              <p><strong>Debug Info:</strong></p>
-              <p>Lead ID: {id}</p>
-              <p>Current URL: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
-              <p>Attempted endpoints:</p>
-              <ul className="list-disc list-inside ml-4">
-                <li>http://localhost:5000/api/leads/{id}</li>
-                <li>http://localhost:5000/leads/{id}</li>
-                <li>/api/leads/{id}</li>
-              </ul>
-            </div>
             <div className="flex gap-3 mt-6 justify-center">
               <button 
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
               >
                 Retry
-              </button>
-              <button 
-                onClick={testApiConnectivity}
-                className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
-              >
-                Test API
               </button>
               <button 
                 onClick={() => router.push('/leads')}
@@ -405,25 +339,23 @@ export default function LeadDetailPage() {
     );
   }
 
-  if (!lead) {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-        <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex items-center justify-center`}>
-          <div className="text-center">
-            <h3 className="text-lg font-medium mb-2">Lead not found</h3>
-            <p className="text-gray-600 mb-4">ID: {id}</p>
-            <button 
-              onClick={() => router.push('/leads')}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Back to Leads
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Render halaman utama dengan placeholder data jika lead belum ada
+  const currentLead = lead || {
+    id: id || '',
+    title: '',
+    fullname: '',
+    company: '',
+    email: '',
+    mobile: '',
+    industry: '',
+    job_position: '',
+    website: '',
+    owner: '',
+    first_name: '',
+    last_name: '',
+    stage: 'new',
+    updated_at: new Date().toISOString()
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -439,28 +371,28 @@ export default function LeadDetailPage() {
                 <span>Leads</span>
                 <span>/</span>
                 <span className="text-gray-900">
-                  {displayValue(lead.title)} {displayValue(lead.fullname)}
+                  {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
                 </span>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">CRM-LEAD-{lead.id}</div>
+                <div className="text-sm text-gray-500">CRM-LEAD-{currentLead.id}</div>
               </div>
             </div>
 
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-semibold text-gray-900">
-                  {displayValue(lead.title)} {displayValue(lead.fullname)}
+                  {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
                 </h1>
                 <div className="flex items-center space-x-2">
-                  {safeString(lead.email) && (
-                    <a href={`mailto:${safeString(lead.email)}`}>
+                  {safeString(currentLead.email) && (
+                    <a href={`mailto:${safeString(currentLead.email)}`}>
                       <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                     </a>
                   )}
-                  {safeString(lead.website) && (
+                  {safeString(currentLead.website) && (
                     <a 
-                      href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                      href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -507,7 +439,7 @@ export default function LeadDetailPage() {
                 </div>
                 <button 
                   onClick={() => setShowConvertModal(true)}
-                  disabled={isConverting}
+                  disabled={isConverting || !lead}
                   className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   {isConverting ? (
@@ -552,18 +484,18 @@ export default function LeadDetailPage() {
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
               <span className="text-lg font-semibold text-gray-700">
-                {getFirstChar(lead.fullname) || getFirstChar(lead.company) || 'L'}
+                {getFirstChar(currentLead.fullname) || getFirstChar(currentLead.company) || 'L'}
               </span>
             </div>
             <div className="flex space-x-2">
-              {safeString(lead.email) && (
-                <a href={`mailto:${safeString(lead.email)}`}>
+              {safeString(currentLead.email) && (
+                <a href={`mailto:${safeString(currentLead.email)}`}>
                   <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                 </a>
               )}
-              {safeString(lead.website) && (
+              {safeString(currentLead.website) && (
                 <a 
-                  href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                  href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -586,44 +518,46 @@ export default function LeadDetailPage() {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Organization</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.company)}
+                  {displayValue(currentLead.company)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Website</span>
-                {safeString(lead.website) ? (
+                {safeString(currentLead.website) ? (
                   <a 
-                    href={safeString(lead.website).startsWith('http') ? safeString(lead.website) : `https://${safeString(lead.website)}`}
+                    href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    {safeString(lead.website)}
+                    {safeString(currentLead.website)}
                   </a>
                 ) : (
                   <span className="text-sm text-gray-400">Not specified</span>
                 )}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Industry</span>
-                <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.industry)}
-                </span>
+              <div className="flex justify-between items-start">
+                <span className="text-sm text-gray-600 flex-shrink-0">Industry</span>
+                <div className="text-right max-w-48">
+                  <span className="text-sm text-gray-900 font-medium break-words">
+                    {displayValue(currentLead.industry)}
+                  </span>
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Job Title</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.job_position)}
+                  {displayValue(currentLead.job_position)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Lead Owner</span>
                 <div className="flex items-center space-x-2">
                   <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
-                    {getFirstChar(lead.owner, 'A')}
+                    {getFirstChar(currentLead.owner, 'A')}
                   </span>
                   <span className="text-sm text-gray-900 font-medium">
-                    {displayValue(lead.owner, 'Administrator')}
+                    {displayValue(currentLead.owner, 'Administrator')}
                   </span>
                 </div>
               </div>
@@ -642,29 +576,29 @@ export default function LeadDetailPage() {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Salutation</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.title)}
+                  {displayValue(currentLead.title)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">First Name</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.first_name)}
+                  {displayValue(currentLead.first_name)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Last Name</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.last_name)}
+                  {displayValue(currentLead.last_name)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Email</span>
-                {safeString(lead.email) ? (
+                {safeString(currentLead.email) ? (
                   <a 
-                    href={`mailto:${safeString(lead.email)}`}
+                    href={`mailto:${safeString(currentLead.email)}`}
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    {safeString(lead.email)}
+                    {safeString(currentLead.email)}
                   </a>
                 ) : (
                   <span className="text-sm text-gray-400">Not specified</span>
@@ -673,7 +607,7 @@ export default function LeadDetailPage() {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Mobile No</span>
                 <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(lead.mobile)}
+                  {displayValue(currentLead.mobile)}
                 </span>
               </div>
             </div>
@@ -681,7 +615,6 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      {/* Convert to Deal Modal */}
       {showConvertModal && lead && (
         <ConvertToDealModal
           onClose={() => setShowConvertModal(false)}

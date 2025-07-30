@@ -24,36 +24,65 @@ export default function MainContentDeals() {
     fetchDeals();
   }, []);
 
-  const fetchDeals = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/deals");
-      const result = await res.json();
+  // Di MainContentDeals - bagian fetchDeals function
+const fetchDeals = async () => {
+  try {
+    setLoading(true);
+    const res = await fetch("/api/deals");
+    const result = await res.json();
 
-      if (!result.success) throw new Error(result.message);
+    if (!result.success) throw new Error(result.message);
 
-      const formattedDeals = result.data.map((deal: any) => ({
+    console.log('[DEBUG] Raw deals data:', result.data); // Debug log
+
+    const formattedDeals = result.data.map((deal: any) => {
+      // Debug setiap deal
+      console.log('[DEBUG] Processing deal:', {
+        id: deal.id,
+        value: deal.value,
+        valueType: typeof deal.value,
+        rawDeal: deal
+      });
+
+      // Pastikan value dikonversi dengan benar
+      let annualRevenue = "$0.00";
+      if (deal.value !== null && deal.value !== undefined && deal.value !== '') {
+        const numValue = parseFloat(deal.value.toString());
+        if (!isNaN(numValue) && numValue > 0) {
+          annualRevenue = `$${numValue.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}`;
+        }
+      }
+
+      console.log('[DEBUG] Formatted annual revenue:', annualRevenue);
+
+      return {
         id: String(deal.id),
-        organization: deal.lead?.company || "N/A",
-        annualRevenue: deal.value ? `${parseFloat(deal.value).toLocaleString()}` : "$0.00",
-        status: deal.stage || "N/A",
-        email: deal.lead?.email || "-",
-        mobile: deal.lead?.phone || "-",
-        assignedTo: deal.creator?.name || "Unassigned",
+        organization: deal.lead?.company || deal.company || "N/A",
+        annualRevenue: annualRevenue,
+        status: deal.stage || "N/A", 
+        email: deal.lead?.email || deal.email || "-",
+        mobile: deal.lead?.phone || deal.lead?.mobile || deal.mobile || "-",
+        assignedTo: deal.creator?.name || deal.owner || "Unassigned",
         updated_at: new Date(deal.updated_at).toLocaleString('en-US', {
           dateStyle: 'medium',
           timeStyle: 'short'
         }),
-        rawData: deal // Keep original data for API calls
-      }));
+        rawData: deal 
+      };
+    });
 
-      setDeals(formattedDeals);
-    } catch (err: any) {
-      alert("Failed to load deals: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log('[DEBUG] Final formatted deals:', formattedDeals);
+    setDeals(formattedDeals);
+  } catch (err: any) {
+    console.error('[ERROR] Failed to load deals:', err);
+    alert("Failed to load deals: " + err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Bulk Delete Handler
   const handleBulkDelete = async (ids: string[]) => {

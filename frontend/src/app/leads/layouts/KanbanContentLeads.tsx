@@ -24,6 +24,7 @@ import Items from "./Item/Item";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import CreateLeadModal from "../add/AddLeadModal";
+import ConvertToDealModal from "../components/ConvertToDealModal";
 
 interface Lead {
   id: number;
@@ -51,7 +52,12 @@ type DNDType = {
 const KanbanLead = () => {
   const [leads, setLeads] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [draggedItem, setDraggedItem] = useState<any>(null); // Track dragged item
+  const [draggedItem, setDraggedItem] = useState<any>(null);
+
+  // Convert modal states
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [convertingLeadId, setConvertingLeadId] = useState<number | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
 
   const [containers, setContainers] = useState<DNDType[]>([
     {
@@ -82,6 +88,16 @@ const KanbanLead = () => {
         </div>
       ),
       title: "Qualification",
+      items: [],
+    },
+    {
+      id: `container-${uuidv4()}`,
+      icon: (
+        <div className="w-4 h-4 rounded-full bg-green-600 flex items-center justify-center">
+          <div className="w-2 h-2 rounded-full bg-white"></div>
+        </div>
+      ),
+      title: "Converted",
       items: [],
     },
     {
@@ -167,9 +183,86 @@ const KanbanLead = () => {
         alert(`Network error: ${error.message}`);
       }
 
-      throw error; // Re-throw untuk handling di handleDragEnd
+      throw error;
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  // Convert to deal function
+  const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
+    if (!convertingLeadId) return;
+
+    setIsConverting(true);
+    try {
+      console.log('[DEBUG] Converting lead to deal:', {
+        leadId: convertingLeadId,
+        dealTitle,
+        dealValue,
+        dealValueType: typeof dealValue,
+        dealStage
+      });
+
+      // Get lead data for conversion
+      const leadData = containers
+        .flatMap(container => container.items)
+        .find(item => item.leadId === convertingLeadId);
+
+      if (!leadData) {
+        throw new Error("Lead data not found");
+      }
+
+      const requestBody = {
+        dealTitle: dealTitle.trim(),
+        dealValue: parseFloat(dealValue.toString()),
+        dealStage: dealStage,
+        leadData: {
+          fullname: leadData.fullname,
+          company: leadData.organization,
+          email: leadData.email,
+          mobile: leadData.mobileno,
+        }
+      };
+
+      console.log('[DEBUG] Request body being sent:', requestBody);
+
+      const response = await fetch(`http://localhost:5000/api/leads/${convertingLeadId}/convert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('[DEBUG] Conversion successful:', result);
+
+      // Show success message
+      alert(`Successfully converted lead "${leadData.fullname}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
+
+      // Close modal
+      setShowConvertModal(false);
+      setConvertingLeadId(null);
+
+      // Refresh data to show updated status
+      setTimeout(() => {
+        fetchLeads();
+      }, 500);
+
+    } catch (error: unknown) {
+      console.error('[ERROR] Failed to convert lead:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
+      alert(`Error: ${errorMessage}`);
+
+      // Revert UI changes by refetching data
+      fetchLeads();
+    } finally {
+      setIsConverting(false);
     }
   };
 
@@ -221,8 +314,8 @@ const KanbanLead = () => {
   const handleDragMove = (event: DragMoveEvent) => {
     const { active, over } = event;
 
-    if (isUpdating) {
-      console.log("Update in progress, ignoring drag move");
+    if (isUpdating || isConverting) {
+      console.log("Update/Convert in progress, ignoring drag move");
       return;
     }
 
@@ -310,7 +403,6 @@ const KanbanLead = () => {
     }
   };
 
-  // FIXED: Improved drag end logic
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
@@ -323,8 +415,8 @@ const KanbanLead = () => {
     setActiveId(null);
 
     // Early returns for edge cases
-    if (isUpdating) {
-      console.log("Update in progress - ignoring drag");
+    if (isUpdating || isConverting) {
+      console.log("Update/Convert in progress - ignoring drag");
       setDraggedItem(null);
       return;
     }
@@ -376,20 +468,27 @@ const KanbanLead = () => {
       return;
     }
 
+    // Special handling for "Converted" stage
+    if (targetContainerTitle === "Converted") {
+      console.log("Moving to Converted stage - showing convert modal");
+      setConvertingLeadId(draggedItem.item.leadId);
+      setShowConvertModal(true);
+      setDraggedItem(null);
+      return;
+    }
+
     console.log(`Updating Lead ${draggedItem.item.leadId}: ${draggedItem.sourceContainer} → ${targetContainerTitle}`);
 
-    // Call API to update stage
+    // Call API to update stage for non-converted stages
     updateLeadStage(draggedItem.item.leadId, targetContainerTitle)
       .then(() => {
         console.log("Stage updated successfully, refreshing data...");
-        // Refresh data from server after successful update
         setTimeout(() => {
           fetchLeads();
         }, 500);
       })
       .catch(error => {
         console.error("Update failed, reverting UI changes");
-        // Revert UI changes by refetching data
         fetchLeads();
       })
       .finally(() => {
@@ -405,7 +504,7 @@ const KanbanLead = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={fetchLeads}
-              disabled={isUpdating}
+              disabled={isUpdating || isConverting}
               className="flex items-center gap-2 px-2.5 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RotateCcw
@@ -423,11 +522,18 @@ const KanbanLead = () => {
               <span className="hidden sm:inline">Kanban Settings</span>
             </button>
 
-            {/* Loading indicator */}
+            {/* Loading indicators */}
             {isUpdating && (
               <div className="flex items-center gap-2 px-3 py-2 text-xs text-blue-600 bg-blue-50 rounded-md border border-blue-200">
                 <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 <span>Updating stage...</span>
+              </div>
+            )}
+
+            {isConverting && (
+              <div className="flex items-center gap-2 px-3 py-2 text-xs text-green-600 bg-green-50 rounded-md border border-green-200">
+                <div className="w-3 h-3 border border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                <span>Converting to deal...</span>
               </div>
             )}
           </div>
@@ -435,7 +541,7 @@ const KanbanLead = () => {
       </div>
 
       <div className="mt-8">
-        <div className="flex grid-cols-4">
+        <div className="flex grid-cols-5">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
@@ -476,8 +582,23 @@ const KanbanLead = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Create Lead Modal */}
       {isModalOpen && <CreateLeadModal onClose={() => setIsModalOpen(false)} />}
+
+      {/* Convert to Deal Modal */}
+      {showConvertModal && convertingLeadId && (
+        <ConvertToDealModal
+          onClose={() => {
+            setShowConvertModal(false);
+            setConvertingLeadId(null);
+            // Refresh data in case of cancellation
+            fetchLeads();
+          }}
+          onConfirm={handleConvertToDeal}
+          selectedCount={1}
+          selectedIds={[String(convertingLeadId)]}
+        />
+      )}
     </main>
   );
 };

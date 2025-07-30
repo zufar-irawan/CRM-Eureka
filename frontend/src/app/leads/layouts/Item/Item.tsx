@@ -4,6 +4,7 @@ import React from 'react';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
 import { GripVertical, AtSign, FileText, CheckCircle, RotateCcw, MessageCircle, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type ItemsType = {
     id: UniqueIdentifier
@@ -11,9 +12,13 @@ type ItemsType = {
     organization: string
     email: string
     mobileno: string
+    leadId: number  // Add leadId prop
 };
 
-const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
+const Items = ({ id, fullname, organization, email, mobileno, leadId }: ItemsType) => {
+    const router = useRouter();
+    const clickStartPos = React.useRef<{ x: number; y: number } | null>(null);
+    
     const {
         attributes,
         listeners,
@@ -27,6 +32,40 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
             type: 'item',
         },
     });
+
+    // Handle mouse down to record initial position
+    const handleMouseDown = (e: React.MouseEvent) => {
+        clickStartPos.current = { x: e.clientX, y: e.clientY };
+    };
+
+    // Handle click to navigate to detail page
+    const handleClick = (e: React.MouseEvent) => {
+        // Check if mouse moved significantly (indicating drag)
+        if (clickStartPos.current) {
+            const deltaX = Math.abs(e.clientX - clickStartPos.current.x);
+            const deltaY = Math.abs(e.clientY - clickStartPos.current.y);
+            
+            // If moved more than 5px, consider it a drag, not a click
+            if (deltaX > 5 || deltaY > 5) {
+                return;
+            }
+        }
+
+        // Prevent navigation if currently dragging
+        if (isDragging) {
+            return;
+        }
+        
+        // Prevent navigation if clicking on interactive elements
+        const target = e.target as HTMLElement;
+        if (target.closest('button') || target.closest('a')) {
+            return;
+        }
+
+        // Navigate to lead detail page
+        router.push(`/leads/detail/${leadId}`);
+    };
+
     return (
         <div
             ref={setNodeRef}
@@ -40,9 +79,13 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
                 isDragging && 'opacity-50',
             )}
             {...listeners}
+            onMouseDown={handleMouseDown}
+            onClick={handleClick}
         >
             <div className="flex pl-1.5 py-2 text-md items-center justify-between">
-                {fullname}
+                <span className="font-medium text-gray-900">
+                    {fullname}
+                </span>
                 {/* <button
                     className="p-2 hover:bg-gray-100 rounded-xl group text-gray-500"
 
@@ -56,15 +99,15 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
             </div>
 
             <div className="flex flex-col pl-1.5 text-[0.8rem] gap-y-4 py-5">
-                <span className="text-xs">
+                <span className="text-xs text-gray-600">
                     {organization}
                 </span>
 
-                <span className="text-xs">
+                <span className="text-xs text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">
                     {email}
                 </span>
 
-                <span className="text-xs">
+                <span className="text-xs text-gray-600">
                     {mobileno}
                 </span>
             </div>

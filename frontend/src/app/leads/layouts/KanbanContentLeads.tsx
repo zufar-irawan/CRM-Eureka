@@ -265,7 +265,7 @@ const KanbanLead = () => {
     } finally {
       setIsConverting(false);
     }
-  };
+  }
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [currentContainerId, setCurrentContainerId] =

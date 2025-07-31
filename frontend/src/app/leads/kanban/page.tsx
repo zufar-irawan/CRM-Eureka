@@ -115,7 +115,7 @@ export default function DealsKanban() {
                 </div>
             </div>
 
-            <Kanban setContainers={setContainers} setDeals={setData} containers={containers} pathname='Leads' />
+            <Kanban setContainers={setContainers} setData={setData} containers={containers} pathname='Leads' />
         </main>
     )
 }

@@ -84,9 +84,9 @@ const Items = ({ id, fullname, organization, email, mobileno, pathname, itemId }
                 transform: CSS.Translate.toString(transform),
             }}
             className='px-2 py-1 bg-white rounded-xl w-full border border-gray-200 cursor-pointer'
-            {...listeners}
             onMouseDown={handleMouseDown}
             onClick={handleClick}
+            {...listeners}
         >
             <div className="flex pl-1.5 py-2 text-md items-center justify-between">
                 <span className="font-medium text-gray-900">

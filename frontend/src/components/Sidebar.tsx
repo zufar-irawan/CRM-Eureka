@@ -131,7 +131,7 @@ const Sidebar = ({ isMinimized, setIsMinimized }: sidebarProps) => {
         <ul className="space-y-1 px-2">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
-            const isActive = pathname === item.link
+            const isActive = pathname.startsWith(item.link)
 
             return (
               <li key={index}>

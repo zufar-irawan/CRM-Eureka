@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import React from 'react';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { AtSign, FileText, CheckCircle, MessageCircle, Plus, DollarSign, Building2, Loader2 } from 'lucide-react';
+import { GripVertical, AtSign, FileText, CheckCircle, RotateCcw, MessageCircle, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type ItemsType = {
@@ -14,21 +14,9 @@ type ItemsType = {
     mobileno: string
     pathname: string
     itemId: number  // Add leadId prop
-    value?: number // For deals
-    itemType?: 'lead' | 'deal' // Specify item type
-    isUpdating?: boolean
 };
 
-const Items = ({
-    id,
-    fullname,
-    organization,
-    email,
-    mobileno, pathname, itemId,
-    value,
-    itemType = 'lead',
-    isUpdating = false
-}: ItemsType) => {
+const Items = ({ id, fullname, organization, email, mobileno, pathname, itemId }: ItemsType) => {
     const router = useRouter();
     const clickStartPos = React.useRef<{ x: number; y: number } | null>(null);
 
@@ -44,7 +32,6 @@ const Items = ({
         data: {
             type: 'item',
         },
-        disabled: isUpdating
     });
 
     // Handle mouse down to record initial position
@@ -88,16 +75,6 @@ const Items = ({
         router.push(routes)
     };
 
-
-    // Format value for display (for deals)
-    const formatValue = (val?: number) => {
-        if (!val || val === 0) return "$0.00";
-        return `$${val.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        })}`;
-    };
-
     return (
         <div
             ref={setNodeRef}
@@ -111,20 +88,10 @@ const Items = ({
             onMouseDown={handleMouseDown}
             onClick={handleClick}
         >
-            {/* Header with name/title and value (for deals) */}
             <div className="flex pl-1.5 py-2 text-md items-center justify-between">
-                <span className="font-medium text-gray-900 truncate flex-1">
+                <span className="font-medium text-gray-900">
                     {fullname}
                 </span>
-                {/* Show value for deals */}
-                {itemType === 'deal' && value !== undefined && (
-                    <div className="flex items-center text-green-600 ml-2 flex-shrink-0">
-                        <DollarSign className="w-3 h-3" />
-                        <span className="text-xs font-medium">
-                            {formatValue(value)}
-                        </span>
-                    </div>
-                )}
             </div>
 
             <div className='w-full py-1'>
@@ -132,19 +99,15 @@ const Items = ({
             </div>
 
             <div className="flex flex-col pl-1.5 text-[0.8rem] gap-y-4 py-5">
-                {/* Organization with icon for deals */}
-                <div className="flex items-center text-xs">
-                    {itemType === 'deal' && <Building2 className="w-3 h-3 mr-1 text-blue-600" />}
-                    <span className="truncate">
-                        {organization}
-                    </span>
-                </div>
+                <span className="text-xs text-gray-600">
+                    {organization}
+                </span>
 
-                <span className="text-xs text-blue-600 hover:underline cursor-pointer truncate">
+                <span className="text-xs text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">
                     {email}
                 </span>
 
-                <span className="text-xs truncate">
+                <span className="text-xs text-gray-600">
                     {mobileno}
                 </span>
             </div>
@@ -164,16 +127,6 @@ const Items = ({
                 <div className="flex-1"></div>
                 <Plus className="w-3 h-3" />
             </div>
-
-            {/* Loading overlay when updating */}
-            {isUpdating && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 rounded-xl flex items-center justify-center">
-                    <div className="flex items-center text-xs text-blue-600">
-                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                        Updating...
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

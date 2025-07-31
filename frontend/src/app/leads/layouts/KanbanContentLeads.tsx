@@ -1,4 +1,3 @@
-//kanban leads
 "use client";
 
 import {

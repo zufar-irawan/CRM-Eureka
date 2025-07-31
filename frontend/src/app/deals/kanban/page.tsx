@@ -55,7 +55,7 @@ export default function DealsKanban() {
             groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
-                leadId: deal.id,
+                itemId: deal.id,
                 fullname: deal.lead?.fullname || "Unknown",
                 organization: deal.lead?.company || "-",
                 email: deal.lead?.email || "-",
@@ -72,7 +72,7 @@ export default function DealsKanban() {
             groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
-                leadId: deal.id,
+                itemId: deal.id,
                 fullname: deal.lead?.fullname || "Unknown",
                 organization: deal.lead?.company || "-",
                 email: deal.lead?.email || "-",
@@ -106,7 +106,7 @@ export default function DealsKanban() {
                 </div>
             </div>
 
-            <Kanban setContainers={setContainers} setDeals={setData} containers={containers} />
+            <Kanban setContainers={setContainers} setDeals={setData} containers={containers} pathname='Deals' />
         </main>
     )
 }

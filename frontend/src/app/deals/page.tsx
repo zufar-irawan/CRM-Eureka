@@ -45,7 +45,7 @@ export default function MainContentDeals() {
       case 'lost':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'; // Default untuk status lain
+        return 'bg-gray-100 text-gray-800 border-gray-200'; 
     }
   };
 
@@ -61,10 +61,9 @@ const fetchDeals = async () => {
 
     if (!result.success) throw new Error(result.message);
 
-    console.log('[DEBUG] Raw deals data:', result.data); // Debug log
+    console.log('[DEBUG] Raw deals data:', result.data); 
 
     const formattedDeals = result.data.map((deal: any) => {
-      // Debug setiap deal
       console.log('[DEBUG] Processing deal:', {
         id: deal.id,
         value: deal.value,
@@ -72,7 +71,6 @@ const fetchDeals = async () => {
         rawDeal: deal
       });
 
-      // Pastikan value dikonversi dengan benar
       let annualRevenue = "$0.00";
       if (deal.value !== null && deal.value !== undefined && deal.value !== '') {
         const numValue = parseFloat(deal.value.toString());
@@ -112,7 +110,6 @@ const fetchDeals = async () => {
   }
 };
 
-  // Bulk Delete Handler
   const handleBulkDelete = async (ids: string[]) => {
     if (!window.confirm(`Are you sure you want to delete ${ids.length} deal(s)?`)) return;
 
@@ -135,7 +132,6 @@ const fetchDeals = async () => {
 
       await Promise.all(deletePromises);
 
-      // Remove deleted deals from state
       setDeals((prev) => prev.filter((deal) => !ids.includes(deal.id)));
       setSelectedDeals([]);
       alert(`Successfully deleted ${ids.length} deal(s)`);

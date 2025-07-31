@@ -9,6 +9,7 @@ import handleDragEnd from "./Functions/HandleDragEnd"
 import { SortableContext } from "@dnd-kit/sortable"
 import Container from "./Container/Container"
 import Items from "./Item/Item"
+import { usePathname } from "next/navigation"
 
 export type DNDType = {
     id: UniqueIdentifier
@@ -16,7 +17,7 @@ export type DNDType = {
     icon: JSX.Element
     items: {
         id: UniqueIdentifier
-        leadId: number
+        itemId: number
         fullname: string
         organization: string
         email: string
@@ -27,10 +28,11 @@ export type DNDType = {
 type kanbanProps = {
     containers: DNDType[]
     setContainers: React.Dispatch<React.SetStateAction<DNDType[]>>;
-    setDeals: React.Dispatch<React.SetStateAction<any[]>>;
+    setDeals: React.Dispatch<React.SetStateAction<any[]>>
+    pathname: string
 }
 
-export default function Kanban({ containers, setContainers, setDeals }: kanbanProps) {
+export default function Kanban({ containers, setContainers, pathname }: kanbanProps) {
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [currentContainerId, setCurrentContainerId] = useState<UniqueIdentifier>()
@@ -62,11 +64,13 @@ export default function Kanban({ containers, setContainers, setDeals }: kanbanPr
                                         {container.items.map((item) => (
                                             <Items
                                                 key={item.id}
-                                                id={item.id}
+                                                id={item.itemId}
                                                 fullname={item.fullname}
                                                 organization={item.organization}
                                                 email={item.email}
                                                 mobileno={item.mobileno}
+                                                pathname={pathname}
+                                                itemId={item.itemId}
                                             />
                                         ))}
                                     </div>

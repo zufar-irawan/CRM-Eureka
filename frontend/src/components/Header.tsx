@@ -14,13 +14,20 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
 
     let title = ""
 
-    if (pathname === "/deals" || pathname === "/deals/kanban") {
+    const path = [
+        "/leads",
+        "/deals",
+        "/tasks",
+        "/companies"
+    ]
+
+    if (pathname.startsWith("/deals")) {
         title = "Deals"
-    } else if (pathname === "/leads" || pathname === "/leads/kanban") {
+    } else if (pathname.startsWith("/leads")) {
         title = "Leads"
-    } else if (pathname === "/tasks" || pathname === "/tasks/kanban") {
+    } else if (pathname.startsWith("/tasks")) {
         title = "Tasks"
-    } else if (pathname === "/companies" || pathname === "/companies/detail") {
+    } else if (pathname.startsWith("/companies")) {
         title = "Companies"
     }
 
@@ -59,7 +66,7 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                                 <button
                                     onClick={() => {
                                         setIsOpen(false);
-                                        redirect('/deals')
+                                        redirect(pathname)
                                     }}
                                     className="w-full px-4 py-2 text-left hover:bg-gray-100"
                                 >
@@ -70,7 +77,13 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                                 <button
                                     onClick={() => {
                                         setIsOpen(false);
-                                        redirect('/deals/kanban')
+                                        redirect(
+                                            pathname.startsWith("/leads") ? path[0] + "/kanban" : (
+                                                pathname.startsWith("/deals") ? path[1] + "/kanban" : (
+                                                    pathname.startsWith("/tasks") ? path[2] + "/kanban" : (
+                                                        pathname.startsWith("/companies") ? path[3] + "/kanban" : ""
+                                                    )
+                                                )))
                                     }}
                                     className="w-full px-4 py-2 text-left hover:bg-gray-100"
                                 >

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { DNDType } from "../Kanban";
+import { error } from "console";
 
 type fetchDataProps = {
   url: string;
@@ -8,7 +9,7 @@ type fetchDataProps = {
   groupBy: string; // misal "stage", "status", dll
   mapItem: (item: any) => {
     id: string;
-    leadId: number;
+    itemId: number;
     fullname: string;
     organization: string;
     email: string;
@@ -24,8 +25,15 @@ export default async function fetchKanbanData({
   mapItem,
 }: fetchDataProps) {
   try {
+    console.log("Url: ", url)
+
     const response = await axios.get(url);
-    const rawData = response.data.data;
+    let rawData 
+    if(url === "http://localhost:5000/api/leads"){
+      rawData = response.data.leads
+    } else if (url === "http://localhost:5000/api/deals"){
+      rawData = response.data.data
+    }
 
     console.log("Fetched data:", rawData);
 

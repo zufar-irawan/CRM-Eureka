@@ -3,7 +3,6 @@ import ContainerProps from './Container.type';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { Button } from '../Button/Button';
 import { GripHorizontal } from 'lucide-react';
 
 const Container = ({

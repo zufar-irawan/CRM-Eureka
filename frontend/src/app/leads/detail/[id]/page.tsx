@@ -47,7 +47,7 @@ export default function LeadDetailPage() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [lead, setLead] = useState<Lead | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Modal state
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -89,75 +89,75 @@ export default function LeadDetailPage() {
   ];
 
   // Di LeadDetailPage - bagian handleConvertToDeal function
-// FIXED: handleConvertToDeal function di LeadDetailPage
-const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
-  if (!lead) return;
+  // FIXED: handleConvertToDeal function di LeadDetailPage
+  const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
+    if (!lead) return;
 
-  setIsConverting(true);
-  try {
-    console.log('[DEBUG] Converting lead to deal:', {
-      leadId: lead.id,
-      dealTitle,
-      dealValue,
-      dealValueType: typeof dealValue,
-      dealStage
-    });
+    setIsConverting(true);
+    try {
+      console.log('[DEBUG] Converting lead to deal:', {
+        leadId: lead.id,
+        dealTitle,
+        dealValue,
+        dealValueType: typeof dealValue,
+        dealStage
+      });
 
-    // FIX: Struktur request body yang sesuai dengan backend
-    const requestBody = {
-      dealTitle: dealTitle.trim(),
-      dealValue: parseFloat(dealValue.toString()), // Pastikan numeric
-      dealStage: dealStage,
-      leadData: {
-        fullname: lead.fullname,
-        company: lead.company,
-        email: lead.email,
-        mobile: lead.mobile,
-        industry: lead.industry,
-        job_position: lead.job_position,
-        website: lead.website
+      // FIX: Struktur request body yang sesuai dengan backend
+      const requestBody = {
+        dealTitle: dealTitle.trim(),
+        dealValue: parseFloat(dealValue.toString()), // Pastikan numeric
+        dealStage: dealStage,
+        leadData: {
+          fullname: lead.fullname,
+          company: lead.company,
+          email: lead.email,
+          mobile: lead.mobile,
+          industry: lead.industry,
+          job_position: lead.job_position,
+          website: lead.website
+        }
+      };
+
+      console.log('[DEBUG] Request body being sent:', requestBody);
+
+      const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/convert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
       }
-    };
 
-    console.log('[DEBUG] Request body being sent:', requestBody);
+      const result = await response.json();
+      console.log('[DEBUG] Conversion successful:', result);
 
-    const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/convert`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+      if (result.data?.deal?.value) {
+        console.log('[DEBUG] Deal created with value:', result.data.deal.value);
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+      // Show success message with value
+      alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
+
+      // Close modal
+      setShowConvertModal(false);
+
+      // Redirect ke deals page untuk melihat hasil
+      router.push('/deals');
+
+    } catch (error: unknown) {
+      console.error('[ERROR] Failed to convert lead:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setIsConverting(false);
     }
-
-    const result = await response.json();
-    console.log('[DEBUG] Conversion successful:', result);
-  
-    if (result.data?.deal?.value) {
-      console.log('[DEBUG] Deal created with value:', result.data.deal.value);
-    }
-
-    // Show success message with value
-    alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
-    
-    // Close modal
-    setShowConvertModal(false);
-    
-    // Redirect ke deals page untuk melihat hasil
-    router.push('/deals');
-    
-  } catch (error: unknown) {
-    console.error('[ERROR] Failed to convert lead:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
-    alert(`Error: ${errorMessage}`);
-  } finally {
-    setIsConverting(false);
-  }
-};
+  };
 
   useEffect(() => {
     if (!id) {
@@ -168,9 +168,9 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
     const fetchLead = async () => {
       try {
         setError(null);
-        
+
         console.log(`[DEBUG] Fetching lead with ID: ${id}`);
-        
+
         const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
           method: 'GET',
           headers: {
@@ -179,32 +179,32 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
           },
           mode: 'cors',
         });
-        
+
         console.log(`[DEBUG] Response:`, {
           status: response.status,
           statusText: response.statusText,
           ok: response.ok
         });
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error(`Lead with ID ${id} not found`);
           }
-          
+
           const errorData = await response.json().catch(() => null);
           const errorMsg = errorData?.message || `HTTP ${response.status}: ${response.statusText}`;
           throw new Error(errorMsg);
         }
-        
+
         const data = await response.json();
         console.log('[DEBUG] Successfully received data:', data);
-        
+
         if (!data || typeof data !== 'object') {
           throw new Error("Invalid data format received from server");
         }
-        
+
         setLead(data);
-        
+
         // Set initial status based on lead stage
         if (data.stage) {
           const normalizedStage = data.stage.toLowerCase();
@@ -217,19 +217,19 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
           };
           setSelectedStatus(statusMap[normalizedStage] || 'New');
         }
-        
+
       } catch (err: unknown) {
         let errorMessage = 'An unexpected error occurred';
-        
+
         if (err instanceof TypeError && err.message.includes('fetch')) {
           errorMessage = 'Network error: Unable to connect to server. Please check if backend server is running on localhost:5000';
         } else if (err instanceof Error) {
           errorMessage = err.message;
         }
-        
+
         console.error('[ERROR] Fetch failed:', err);
         setError(errorMessage);
-        
+
         if (err instanceof Error && err.message.includes('not found')) {
           setTimeout(() => router.push('/leads'), 3000);
         }
@@ -249,13 +249,13 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
         },
         mode: 'cors',
       });
-      
+
       console.log('[DEBUG] API connectivity test result:', {
         status: response.status,
         ok: response.ok,
         statusText: response.statusText
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('[DEBUG] API is accessible, sample data:', data);
@@ -320,13 +320,13 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
               {error}
             </div>
             <div className="flex gap-3 mt-6 justify-center">
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
               >
                 Retry
               </button>
-              <button 
+              <button
                 onClick={() => router.push('/leads')}
                 className="px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200"
               >
@@ -358,27 +358,12 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-
-      <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex`}>
+    <main className="p-4 overflow-auto lg:p-6 bg-white">
+      <div className={`flex-1 flex`}>
         {/* Main content area */}
         <div className="flex-1 bg-white">
           {/* Header section */}
           <div className="border-b border-gray-200 p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-2 text-gray-600 text-sm">
-                <span>Leads</span>
-                <span>/</span>
-                <span className="text-gray-900">
-                  {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
-                </span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">CRM-LEAD-{currentLead.id}</div>
-              </div>
-            </div>
-
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-semibold text-gray-900">
@@ -391,7 +376,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
                     </a>
                   )}
                   {safeString(currentLead.website) && (
-                    <a 
+                    <a
                       href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -402,13 +387,13 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
                   <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <select className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700">
                   <option>Assign to</option>
                 </select>
                 <div className="relative">
-                  <button 
+                  <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50"
                   >
@@ -416,7 +401,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
                     <span>{selectedStatus}</span>
                     <ChevronDown className="w-4 h-4 text-gray-400" />
                   </button>
-                  
+
                   {isDropdownOpen && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                       <div className="py-1">
@@ -437,7 +422,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
                     </div>
                   )}
                 </div>
-                <button 
+                <button
                   onClick={() => setShowConvertModal(true)}
                   disabled={isConverting || !lead}
                   className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
@@ -462,11 +447,10 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
                 <button
                   key={tab.name}
                   onClick={() => setActiveTab(tab.name)}
-                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    tab.name === activeTab
-                      ? "border-gray-900 text-gray-900"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${tab.name === activeTab
+                    ? "border-gray-900 text-gray-900"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   <tab.icon className="w-4 h-4" />
                   <span>{tab.name}</span>
@@ -494,7 +478,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
                 </a>
               )}
               {safeString(currentLead.website) && (
-                <a 
+                <a
                   href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -524,7 +508,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Website</span>
                 {safeString(currentLead.website) ? (
-                  <a 
+                  <a
                     href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -594,7 +578,7 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Email</span>
                 {safeString(currentLead.email) ? (
-                  <a 
+                  <a
                     href={`mailto:${safeString(currentLead.email)}`}
                     className="text-sm text-blue-600 hover:underline"
                   >
@@ -623,6 +607,6 @@ const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealSta
           selectedIds={[String(lead.id)]}
         />
       )}
-    </div>
+    </main>
   );
 }

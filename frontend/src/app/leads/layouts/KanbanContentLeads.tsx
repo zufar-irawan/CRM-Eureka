@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  closestCenter,
   closestCorners,
   DndContext,
   DragEndEvent,
@@ -544,7 +545,7 @@ const KanbanLead = () => {
         <div className="flex grid-cols-5">
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
+            collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}

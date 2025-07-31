@@ -14,6 +14,8 @@ type fetchDataProps = {
     organization: string;
     email: string;
     mobileno: string;
+    value?: number;
+    stage?: string;
   };
 };
 
@@ -42,7 +44,7 @@ export default async function fetchKanbanData({
       return;
     }
 
-    setData(rawData); // Simpan data mentah
+    setData(rawData); 
 
     const grouped: { [key: string]: any[] } = {};
 
@@ -63,5 +65,6 @@ export default async function fetchKanbanData({
     console.log("Grouped by", groupBy, ":", grouped);
   } catch (error) {
     console.error("Failed to fetch data:", error);
+    throw error; 
   }
 }

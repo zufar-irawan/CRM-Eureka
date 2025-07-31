@@ -36,6 +36,7 @@ interface Lead {
   last_name?: string | null;
   stage?: string | null;
   updated_at?: string | null;
+  status?: boolean;
 }
 
 export default function LeadDetailPage() {
@@ -47,6 +48,7 @@ export default function LeadDetailPage() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [lead, setLead] = useState<Lead | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdatingStage, setIsUpdatingStage] = useState(false);
 
   // Modal state
   const [showConvertModal, setShowConvertModal] = useState(false);
@@ -69,12 +71,11 @@ export default function LeadDetailPage() {
   };
 
   const statusOptions = [
-    { name: "New", color: "bg-gray-500" },
-    { name: "Contacted", color: "bg-orange-500" },
-    { name: "Nurture", color: "bg-blue-500" },
-    { name: "Qualified", color: "bg-green-500" },
-    { name: "Unqualified", color: "bg-red-500" },
-    { name: "Junk", color: "bg-purple-500" }
+    { name: "New", color: "bg-gray-500", backendStage: "New" },
+    { name: "Contacted", color: "bg-orange-500", backendStage: "Contacted" },
+    { name: "Qualification", color: "bg-green-500", backendStage: "Qualification" },
+    { name: "Unqualified", color: "bg-red-500", backendStage: "Unqualified" },
+    { name: "Converted", color: "bg-purple-500", backendStage: "Converted" }
   ];
 
   const tabs = [
@@ -88,8 +89,94 @@ export default function LeadDetailPage() {
     { name: "Attachments", icon: Paperclip }
   ];
 
-  // Di LeadDetailPage - bagian handleConvertToDeal function
-  // FIXED: handleConvertToDeal function di LeadDetailPage
+  // Function to map backend stage to frontend status
+  const mapStageToStatus = (stage: string): string => {
+    const stageMap: { [key: string]: string } = {
+      'New': 'New',
+      'Contacted': 'Contacted',
+      'Qualification': 'Qualification',
+      'Unqualified': 'Unqualified',
+      'Converted': 'Converted'
+    };
+    return stageMap[stage] || 'New';
+  };
+
+  const updateLeadStage = async (newStatus: string) => {
+    if (!lead) return;
+
+    const statusOption = statusOptions.find(s => s.name === newStatus);
+    if (!statusOption) return;
+
+    if (newStatus === "Converted") {
+      alert("To convert a lead, please use the 'Convert to Deal' button instead.");
+      return;
+    }
+
+    if (lead.status === true) {
+      alert("Cannot update stage of converted lead.");
+      return;
+    }
+
+    setIsUpdatingStage(true);
+
+    try {
+      console.log('[DEBUG] Updating lead stage:', {
+        leadId: lead.id,
+        currentStage: lead.stage,
+        newStage: statusOption.backendStage
+      });
+
+      const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/stage`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          stage: statusOption.backendStage
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('[DEBUG] Stage update successful:', result);
+
+      setLead(prevLead => prevLead ? {
+        ...prevLead,
+        stage: statusOption.backendStage,
+        updated_at: new Date().toISOString()
+      } : null);
+
+      setSelectedStatus(newStatus);
+
+      alert(`Lead stage updated to "${newStatus}" successfully!`);
+
+    } catch (error: unknown) {
+      console.error('[ERROR] Failed to update lead stage:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update lead stage';
+      alert(`Error: ${errorMessage}`);
+
+      if (lead?.stage) {
+        setSelectedStatus(mapStageToStatus(lead.stage));
+      }
+    } finally {
+      setIsUpdatingStage(false);
+      setIsDropdownOpen(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === selectedStatus) {
+      setIsDropdownOpen(false);
+      return;
+    }
+
+    await updateLeadStage(newStatus);
+  };
+
   const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
     if (!lead) return;
 
@@ -103,10 +190,9 @@ export default function LeadDetailPage() {
         dealStage
       });
 
-      // FIX: Struktur request body yang sesuai dengan backend
       const requestBody = {
         dealTitle: dealTitle.trim(),
-        dealValue: parseFloat(dealValue.toString()), // Pastikan numeric
+        dealValue: parseFloat(dealValue.toString()),
         dealStage: dealStage,
         leadData: {
           fullname: lead.fullname,
@@ -141,13 +227,19 @@ export default function LeadDetailPage() {
         console.log('[DEBUG] Deal created with value:', result.data.deal.value);
       }
 
-      // Show success message with value
+      setLead(prevLead => prevLead ? {
+        ...prevLead,
+        stage: 'Converted',
+        status: true,
+        updated_at: new Date().toISOString()
+      } : null);
+
+      setSelectedStatus('Converted');
+
       alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
 
-      // Close modal
       setShowConvertModal(false);
 
-      // Redirect ke deals page untuk melihat hasil
       router.push('/deals');
 
     } catch (error: unknown) {
@@ -205,17 +297,8 @@ export default function LeadDetailPage() {
 
         setLead(data);
 
-        // Set initial status based on lead stage
         if (data.stage) {
-          const normalizedStage = data.stage.toLowerCase();
-          const statusMap: { [key: string]: string } = {
-            'new': 'New',
-            'contacted': 'Contacted',
-            'qualification': 'Nurture',
-            'qualified': 'Qualified',
-            'unqualified': 'Unqualified'
-          };
-          setSelectedStatus(statusMap[normalizedStage] || 'New');
+          setSelectedStatus(mapStageToStatus(data.stage));
         }
 
       } catch (err: unknown) {
@@ -238,37 +321,6 @@ export default function LeadDetailPage() {
 
     fetchLead();
   }, [id, router]);
-
-  const testApiConnectivity = async () => {
-    try {
-      console.log('[DEBUG] Testing API connectivity...');
-      const response = await fetch('http://localhost:5000/api/leads', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      });
-
-      console.log('[DEBUG] API connectivity test result:', {
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('[DEBUG] API is accessible, sample data:', data);
-        alert('API connection successful! Check console for details.');
-      } else {
-        alert(`API connection failed: ${response.status} ${response.statusText}`);
-      }
-    } catch (error: unknown) {
-      console.error('[DEBUG] API connectivity test failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`API connection failed: ${errorMessage}`);
-    }
-  };
 
   const renderTabContent = () => {
     if (!lead) return null;
@@ -307,39 +359,6 @@ export default function LeadDetailPage() {
         );
     }
   };
-
-  // Jika ada error, tampilkan error page
-  if (error) {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-        <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex items-center justify-center`}>
-          <div className="text-center p-6 bg-red-50 rounded-lg max-w-2xl">
-            <h3 className="text-lg font-medium text-red-800 mb-4">Error Loading Lead</h3>
-            <div className="text-red-600 mb-4 whitespace-pre-line text-left bg-red-100 p-3 rounded text-sm">
-              {error}
-            </div>
-            <div className="flex gap-3 mt-6 justify-center">
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
-              >
-                Retry
-              </button>
-              <button
-                onClick={() => router.push('/leads')}
-                className="px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200"
-              >
-                Back to Leads List
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render halaman utama dengan placeholder data jika lead belum ada
   const currentLead = lead || {
     id: id || '',
     title: '',
@@ -353,9 +372,14 @@ export default function LeadDetailPage() {
     owner: '',
     first_name: '',
     last_name: '',
-    stage: 'new',
-    updated_at: new Date().toISOString()
+    stage: 'New',
+    updated_at: new Date().toISOString(),
+    status: false
   };
+
+  const availableStatusOptions = currentLead.status === true
+    ? statusOptions.filter(option => option.name === 'Converted')
+    : statusOptions.filter(option => option.name !== 'Converted');
 
   return (
     <main className="p-4 overflow-auto lg:p-6 bg-white">
@@ -364,6 +388,24 @@ export default function LeadDetailPage() {
         <div className="flex-1 bg-white">
           {/* Header section */}
           <div className="border-b border-gray-200 p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center space-x-2 text-gray-600 text-sm">
+                <span>Leads</span>
+                <span>/</span>
+                <span className="text-gray-900">
+                  {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
+                </span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-500">CRM-LEAD-{currentLead.id}</div>
+                {currentLead.status === true && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                    Converted
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-semibold text-gray-900">
@@ -394,28 +436,39 @@ export default function LeadDetailPage() {
                 </select>
                 <div className="relative">
                   <button
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50"
+                    onClick={() => !isUpdatingStage && setIsDropdownOpen(!isDropdownOpen)}
+                    disabled={isUpdatingStage}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <div className={`w-2 h-2 rounded-full ${statusOptions.find(s => s.name === selectedStatus)?.color}`}></div>
-                    <span>{selectedStatus}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                    {isUpdatingStage ? (
+                      <>
+                        <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className={`w-2 h-2 rounded-full ${statusOptions.find(s => s.name === selectedStatus)?.color}`}></div>
+                        <span>{selectedStatus}</span>
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      </>
+                    )}
                   </button>
 
-                  {isDropdownOpen && (
+                  {isDropdownOpen && !isUpdatingStage && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                       <div className="py-1">
-                        {statusOptions.map((status) => (
+                        {availableStatusOptions.map((status) => (
                           <button
                             key={status.name}
-                            onClick={() => {
-                              setSelectedStatus(status.name);
-                              setIsDropdownOpen(false);
-                            }}
-                            className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            onClick={() => handleStatusChange(status.name)}
+                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
+                              }`}
                           >
                             <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
                             <span>{status.name}</span>
+                            {status.name === selectedStatus && (
+                              <span className="ml-auto text-blue-600">✓</span>
+                            )}
                           </button>
                         ))}
                       </div>
@@ -424,7 +477,7 @@ export default function LeadDetailPage() {
                 </div>
                 <button
                   onClick={() => setShowConvertModal(true)}
-                  disabled={isConverting || !lead}
+                  disabled={isConverting || !lead || currentLead.status === true}
                   className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   {isConverting ? (
@@ -432,6 +485,8 @@ export default function LeadDetailPage() {
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       <span>Converting...</span>
                     </>
+                  ) : currentLead.status === true ? (
+                    <span>Already Converted</span>
                   ) : (
                     <span>Convert to Deal</span>
                   )}
@@ -542,6 +597,15 @@ export default function LeadDetailPage() {
                   </span>
                   <span className="text-sm text-gray-900 font-medium">
                     {displayValue(currentLead.owner, 'Administrator')}
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Current Stage</span>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${statusOptions.find(s => s.name === selectedStatus)?.color}`}></div>
+                  <span className="text-sm text-gray-900 font-medium">
+                    {selectedStatus}
                   </span>
                 </div>
               </div>

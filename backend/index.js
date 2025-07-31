@@ -6,6 +6,7 @@ import leadsRouter from './routes/leadsRoutes.js';
 import tasksRouter from './routes/tasksRoutes.js';
 import authRouter from './routes/authRoutes.js';
 import dealsRouter from './routes/dealsRoutes.js';
+import usersRouter from './routes/usersRoutes.js'
 import { setupAssociations } from './models/associations.js';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -31,6 +32,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/api/deals", dealsRouter);
+app.use("/api/users", usersRouter)
 
 app.listen(process.env.APP_PORT, () => {
     console.log(`Server is running on port`);

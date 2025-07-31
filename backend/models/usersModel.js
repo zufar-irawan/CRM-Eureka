@@ -1,5 +1,6 @@
 import { sequelize } from '../config/db.js';
 import { DataTypes } from 'sequelize';
+import crypto from 'crypto';
 
 export const User = sequelize.define('users', {
   id: {

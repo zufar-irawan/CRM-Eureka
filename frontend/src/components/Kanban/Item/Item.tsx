@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import React from 'react';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { GripVertical, AtSign, FileText, CheckCircle, RotateCcw, MessageCircle, Plus } from 'lucide-react';
+import { AtSign, FileText, CheckCircle, MessageCircle, Plus, DollarSign, Building2, Loader2 } from 'lucide-react';
 
 type ItemsType = {
     id: UniqueIdentifier
@@ -11,9 +11,21 @@ type ItemsType = {
     organization: string
     email: string
     mobileno: string
+    value?: number // For deals
+    itemType?: 'lead' | 'deal' // Specify item type
+    isUpdating?: boolean
 };
 
-const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
+const Items = ({ 
+    id, 
+    fullname, 
+    organization, 
+    email, 
+    mobileno, 
+    value,
+    itemType = 'lead',
+    isUpdating = false
+}: ItemsType) => {
     const {
         attributes,
         listeners,
@@ -26,7 +38,18 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
         data: {
             type: 'item',
         },
+        disabled: isUpdating
     });
+
+    // Format value for display (for deals)
+    const formatValue = (val?: number) => {
+        if (!val || val === 0) return "$0.00";
+        return `$${val.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+    };
+
     return (
         <div
             ref={setNodeRef}
@@ -36,19 +59,26 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
                 transform: CSS.Translate.toString(transform),
             }}
             className={clsx(
-                'px-2 py-1 bg-white rounded-xl w-full border border-gray-200 cursor-pointer',
-                isDragging && 'opacity-50',
+                'px-2 py-1 bg-white rounded-xl w-full border border-gray-200 cursor-pointer relative',
+                isDragging && 'opacity-50 shadow-lg scale-105',
+                isUpdating && 'opacity-60'
             )}
             {...listeners}
         >
+            {/* Header with name/title and value (for deals) */}
             <div className="flex pl-1.5 py-2 text-md items-center justify-between">
-                {fullname}
-                {/* <button
-                    className="p-2 hover:bg-gray-100 rounded-xl group text-gray-500"
-
-                >
-                    <GripVertical size={16} className='group-hover:text-gray-800' />
-                </button> */}
+                <span className="font-medium text-gray-900 truncate flex-1">
+                    {fullname}
+                </span>
+                {/* Show value for deals */}
+                {itemType === 'deal' && value !== undefined && (
+                    <div className="flex items-center text-green-600 ml-2 flex-shrink-0">
+                        <DollarSign className="w-3 h-3" />
+                        <span className="text-xs font-medium">
+                            {formatValue(value)}
+                        </span>
+                    </div>
+                )}
             </div>
 
             <div className='w-full py-1'>
@@ -56,15 +86,19 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
             </div>
 
             <div className="flex flex-col pl-1.5 text-[0.8rem] gap-y-4 py-5">
-                <span className="text-xs">
-                    {organization}
-                </span>
+                {/* Organization with icon for deals */}
+                <div className="flex items-center text-xs">
+                    {itemType === 'deal' && <Building2 className="w-3 h-3 mr-1 text-blue-600" />}
+                    <span className="truncate">
+                        {organization}
+                    </span>
+                </div>
 
-                <span className="text-xs">
+                <span className="text-xs text-blue-600 hover:underline cursor-pointer truncate">
                     {email}
                 </span>
 
-                <span className="text-xs">
+                <span className="text-xs truncate">
                     {mobileno}
                 </span>
             </div>
@@ -84,6 +118,16 @@ const Items = ({ id, fullname, organization, email, mobileno }: ItemsType) => {
                 <div className="flex-1"></div>
                 <Plus className="w-3 h-3" />
             </div>
+
+            {/* Loading overlay when updating */}
+            {isUpdating && (
+                <div className="absolute inset-0 bg-white bg-opacity-75 rounded-xl flex items-center justify-center">
+                    <div className="flex items-center text-xs text-blue-600">
+                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                        Updating...
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

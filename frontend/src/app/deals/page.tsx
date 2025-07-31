@@ -16,11 +16,40 @@ import {
 } from "lucide-react";
 import SelectedActionBar from "@/app/leads/components/SelectedActionBar";
 
+interface Deal {
+  id: string;
+  organization: string;
+  annualRevenue: string;
+  status: string;
+  email: string;
+  mobile: string;
+  assignedTo: string;
+  updated_at: string;
+  rawData: any;
+}
+
 export default function MainContentDeals() {
   const router = useRouter();
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
+
+  const getStatusColor = (status: string) => {
+    const normalizedStatus = status.toLowerCase().trim();
+    
+    switch (normalizedStatus) {
+      case 'proposal':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'negotiation':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'won':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'lost':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'; 
+    }
+  };
 
   useEffect(() => {
     fetchDeals();
@@ -272,7 +301,7 @@ export default function MainContentDeals() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(deal.status)}`}>
                         {deal.status}
                       </span>
                     </td>
@@ -347,7 +376,7 @@ export default function MainContentDeals() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(deal.status)}`}>
                       {deal.status}
                     </span>
                     <button 

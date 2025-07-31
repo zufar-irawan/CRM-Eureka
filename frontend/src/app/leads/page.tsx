@@ -15,7 +15,7 @@ export default function Leads() {
 
   const handleSelect = (view: "List" | "Kanban") => {
     setSelectedView(view);
-    setIsOpen(false);
+    setIsOpen(false); 
   };
 
   return (

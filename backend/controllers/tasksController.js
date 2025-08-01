@@ -57,7 +57,6 @@ export const getTasks = async (req, res) => {
   }
 };
 
-// POST /api/tasks - Tambah task
 export const createTask = async (req, res) => {
   try {
     const {
@@ -70,7 +69,6 @@ export const createTask = async (req, res) => {
       priority
     } = req.body;
 
-    // Validation
     if (!lead_id || !assigned_to || !title) {
       return res.status(400).json({
         success: false,
@@ -242,7 +240,6 @@ export const addTaskComment = async (req, res) => {
   }
 };
 
-// PUT /api/tasks/task-comments/:commentId - Edit komentar tertentu
 export const updateTaskComment = async (req, res) => {
   try {
     const { commentId } = req.params;
@@ -308,3 +305,59 @@ export const deleteTaskComment = async (req, res) => {
     });
   }
 };
+
+export const updateTaskStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['new', 'pending', 'completed', 'overdue', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "invalid status. Valid statuses are: " + validStatuses.join(', ')
+      });
+    }
+
+    const task = await Tasks.findByPk(id);
+    if(!task) {
+      return res.status(404).json({
+        success: false,
+        message: "task tidak ditemukan"
+      })
+    }
+
+    const oldStatus = task.status;
+
+    if (oldStatus === status) {
+      return res.status(200).json({
+        success: true,
+        message: "no status change detected",
+        data: {
+          task_id: id,
+          status: status,
+          update_at: task.update_at
+        }
+      })
+    }
+
+    console.log(`✅ Task ${id} status updated from "${oldStatus}" to "${status}"`);
+    res.status(200).json({
+      success: true,
+      message: "Task status updated successfully",
+      data: {
+        task_id: id,
+        old_status: oldStatus,
+        new_status: status,
+        updated_at: new Date()
+      }
+    })
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating task status",
+      error: error.message
+    });
+  }
+}

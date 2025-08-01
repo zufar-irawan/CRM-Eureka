@@ -8,35 +8,56 @@ interface Props {
   onLeadCreated?: () => void;
 }
 
+interface FormState {
+  title: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  mobile: string;
+  fax: string;
+  website: string;
+  work_email: string;
+  job_position: string;
+  company: string;
+  industry: string;
+  number_of_employees: string;
+  lead_source: string;
+  stage: string;
+  rating: string;
+  street: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  description: string;
+  owner: string;
+}
+
 export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     title: "",
     first_name: "",
     last_name: "",
-
     email: "",
     phone: "",
     mobile: "",
     fax: "",
     website: "",
-
+    work_email: "",
     job_position: "",
     company: "",
     industry: "",
     number_of_employees: "",
-
     lead_source: "",
     stage: "",
     rating: "",
-
     street: "",
     city: "",
     state: "",
     postal_code: "",
     country: "",
-
     description: "",
-
     owner: "",
   });
 
@@ -112,7 +133,6 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
         <div
           className="bg-white w-full max-w-6xl rounded-xl shadow-2xl relative transform transition-all duration-300 max-h-[90vh] overflow-hidden pointer-events-auto"
-        // style={{ marginLeft: 'max(1rem, calc((100vw - 64rem) / 2))' }}
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
@@ -136,10 +156,10 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
               )}
 
               <form onSubmit={handleSubmit}>
-                {/* Personal Information Section */}
+                {/* Personal & Contact Information Section */}
                 <div className="mb-8">
                   <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Personal Information
+                    Personal & Contact Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
@@ -183,15 +203,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                         maxLength={50}
                       />
                     </div>
-                  </div>
-                </div>
 
-                {/* Contact Information Section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Contact Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Email</label>
                       <input
@@ -202,18 +214,6 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={100}
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Phone</label>
-                      <input
-                        name="phone"
-                        placeholder="Enter phone number"
-                        value={form.phone}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={20}
                       />
                     </div>
 
@@ -238,19 +238,6 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={20}
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Website</label>
-                      <input
-                        name="website"
-                        type="url"
-                        placeholder="Enter website URL"
-                        value={form.website}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
                       />
                     </div>
                   </div>
@@ -318,6 +305,44 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         min="0"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Phone</label>
+                      <input
+                        name="phone"
+                        placeholder="Enter phone number"
+                        value={form.phone}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        maxLength={20}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Website</label>
+                      <input
+                        name="website"
+                        type="url"
+                        placeholder="Enter website URL"
+                        value={form.website}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        maxLength={100}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Work Email</label>
+                      <input
+                        name="work_email"
+                        type="email"
+                        placeholder="Enter work email address"
+                        value={form.work_email}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        maxLength={100}
                       />
                     </div>
                   </div>

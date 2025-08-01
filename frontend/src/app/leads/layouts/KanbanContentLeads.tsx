@@ -1,7 +1,7 @@
-//kanban leads
 "use client";
 
 import {
+  closestCenter,
   closestCorners,
   DndContext,
   DragEndEvent,
@@ -265,7 +265,7 @@ const KanbanLead = () => {
     } finally {
       setIsConverting(false);
     }
-  };
+  }
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [currentContainerId, setCurrentContainerId] =
@@ -545,7 +545,7 @@ const KanbanLead = () => {
         <div className="flex grid-cols-5">
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
+            collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}

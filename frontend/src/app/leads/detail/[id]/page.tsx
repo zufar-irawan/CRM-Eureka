@@ -49,7 +49,7 @@ export default function LeadDetailPage() {
   const [lead, setLead] = useState<Lead | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
-  
+
   // Modal state
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -118,7 +118,7 @@ export default function LeadDetailPage() {
     }
 
     setIsUpdatingStage(true);
-    
+
     try {
       console.log('[DEBUG] Updating lead stage:', {
         leadId: lead.id,
@@ -158,7 +158,7 @@ export default function LeadDetailPage() {
       console.error('[ERROR] Failed to update lead stage:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to update lead stage';
       alert(`Error: ${errorMessage}`);
-      
+
       if (lead?.stage) {
         setSelectedStatus(mapStageToStatus(lead.stage));
       }
@@ -222,7 +222,7 @@ export default function LeadDetailPage() {
 
       const result = await response.json();
       console.log('[DEBUG] Conversion successful:', result);
-    
+
       if (result.data?.deal?.value) {
         console.log('[DEBUG] Deal created with value:', result.data.deal.value);
       }
@@ -237,11 +237,11 @@ export default function LeadDetailPage() {
       setSelectedStatus('Converted');
 
       alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
-      
+
       setShowConvertModal(false);
-      
+
       router.push('/deals');
-      
+
     } catch (error: unknown) {
       console.error('[ERROR] Failed to convert lead:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
@@ -260,9 +260,9 @@ export default function LeadDetailPage() {
     const fetchLead = async () => {
       try {
         setError(null);
-        
+
         console.log(`[DEBUG] Fetching lead with ID: ${id}`);
-        
+
         const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
           method: 'GET',
           headers: {
@@ -271,48 +271,48 @@ export default function LeadDetailPage() {
           },
           mode: 'cors',
         });
-        
+
         console.log(`[DEBUG] Response:`, {
           status: response.status,
           statusText: response.statusText,
           ok: response.ok
         });
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error(`Lead with ID ${id} not found`);
           }
-          
+
           const errorData = await response.json().catch(() => null);
           const errorMsg = errorData?.message || `HTTP ${response.status}: ${response.statusText}`;
           throw new Error(errorMsg);
         }
-        
+
         const data = await response.json();
         console.log('[DEBUG] Successfully received data:', data);
-        
+
         if (!data || typeof data !== 'object') {
           throw new Error("Invalid data format received from server");
         }
-        
+
         setLead(data);
-        
+
         if (data.stage) {
           setSelectedStatus(mapStageToStatus(data.stage));
         }
-        
+
       } catch (err: unknown) {
         let errorMessage = 'An unexpected error occurred';
-        
+
         if (err instanceof TypeError && err.message.includes('fetch')) {
           errorMessage = 'Network error: Unable to connect to server. Please check if backend server is running on localhost:5000';
         } else if (err instanceof Error) {
           errorMessage = err.message;
         }
-        
+
         console.error('[ERROR] Fetch failed:', err);
         setError(errorMessage);
-        
+
         if (err instanceof Error && err.message.includes('not found')) {
           setTimeout(() => router.push('/leads'), 3000);
         }
@@ -377,15 +377,13 @@ export default function LeadDetailPage() {
     status: false
   };
 
-  const availableStatusOptions = currentLead.status === true 
-    ? statusOptions.filter(option => option.name === 'Converted') 
-    : statusOptions.filter(option => option.name !== 'Converted'); 
+  const availableStatusOptions = currentLead.status === true
+    ? statusOptions.filter(option => option.name === 'Converted')
+    : statusOptions.filter(option => option.name !== 'Converted');
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-
-      <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex`}>
+    <main className="p-4 overflow-auto lg:p-6 bg-white">
+      <div className={`flex-1 flex`}>
         {/* Main content area */}
         <div className="flex-1 bg-white">
           {/* Header section */}
@@ -420,7 +418,7 @@ export default function LeadDetailPage() {
                     </a>
                   )}
                   {safeString(currentLead.website) && (
-                    <a 
+                    <a
                       href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -431,13 +429,13 @@ export default function LeadDetailPage() {
                   <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3">
                 <select className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700">
                   <option>Assign to</option>
                 </select>
                 <div className="relative">
-                  <button 
+                  <button
                     onClick={() => !isUpdatingStage && setIsDropdownOpen(!isDropdownOpen)}
                     disabled={isUpdatingStage}
                     className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -455,7 +453,7 @@ export default function LeadDetailPage() {
                       </>
                     )}
                   </button>
-                  
+
                   {isDropdownOpen && !isUpdatingStage && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                       <div className="py-1">
@@ -463,9 +461,8 @@ export default function LeadDetailPage() {
                           <button
                             key={status.name}
                             onClick={() => handleStatusChange(status.name)}
-                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${
-                              status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
-                            }`}
+                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
+                              }`}
                           >
                             <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
                             <span>{status.name}</span>
@@ -478,7 +475,7 @@ export default function LeadDetailPage() {
                     </div>
                   )}
                 </div>
-                <button 
+                <button
                   onClick={() => setShowConvertModal(true)}
                   disabled={isConverting || !lead || currentLead.status === true}
                   className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
@@ -505,11 +502,10 @@ export default function LeadDetailPage() {
                 <button
                   key={tab.name}
                   onClick={() => setActiveTab(tab.name)}
-                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    tab.name === activeTab
-                      ? "border-gray-900 text-gray-900"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${tab.name === activeTab
+                    ? "border-gray-900 text-gray-900"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   <tab.icon className="w-4 h-4" />
                   <span>{tab.name}</span>
@@ -537,7 +533,7 @@ export default function LeadDetailPage() {
                 </a>
               )}
               {safeString(currentLead.website) && (
-                <a 
+                <a
                   href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -567,7 +563,7 @@ export default function LeadDetailPage() {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Website</span>
                 {safeString(currentLead.website) ? (
-                  <a 
+                  <a
                     href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -646,7 +642,7 @@ export default function LeadDetailPage() {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Email</span>
                 {safeString(currentLead.email) ? (
-                  <a 
+                  <a
                     href={`mailto:${safeString(currentLead.email)}`}
                     className="text-sm text-blue-600 hover:underline"
                   >
@@ -675,6 +671,6 @@ export default function LeadDetailPage() {
           selectedIds={[String(lead.id)]}
         />
       )}
-    </div>
+    </main>
   );
 }

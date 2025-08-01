@@ -3,7 +3,7 @@
 import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useState } from "react"
 
 interface Props {
     onClose: () => void;

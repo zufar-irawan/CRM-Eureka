@@ -14,13 +14,20 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
 
     let title = ""
 
-    if (pathname === "/deals" || pathname === "/deals/kanban") {
+    const path = [
+        "/leads",
+        "/deals",
+        "/tasks",
+        "/companies"
+    ]
+
+    if (pathname.startsWith("/deals")) {
         title = "Deals"
-    } else if (pathname === "/leads" || pathname === "/leads/kanban") {
+    } else if (pathname.startsWith("/leads")) {
         title = "Leads"
-    } else if (pathname === "/tasks" || pathname === "/tasks/kanban") {
+    } else if (pathname.startsWith("/tasks")) {
         title = "Tasks"
-    } else if (pathname === "/companies" || pathname === "/companies/detail") {
+    } else if (pathname.startsWith("/companies")) {
         title = "Companies"
     }
 
@@ -39,12 +46,12 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                             onClick={() => setIsOpen(!isOpen)}
                             className="flex cursor-pointer hover:scale-105 hover:-translate-y-0.5 transition-transform items-center"
                         >
-                            {pathname === "/deals" || "/leads" || "/tasks" ? (
+                            {["/deals", "/leads", "/tasks"].includes(pathname) ? (
                                 <AlignJustify size={13} className="text-gray-500 mr-1.5" />
                             ) : (
                                 <Kanban size={15} className="text-gray-500 mr-1" />
                             )}
-                            <h2 className="text-md text-gray-900 mr-1">{pathname === "/deals" || "/leads" || "/tasks" ? "List" : "Kanban"}</h2>
+                            <h2 className="text-md text-gray-900 mr-1">{["/deals", "/leads", "/tasks"].includes(pathname) ? "List" : "Kanban"}</h2>
                             <ChevronDown size={16} className="text-gray-500" />
                         </button>
 
@@ -59,7 +66,7 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                                 <button
                                     onClick={() => {
                                         setIsOpen(false);
-                                        redirect('/deals')
+                                        redirect(pathname)
                                     }}
                                     className="w-full px-4 py-2 text-left hover:bg-gray-100"
                                 >
@@ -70,7 +77,13 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                                 <button
                                     onClick={() => {
                                         setIsOpen(false);
-                                        redirect('/deals/kanban')
+                                        redirect(
+                                            pathname.startsWith("/leads") ? path[0] + "/kanban" : (
+                                                pathname.startsWith("/deals") ? path[1] + "/kanban" : (
+                                                    pathname.startsWith("/tasks") ? path[2] + "/kanban" : (
+                                                        pathname.startsWith("/companies") ? path[3] + "/kanban" : ""
+                                                    )
+                                                )))
                                     }}
                                     className="w-full px-4 py-2 text-left hover:bg-gray-100"
                                 >

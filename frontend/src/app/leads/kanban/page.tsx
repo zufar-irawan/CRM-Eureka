@@ -15,7 +15,7 @@ export default function DealsKanban() {
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>
             ,
-            title: 'proposal',
+            title: 'New',
             items: []
         },
         {
@@ -24,59 +24,68 @@ export default function DealsKanban() {
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>
             ,
-            title: 'negotiation',
+            title: 'Contacted',
             items: []
         },
         {
             id: `container-${uuidv4()}`,
-            icon: <div className="w-4 h-4 rounded-full bg-green-700 flex items-center justify-center">
+            icon: <div className="w-4 h-4 rounded-full bg-red-700 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>
             ,
-            title: 'won',
+            title: 'Qualification',
             items: []
         },
         {
             id: `container-${uuidv4()}`,
-            icon: <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center">
+            icon: <div className="w-4 h-4 rounded-full bg-green-600 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>
             ,
-            title: 'lost',
+            title: 'Converted',
+            items: []
+        },
+        {
+            id: `container-${uuidv4()}`,
+            icon: <div className="w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+            </div>
+            ,
+            title: 'Unqualified',
             items: []
         },
     ])
 
     const handleRefresh = () => {
         fetchKanbanData({
-            url: "http://localhost:5000/api/deals",
+            url: "http://localhost:5000/api/leads",
             setData: setData,
             setContainers: setContainers,
             groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
-            mapItem: (deal) => ({
-                id: `item-${deal.id}`,
-                itemId: deal.id,
-                fullname: deal.lead?.fullname || "Unknown",
-                organization: deal.lead?.company || "-",
-                email: deal.lead?.email || "-",
-                mobileno: deal.lead?.phone || "-",
+            mapItem: (lead) => ({
+                id: `item-${lead.id}`,
+                itemId: lead.id,
+                fullname: lead.lead?.fullname || "Unknown",
+                organization: lead.lead?.company || "-",
+                email: lead.lead?.email || "-",
+                mobileno: lead.lead?.phone || "-",
             }),
         })
     }
 
     useEffect(() => {
         fetchKanbanData({
-            url: "http://localhost:5000/api/deals",
+            url: "http://localhost:5000/api/leads",
             setData: setData,
             setContainers: setContainers,
             groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
-            mapItem: (deal) => ({
-                id: `item-${deal.id}`,
-                itemId: deal.id,
-                fullname: deal.lead?.fullname || "Unknown",
-                organization: deal.lead?.company || "-",
-                email: deal.lead?.email || "-",
-                mobileno: deal.lead?.phone || "-",
+            mapItem: (lead) => ({
+                id: `item-${lead.id}`,
+                itemId: lead.id,
+                fullname: lead.fullname || "Unknown",
+                organization: lead.company || "-",
+                email: lead.email || "-",
+                mobileno: lead.phone || "-",
             }),
         })
     }, []);
@@ -106,7 +115,7 @@ export default function DealsKanban() {
                 </div>
             </div>
 
-            <Kanban setContainers={setContainers} setData={setData} containers={containers} pathname='Deals' />
+            <Kanban setContainers={setContainers} setData={setData} containers={containers} pathname='Leads' />
         </main>
     )
 }

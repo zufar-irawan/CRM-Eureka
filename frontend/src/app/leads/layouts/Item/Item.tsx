@@ -18,7 +18,7 @@ type ItemsType = {
 const Items = ({ id, fullname, organization, email, mobileno, leadId }: ItemsType) => {
     const router = useRouter();
     const clickStartPos = React.useRef<{ x: number; y: number } | null>(null);
-    
+
     const {
         attributes,
         listeners,
@@ -44,7 +44,7 @@ const Items = ({ id, fullname, organization, email, mobileno, leadId }: ItemsTyp
         if (clickStartPos.current) {
             const deltaX = Math.abs(e.clientX - clickStartPos.current.x);
             const deltaY = Math.abs(e.clientY - clickStartPos.current.y);
-            
+
             // If moved more than 5px, consider it a drag, not a click
             if (deltaX > 5 || deltaY > 5) {
                 return;
@@ -55,7 +55,7 @@ const Items = ({ id, fullname, organization, email, mobileno, leadId }: ItemsTyp
         if (isDragging) {
             return;
         }
-        
+
         // Prevent navigation if clicking on interactive elements
         const target = e.target as HTMLElement;
         if (target.closest('button') || target.closest('a')) {
@@ -74,10 +74,7 @@ const Items = ({ id, fullname, organization, email, mobileno, leadId }: ItemsTyp
                 transition,
                 transform: CSS.Translate.toString(transform),
             }}
-            className={clsx(
-                'px-2 py-1 bg-white rounded-xl w-full border border-gray-200 cursor-pointer',
-                isDragging && 'opacity-50',
-            )}
+            className='px-2 py-1 bg-white rounded-xl w-full border border-gray-200 cursor-pointer'
             {...listeners}
             onMouseDown={handleMouseDown}
             onClick={handleClick}
@@ -86,12 +83,6 @@ const Items = ({ id, fullname, organization, email, mobileno, leadId }: ItemsTyp
                 <span className="font-medium text-gray-900">
                     {fullname}
                 </span>
-                {/* <button
-                    className="p-2 hover:bg-gray-100 rounded-xl group text-gray-500"
-
-                >
-                    <GripVertical size={16} className='group-hover:text-gray-800' />
-                </button> */}
             </div>
 
             <div className='w-full py-1'>

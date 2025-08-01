@@ -31,14 +31,7 @@ const Container = ({
         <div
             {...attributes}
             ref={setNodeRef}
-            style={{
-                transition,
-                transform: CSS.Translate.toString(transform),
-            }}
-            className={clsx(
-                'w-full h-full min-w-[260px] max-w-[260px] rounded-xl hover:bg-gray-50 bg-white flex flex-col',
-                isDragging && 'opacity-50',
-            )}
+            className='w-full h-full min-w-[260px] max-w-[260px] rounded-xl hover:bg-gray-50 bg-white flex flex-col'
         >
             <div className="flex items-center py-4 px-2 justify-between">
                 <div className="w-full flex flex-col gap-y-1">

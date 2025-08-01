@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getTasks, getTaskById, createTask, updateTask, getTaskComments, addTaskComment, updateTaskComment, deleteTaskComment } from "../controllers/tasksController.js";
+import { getTasks, getTaskById, createTask, updateTask, getTaskComments, addTaskComment, updateTaskComment, deleteTaskComment, updateTaskStatus } from "../controllers/tasksController.js";
 
 const router = Router();
 router.get("/", getTasks);                           // GET /api/tasks - List task berdasarkan user
@@ -10,4 +10,5 @@ router.get("/:id/comments", getTaskComments);        // GET /api/tasks/:id/comme
 router.post("/:id/comments", addTaskComment);        // POST /api/tasks/:id/comments - Tambahkan komentar ke task
 router.put("/task-comments/:commentId", updateTaskComment);    // PUT /api/tasks/task-comments/:commentId - Edit komentar tertentu
 router.delete("/task-comments/:commentId", deleteTaskComment); // DELETE /api/tasks/task-comments/:commentId - Hapus komentar tertentu
+router.put('/:id/updateStatus', updateTaskStatus); // PUT /api/tasks/:id/updateStatus - Update status tasks
 export default router;

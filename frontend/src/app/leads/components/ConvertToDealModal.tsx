@@ -1,20 +1,28 @@
+// File: ConvertToDealModal.tsx - Simplified implementation
+
 "use client";
 
 import { useState } from "react";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, Building, User, DollarSign, Target } from "lucide-react";
 
 interface ConvertToDealModalProps {
   onClose: () => void;
-  onConfirm: (dealTitle: string, dealValue: number, dealStage: string) => void; 
+  onConfirm: (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => Promise<any>; 
   selectedCount: number;
   selectedIds: string[];
+}
+
+interface ConversionResult {
+  leadId: string;
+  success: boolean;
+  error?: string;
 }
 
 const dealStages = [
   { value: "proposal", label: "Proposal" },
   { value: "negotiation", label: "Negotiation" },
-  { value: "closed_won", label: "Closed Won" },
-  { value: "closed_lost", label: "Closed Lost" }
+  { value: "won", label: "Won" },
+  { value: "lost", label: "Lost" }
 ];
 
 export default function ConvertToDealModal({
@@ -28,57 +36,106 @@ export default function ConvertToDealModal({
   const [dealStage, setDealStage] = useState("proposal");
   const [isLoading, setIsLoading] = useState(false);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!dealTitle.trim()) {
-    alert("Please enter a deal title");
-    return;
-  }
-
-  if (dealValue < 0) {
-    alert("Deal value cannot be negative");
-    return;
-  }
-
-  console.log('[DEBUG] Modal values before submit:', {
-    dealTitle,
-    dealValue,
-    dealValueType: typeof dealValue,
-    dealStage
-  });
-
-  setIsLoading(true);
-  try {
-    const numericValue = parseFloat(dealValue.toString());
-    if (isNaN(numericValue)) {
-      throw new Error("Invalid deal value");
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    await onConfirm(dealTitle, numericValue, dealStage);
-  } catch (error) {
-    console.error("Error converting leads:", error);
-    alert("Error: " + (error instanceof Error ? error.message : "Unknown error"));
-  } finally {
-    setIsLoading(false);
-  }
-};
+    if (!dealTitle.trim()) {
+      alert("Please enter a deal title");
+      return;
+    }
 
-<input
-  type="number"
-  value={dealValue || ''} 
-  onChange={(e) => {
-    const value = e.target.value;
-    const numValue = value === '' ? 0 : parseFloat(value);
-    setDealValue(isNaN(numValue) ? 0 : numValue);
-  }}
-  placeholder="0.00"
-  min="0"
-  step="0.01"
-  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-  disabled={isLoading}
-/>
+    if (dealValue < 0) {
+      alert("Deal value cannot be negative");
+      return;
+    }
 
+    console.log('[DEBUG] Modal values before submit:', {
+      dealTitle,
+      dealValue,
+      dealValueType: typeof dealValue,
+      dealStage,
+      selectedIds
+    });
+
+    setIsLoading(true);
+    const results: ConversionResult[] = [];
+    
+    try {
+      const numericValue = parseFloat(dealValue.toString());
+      if (isNaN(numericValue)) {
+        throw new Error("Invalid deal value");
+      }
+      
+      // Convert each lead individually
+      for (const leadId of selectedIds) {
+        try {
+          console.log(`[DEBUG] Converting lead ${leadId}...`);
+          
+          const result = await onConfirm(
+            leadId,
+            selectedCount === 1 ? dealTitle : `${dealTitle} - Lead ${leadId}`, 
+            numericValue, 
+            dealStage
+          );
+          
+          console.log(`[DEBUG] Conversion result for lead ${leadId}:`, result);
+          
+          if (result && result.success && result.data) {
+            results.push({
+              leadId,
+              success: true
+            });
+            console.log(`✅ Lead ${leadId} converted successfully`);
+          } else {
+            const errorMsg = result?.message || "Unknown error occurred";
+            results.push({
+              leadId,
+              success: false,
+              error: errorMsg
+            });
+            console.error(`❌ Lead ${leadId} conversion failed:`, errorMsg);
+          }
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : "Unknown error";
+          console.error(`❌ Error converting lead ${leadId}:`, error);
+          results.push({
+            leadId,
+            success: false,
+            error: errorMsg
+          });
+        }
+      }
+      
+      const successCount = results.filter(r => r.success).length;
+      const failureCount = results.filter(r => !r.success).length;
+      
+      console.log(`[DEBUG] Conversion summary: ${successCount} success, ${failureCount} failed`);
+      
+      if (successCount > 0) {
+        // Show success message and close modal
+        if (successCount === selectedCount) {
+          alert(`🎉 Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`);
+        } else {
+          alert(`Partially successful: ${successCount} converted, ${failureCount} failed`);
+        }
+        
+        // Close modal after successful conversion
+        onClose();
+      } else {
+        // If no conversions succeeded, show error message
+        const firstError = results.find(r => r.error)?.error || "All conversions failed";
+        alert(`Conversion failed: ${firstError}`);
+      }
+      
+    } catch (error) {
+      console.error("Error in conversion process:", error);
+      alert("Error: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Simple conversion form - no results screen
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
@@ -104,6 +161,16 @@ const handleSubmit = async (e: React.FormEvent) => {
               Lead IDs: {selectedIds.join(", ")}
             </p>
           )}
+          <div className="mt-2 text-xs text-blue-700 space-y-1">
+            <div className="flex items-center gap-1">
+              <Building className="w-3 h-3" />
+              <span>Companies will be created automatically from company information</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <User className="w-3 h-3" />
+              <span>Contacts will be created automatically from personal information</span>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -115,7 +182,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               type="text"
               value={dealTitle}
               onChange={(e) => setDealTitle(e.target.value)}
-              placeholder={selectedCount === 1 ? "Deal from Lead" : `Deal from ${selectedCount} Leads`}
+              placeholder={selectedCount === 1 ? "Deal from Lead Conversion" : `Deal from ${selectedCount} Leads`}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={isLoading}
               required
@@ -126,16 +193,23 @@ const handleSubmit = async (e: React.FormEvent) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Deal Value ($)
             </label>
-            <input
-              type="number"
-              value={dealValue}
-              onChange={(e) => setDealValue(Number(e.target.value))}
-              placeholder="0"
-              min="0"
-              step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            />
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input
+                type="number"
+                value={dealValue || ''} 
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = value === '' ? 0 : parseFloat(value);
+                  setDealValue(isNaN(numValue) ? 0 : numValue);
+                }}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div>
@@ -156,7 +230,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </select>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}

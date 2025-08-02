@@ -246,7 +246,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                 {/* Professional Information Section */}
                 <div className="mb-8">
                   <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Professional Information
+                    Company Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
@@ -334,7 +334,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Work Email</label>
+                      <label className="block text-sm font-medium text-gray-600">Company Email</label>
                       <input
                         name="work_email"
                         type="email"

@@ -2,6 +2,8 @@ import { Leads } from "../models/leads/leadsModel.js";
 import { LeadComments } from "../models/leads/leadsCommentModel.js";
 import { Tasks } from "../models/tasks/tasksModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
+import { Companies } from "../models/companies/companiesModel.js";
+import { Contacts } from "../models/contacts/contactsModel.js";
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js'; 
 
@@ -108,6 +110,7 @@ export const createLead = async (req, res) => {
             last_name,
             job_position,
             email,
+            work_email, // NEW: Work email field
             phone,
             mobile,
             fax,
@@ -125,6 +128,14 @@ export const createLead = async (req, res) => {
             description
         } = req.body;
 
+        // Validation: at least one of email or work_email should be provided
+        if (!email && !work_email) {
+            await transaction.rollback();
+            return res.status(400).json({
+                message: "At least one email (personal or work) is required"
+            });
+        }
+
         const newLead = await Leads.create({
             owner,
             company,
@@ -133,6 +144,7 @@ export const createLead = async (req, res) => {
             last_name,
             job_position,
             email,
+            work_email, // NEW: Include work_email
             phone,
             mobile,
             fax,
@@ -201,6 +213,7 @@ export const updateLead = async (req, res) => {
             last_name,
             job_position,
             email,
+            work_email, // NEW: Include work_email in update
             phone,
             mobile,
             fax,
@@ -226,6 +239,7 @@ export const updateLead = async (req, res) => {
             last_name: last_name !== undefined ? last_name : lead.last_name,
             job_position: job_position !== undefined ? job_position : lead.job_position,
             email: email !== undefined ? email : lead.email,
+            work_email: work_email !== undefined ? work_email : lead.work_email, // NEW: Update work_email
             phone: phone !== undefined ? phone : lead.phone,
             mobile: mobile !== undefined ? mobile : lead.mobile,
             fax: fax !== undefined ? fax : lead.fax,
@@ -300,7 +314,6 @@ export const deleteLead = async (req, res) => {
     }
 };
 
-// FIXED: Convert Lead function di leadsController.js
 export const convertLead = async (req, res) => {
     const transaction = await sequelize.transaction();
     
@@ -312,8 +325,7 @@ export const convertLead = async (req, res) => {
             return res.status(400).json({ message: "Invalid lead ID" });
         }
 
-        // FIX: Gunakan parameter yang sesuai dengan frontend
-        const { dealTitle, dealValue, dealStage, leadData } = req.body;
+        const { dealTitle, dealValue, dealStage } = req.body;
         
         console.log('[DEBUG] Received convert request:', {
             leadId,
@@ -323,6 +335,7 @@ export const convertLead = async (req, res) => {
             valueType: typeof dealValue
         });
 
+        // Find lead with transaction lock
         const lead = await Leads.findByPk(leadId, { 
             transaction,
             lock: true
@@ -341,47 +354,195 @@ export const convertLead = async (req, res) => {
             });
         }
 
-        // Update lead stage to Converted and status to true
+        let companyId = null;
+        let contactId = null;
+
+        // STEP 1: Create or find Company if company name exists
+        if (lead.company && lead.company.trim()) {
+            // Check if company already exists by name
+            let existingCompany = await Companies.findOne({
+                where: {
+                    name: lead.company.trim()
+                },
+                transaction
+            });
+
+            if (existingCompany) {
+                companyId = existingCompany.id;
+                console.log('[DEBUG] Using existing company:', companyId);
+                
+                // Update company info if we have more details from lead
+                const updateData = {};
+                if (lead.phone && !existingCompany.phone) updateData.phone = lead.phone;
+                if (lead.work_email && !existingCompany.email) updateData.email = lead.work_email;
+                
+                // Build address from lead address fields
+                if (lead.street || lead.city || lead.state || lead.postal_code) {
+                    const addressParts = [lead.street, lead.city, lead.state, lead.postal_code].filter(Boolean);
+                    if (addressParts.length > 0 && !existingCompany.address) {
+                        updateData.address = addressParts.join(', ');
+                    }
+                }
+                
+                if (Object.keys(updateData).length > 0) {
+                    await existingCompany.update(updateData, { transaction });
+                }
+            } else {
+                // Create new company from lead data
+                const addressParts = [lead.street, lead.city, lead.state, lead.postal_code].filter(Boolean);
+                const companyAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
+
+                const newCompany = await Companies.create({
+                    name: lead.company.trim(),
+                    address: companyAddress,
+                    phone: lead.phone,
+                    email: lead.work_email || null, // Use work_email for company email
+                    created_at: new Date()
+                }, { transaction });
+
+                companyId = newCompany.id;
+                console.log('[DEBUG] Created new company:', companyId);
+            }
+        }
+
+        // STEP 2: Create Contact if personal information exists
+        if (lead.fullname || lead.first_name || lead.last_name || lead.email) {
+            // Build contact name
+            const contactName = lead.fullname || `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
+            
+            if (contactName) {
+                let existingContact = null;
+                
+                // Check if contact already exists by email or name+company combination
+                if (lead.email) {
+                    existingContact = await Contacts.findOne({
+                        where: {
+                            [Op.or]: [
+                                { email: lead.email },
+                                { 
+                                    name: contactName,
+                                    company_id: companyId 
+                                }
+                            ]
+                        },
+                        transaction
+                    });
+                } else {
+                    // If no email, check by name and company
+                    existingContact = await Contacts.findOne({
+                        where: {
+                            name: contactName,
+                            company_id: companyId
+                        },
+                        transaction
+                    });
+                }
+
+                if (existingContact) {
+                    contactId = existingContact.id;
+                    console.log('[DEBUG] Using existing contact:', contactId);
+                    
+                    // Update contact info if we have more details
+                    const updateData = {};
+                    if (lead.email && !existingContact.email) updateData.email = lead.email;
+                    if (lead.mobile && !existingContact.phone) updateData.phone = lead.mobile;
+                    if (lead.job_position && !existingContact.position) updateData.position = lead.job_position;
+                    if (companyId && !existingContact.company_id) updateData.company_id = companyId;
+                    
+                    if (Object.keys(updateData).length > 0) {
+                        await existingContact.update(updateData, { transaction });
+                    }
+                } else {
+                    // Create new contact
+                    const newContact = await Contacts.create({
+                        company_id: companyId, // Link to company
+                        name: contactName,
+                        email: lead.email, // Personal email for contact
+                        phone: lead.mobile || lead.phone,
+                        position: lead.job_position,
+                        created_at: new Date()
+                    }, { transaction });
+
+                    contactId = newContact.id;
+                    console.log('[DEBUG] Created new contact:', contactId);
+                }
+            }
+        }
+
+        // STEP 3: Update lead stage to Converted and status to true
         await lead.update({ 
             stage: 'Converted',
             status: true
         }, { transaction });
 
-        // FIX: Pastikan value dikonversi dengan benar
+        // STEP 4: Create deal with company and contact references
         const numericValue = dealValue ? parseFloat(dealValue.toString()) : 0;
         
-        console.log('[DEBUG] Creating deal with value:', {
+        console.log('[DEBUG] Creating deal with:', {
             originalValue: dealValue,
             numericValue,
+            companyId,
+            contactId,
             isNaN: isNaN(numericValue)
         });
 
-        // Create deal in database
         const newDeal = await Deals.create({
             lead_id: leadId,
             title: dealTitle || `Deal from Lead Conversion - ${lead.fullname || lead.company}`,
-            value: numericValue, // FIX: Gunakan numeric value
+            value: isNaN(numericValue) ? 0 : numericValue,
             stage: dealStage || 'proposal',
             owner: lead.owner || 0,
-            id_contact: 0,
-            id_company: 0,
+            id_contact: contactId, // Will be null if no contact created
+            id_company: companyId, // Will be null if no company created
             created_by: req.user?.id || 1,
-            status: 'active'
+            created_at: new Date(),
+            updated_at: new Date()
         }, { transaction });
 
         await transaction.commit();
 
-        console.log('[DEBUG] Deal created successfully:', {
+        console.log('[DEBUG] Conversion completed successfully:', {
             dealId: newDeal.id,
-            value: newDeal.value,
-            valueInDb: await Deals.findByPk(newDeal.id, { attributes: ['value'] })
+            companyId,
+            contactId,
+            value: newDeal.value
         });
 
+        // Fetch created entities to return detailed response
+        const createdCompany = companyId ? await Companies.findByPk(companyId) : null;
+        const createdContact = contactId ? await Contacts.findByPk(contactId, {
+            include: [{
+                model: Companies,
+                as: 'company',
+                attributes: ['id', 'name']
+            }]
+        }) : null;
+
+        // Return detailed response with created entities
         res.status(200).json({
             success: true,
             message: "Lead converted successfully",
             data: {
-                lead: lead,
+                lead: {
+                    id: lead.id,
+                    stage: lead.stage,
+                    status: lead.status
+                },
+                company: createdCompany ? {
+                    id: createdCompany.id,
+                    name: createdCompany.name,
+                    address: createdCompany.address,
+                    email: createdCompany.email,
+                    phone: createdCompany.phone
+                } : null,
+                contact: createdContact ? {
+                    id: createdContact.id,
+                    name: createdContact.name,
+                    email: createdContact.email,
+                    phone: createdContact.phone,
+                    position: createdContact.position,
+                    company: createdContact.company
+                } : null,
                 deal: {
                     id: newDeal.id,
                     lead_id: newDeal.lead_id,
@@ -389,22 +550,28 @@ export const convertLead = async (req, res) => {
                     value: newDeal.value,
                     stage: newDeal.stage,
                     owner: newDeal.owner,
-                    created_by: newDeal.created_by,
-                    status: newDeal.status
+                    id_company: newDeal.id_company,
+                    id_contact: newDeal.id_contact,
+                    created_by: newDeal.created_by
                 }
             }
         });
     } catch (error) {
         await transaction.rollback();
-        console.error('Error converting lead:', error);
+        console.error('Error converting lead:', {
+            leadId,
+            error: error.message,
+            stack: error.stack
+        });
+        
         res.status(500).json({ 
             success: false,
-            message: error.message 
+            message: `Failed to convert lead: ${error.message}`,
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
-}
+};
 
-// IMPROVED: Update Lead Stage with better validation and locking
 export const updateLeadStage = async (req, res) => {
     const transaction = await sequelize.transaction();
     

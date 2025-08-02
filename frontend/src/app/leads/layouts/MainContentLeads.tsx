@@ -128,14 +128,8 @@ export default function MainLeads() {
   );
 
   useEffect(() => {
-    fetchLeads();
-  
-    const interval = setInterval(() => {
-      fetchLeads();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [selectedStage, searchTerm, sortBy, sortOrder]);
+  fetchLeads();
+}, [selectedStage, searchTerm, sortBy, sortOrder, leads.length]);
 
   const fetchLeads = async () => {
     try {

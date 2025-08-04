@@ -17,7 +17,6 @@ export const getAllContacts = async (req, res) => {
         } = req.query;
         const offset = (page - 1) * limit;
         let whereClause = {};
-
         if (search) {
             whereClause[Op.or] = [
                 { name: { [Op.like]: `%${search}%` } },

@@ -1,77 +1,69 @@
 "use client";
 
-import { X, User, Building2, Mail, Phone, Globe, Briefcase, MapPin } from "lucide-react";
+import { X } from "lucide-react";
 import { useState, useEffect } from "react";
-import axios from "axios";
 
-const api = axios.create({
-  baseURL: "http://localhost:5000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 10000,
-});
+interface Props {
+  lead: any;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (updatedLead: any) => void;
+}
 
-interface LeadForm {
+interface FormState {
   title: string;
   first_name: string;
   last_name: string;
-  company: string;
   email: string;
   phone: string;
   mobile: string;
   fax: string;
   website: string;
+  work_email: string;
   job_position: string;
+  company: string;
+  industry: string;
+  number_of_employees: string;
+  lead_source: string;
+  stage: string;
+  rating: string;
   street: string;
   city: string;
   state: string;
   postal_code: string;
   country: string;
   description: string;
-  stage: string;
-  lead_source: string;
-  rating: string;
-  industry: string;
-  number_of_employees: string;
+  owner: string;
 }
 
-export default function EditLeadModal({
-  lead,
-  isOpen,
-  onClose,
-  onSave,
-}: {
-  lead: any;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (updatedLead: any) => void;
-}) {
-  const [form, setForm] = useState<LeadForm>({
+export default function EditLeadModal({ lead, isOpen, onClose, onSave }: Props) {
+  const [form, setForm] = useState<FormState>({
     title: "",
     first_name: "",
     last_name: "",
-    company: "",
     email: "",
     phone: "",
     mobile: "",
     fax: "",
     website: "",
+    work_email: "",
     job_position: "",
+    company: "",
+    industry: "",
+    number_of_employees: "",
+    lead_source: "",
+    stage: "",
+    rating: "",
     street: "",
     city: "",
     state: "",
     postal_code: "",
     country: "",
     description: "",
-    stage: "",
-    lead_source: "",
-    rating: "",
-    industry: "",
-    number_of_employees: "",
+    owner: "",
   });
 
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -80,88 +72,102 @@ export default function EditLeadModal({
         title: lead.title || "",
         first_name: lead.first_name || "",
         last_name: lead.last_name || "",
-        company: lead.company || "",
         email: lead.email || "",
         phone: lead.phone || "",
         mobile: lead.mobile || "",
         fax: lead.fax || "",
         website: lead.website || "",
+        work_email: lead.work_email || "",
         job_position: lead.job_position || "",
+        company: lead.company || "",
+        industry: lead.industry || "",
+        number_of_employees: lead.number_of_employees || "",
+        lead_source: lead.lead_source || "",
+        stage: lead.stage || "",
+        rating: lead.rating || "",
         street: lead.street || "",
         city: lead.city || "",
         state: lead.state || "",
         postal_code: lead.postal_code || "",
         country: lead.country || "",
         description: lead.description || "",
-        stage: lead.stage || "",
-        lead_source: lead.lead_source || "",
-        rating: lead.rating || "",
-        industry: lead.industry || "",
-        number_of_employees: lead.number_of_employees || "",
+        owner: lead.owner || "",
       });
     }
   }, [lead]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
-  
-  try {
-    const submitData = {
-      ...form,
-      number_of_employees: form.number_of_employees ? parseInt(form.number_of_employees) : null,
-    };
-    
-    
-    Object.keys(submitData).forEach(key => {
-      if ((submitData as any)[key] === '') {
-        delete (submitData as any)[key];
-      }
-    });
-
-    const response = await api.put(`/leads/${lead.id}`, submitData);
-
-   
-    if (response.status !== 200) {
-      throw new Error(response.data?.message || 'Failed to update lead');
-    }
-    
-    onSave(response.data); 
-    onClose();
-  } catch (err) {
-    console.error("Error updating lead:", err);
-    setError(err instanceof Error ? err.message : "Failed to update lead");
-  } finally {
-    setLoading(false);
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) {
+    setForm({ ...form, [e.target.name]: e.target.value });
   }
-};
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const submitData = {
+        ...form,
+        number_of_employees: form.number_of_employees ? parseInt(form.number_of_employees) : null,
+        owner: form.owner ? parseInt(form.owner) : null,
+      };
+
+      // Remove empty string values
+      Object.keys(submitData).forEach(key => {
+        if ((submitData as any)[key] === '') {
+          delete (submitData as any)[key];
+        }
+      });
+
+      const response = await fetch(`http://localhost:5000/api/leads/${lead.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(submitData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to update lead');
+      }
+
+      if (onSave) {
+        onSave(result);
+      }
+
+      onClose();
+    } catch (err) {
+      console.error('Error updating lead:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update lead');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   if (!isOpen) return null;
 
   return (
     <>
       {/* Transparent Backdrop */}
-      <div 
-        className="fixed inset-0 bg-transparent z-40"
+      <div
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal Container - Positioned to center within main content area */}
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-        <div 
-          className="bg-white w-full max-w-6xl rounded-xl shadow-2xl relative transform transition-all duration-300 scale-100 max-h-[90vh] overflow-hidden mx-4 pointer-events-auto"
-          style={{ marginLeft: 'max(1rem, calc((100vw - 64rem) / 2))' }}
+        <div
+          className="bg-white w-full max-w-6xl rounded-xl shadow-2xl relative transform transition-all duration-300 max-h-[90vh] overflow-hidden pointer-events-auto"
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
             <h2 className="text-2xl font-semibold text-gray-800">Edit Lead</h2>
-            <button 
+            <button
               onClick={onClose}
               className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
             >
@@ -180,18 +186,18 @@ export default function EditLeadModal({
               )}
 
               <form onSubmit={handleSubmit}>
-                {/* Personal Information Section */}
+                {/* Personal & Contact Information Section */}
                 <div className="mb-8">
                   <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Personal Information
+                    Personal & Contact Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Salutation</label>
-                      <select 
-                        name="title" 
-                        value={form.title} 
-                        onChange={handleChange} 
+                      <select
+                        name="title"
+                        value={form.title}
+                        onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                       >
                         <option value="">Select Salutation</option>
@@ -200,101 +206,68 @@ export default function EditLeadModal({
                         <option value="Ms">Ms</option>
                       </select>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">
                         First Name <span className="text-red-500">*</span>
                       </label>
-                      <input 
-                        name="first_name" 
-                        placeholder="Enter first name" 
-                        value={form.first_name} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
-                        required 
+                      <input
+                        name="first_name"
+                        placeholder="Enter first name"
+                        value={form.first_name}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        required
                         maxLength={50}
                       />
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Last Name</label>
-                      <input 
-                        name="last_name" 
-                        placeholder="Enter last name" 
-                        value={form.last_name} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="last_name"
+                        placeholder="Enter last name"
+                        value={form.last_name}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={50}
                       />
                     </div>
-                  </div>
-                </div>
 
-                {/* Contact Information Section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Contact Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Email</label>
-                      <input 
-                        name="email" 
+                      <input
+                        name="email"
                         type="email"
-                        placeholder="Enter email address" 
-                        value={form.email} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                        placeholder="Enter email address"
+                        value={form.email}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={100}
                       />
                     </div>
-                    
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Phone</label>
-                      <input 
-                        name="phone" 
-                        placeholder="Enter phone number" 
-                        value={form.phone} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
-                        maxLength={20}
-                      />
-                    </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Mobile</label>
-                      <input 
-                        name="mobile" 
-                        placeholder="Enter mobile number" 
-                        value={form.mobile} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="mobile"
+                        placeholder="Enter mobile number"
+                        value={form.mobile}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={20}
                       />
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Fax</label>
-                      <input 
-                        name="fax" 
-                        placeholder="Enter fax number" 
-                        value={form.fax} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="fax"
+                        placeholder="Enter fax number"
+                        value={form.fax}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={20}
-                      />
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Website</label>
-                      <input 
-                        name="website" 
-                        type="text"
-                        placeholder="Enter website URL" 
-                        value={form.website} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
-                        maxLength={100}
                       />
                     </div>
                   </div>
@@ -308,34 +281,34 @@ export default function EditLeadModal({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Job Position</label>
-                      <input 
-                        name="job_position" 
-                        placeholder="Enter job position" 
-                        value={form.job_position} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="job_position"
+                        placeholder="Enter job position"
+                        value={form.job_position}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={100}
                       />
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Company</label>
-                      <input 
-                        name="company" 
-                        placeholder="Enter company name" 
-                        value={form.company} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="company"
+                        placeholder="Enter company name"
+                        value={form.company}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={100}
                       />
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Industry</label>
-                      <select 
-                        name="industry" 
-                        value={form.industry} 
-                        onChange={handleChange} 
+                      <select
+                        name="industry"
+                        value={form.industry}
+                        onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                       >
                         <option value="">Select Industry</option>
@@ -351,17 +324,55 @@ export default function EditLeadModal({
                         <option value="Venture Capital">Venture Capital</option>
                       </select>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">No. of Employees</label>
-                      <input 
-                        name="number_of_employees" 
+                      <input
+                        name="number_of_employees"
                         type="number"
-                        placeholder="Enter number of employees" 
-                        value={form.number_of_employees} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                        placeholder="Enter number of employees"
+                        value={form.number_of_employees}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         min="0"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Phone</label>
+                      <input
+                        name="phone"
+                        placeholder="Enter phone number"
+                        value={form.phone}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        maxLength={20}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Website</label>
+                      <input
+                        name="website"
+                        type="url"
+                        placeholder="Enter website URL"
+                        value={form.website}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        maxLength={100}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Work Email</label>
+                      <input
+                        name="work_email"
+                        type="email"
+                        placeholder="Enter work email address"
+                        value={form.work_email}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        maxLength={100}
                       />
                     </div>
                   </div>
@@ -375,10 +386,10 @@ export default function EditLeadModal({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Lead Source</label>
-                      <select 
-                        name="lead_source" 
-                        value={form.lead_source} 
-                        onChange={handleChange} 
+                      <select
+                        name="lead_source"
+                        value={form.lead_source}
+                        onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                       >
                         <option value="">Select Lead Source</option>
@@ -392,13 +403,13 @@ export default function EditLeadModal({
                         <option value="Other">Other</option>
                       </select>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Stage</label>
-                      <select 
-                        name="stage" 
-                        value={form.stage} 
-                        onChange={handleChange} 
+                      <select
+                        name="stage"
+                        value={form.stage}
+                        onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                       >
                         <option value="">Select Stage</option>
@@ -409,13 +420,13 @@ export default function EditLeadModal({
                         <option value="Unqualified">Unqualified</option>
                       </select>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Rating</label>
-                      <select 
-                        name="rating" 
-                        value={form.rating} 
-                        onChange={handleChange} 
+                      <select
+                        name="rating"
+                        value={form.rating}
+                        onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                       >
                         <option value="">Select Rating</option>
@@ -435,60 +446,60 @@ export default function EditLeadModal({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1 md:col-span-3">
                       <label className="block text-sm font-medium text-gray-600">Street</label>
-                      <input 
-                        name="street" 
-                        placeholder="Enter street address" 
-                        value={form.street} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="street"
+                        placeholder="Enter street address"
+                        value={form.street}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={255}
                       />
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">City</label>
-                      <input 
-                        name="city" 
-                        placeholder="Enter city" 
-                        value={form.city} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="city"
+                        placeholder="Enter city"
+                        value={form.city}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={100}
                       />
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">State</label>
-                      <input 
-                        name="state" 
-                        placeholder="Enter state" 
-                        value={form.state} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="state"
+                        placeholder="Enter state"
+                        value={form.state}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={100}
                       />
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Postal Code</label>
-                      <input 
-                        name="postal_code" 
-                        placeholder="Enter postal code" 
-                        value={form.postal_code} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="postal_code"
+                        placeholder="Enter postal code"
+                        value={form.postal_code}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={20}
                       />
                     </div>
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Country</label>
-                      <input 
-                        name="country" 
-                        placeholder="Enter country" 
-                        value={form.country} 
-                        onChange={handleChange} 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200" 
+                      <input
+                        name="country"
+                        placeholder="Enter country"
+                        value={form.country}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
                         maxLength={100}
                       />
                     </div>
@@ -502,33 +513,33 @@ export default function EditLeadModal({
                   </h3>
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-600">Description</label>
-                    <textarea 
-                      name="description" 
-                      placeholder="Enter description or additional notes" 
-                      value={form.description} 
-                      onChange={handleChange} 
+                    <textarea
+                      name="description"
+                      placeholder="Enter description or additional notes"
+                      value={form.description}
+                      onChange={handleChange}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-vertical" 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-vertical"
                     />
                   </div>
                 </div>
 
                 {/* Form Actions */}
                 <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4">
-                  <button 
+                  <button
                     type="button"
                     onClick={onClose}
-                    disabled={loading}
+                    disabled={isSubmitting}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors duration-200 font-medium disabled:opacity-50"
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     type="submit"
-                    disabled={loading}
+                    disabled={isSubmitting}
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {loading ? 'Saving...' : 'Save Changes'}
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>

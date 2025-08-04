@@ -1,3 +1,4 @@
+// File: models/leads/leadsModel.js - Updated with work_email field
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -37,6 +38,16 @@ export const Leads = sequelize.define('Lead', {
     allowNull: true
   },
   email: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    validate: {
+      isEmail: {
+        msg: "Must be a valid email address"
+      }
+    }
+  },
+  // ADDED: Work email field for company email
+  work_email: {
     type: DataTypes.STRING(100),
     allowNull: true,
     validate: {
@@ -117,7 +128,6 @@ export const Leads = sequelize.define('Lead', {
     type: DataTypes.TEXT,
     allowNull: true
   },
-  // ADDED: Status kolom untuk tracking conversion
   status: {
     type: DataTypes.BOOLEAN,
     allowNull: false,

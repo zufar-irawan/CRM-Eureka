@@ -326,7 +326,6 @@ export const updateTaskStatus = async (req, res) => {
         message: "task tidak ditemukan"
       })
     }
-
     const oldStatus = task.status;
 
     if (oldStatus === status) {

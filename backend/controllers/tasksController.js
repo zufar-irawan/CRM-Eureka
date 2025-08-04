@@ -8,7 +8,6 @@ export const getTasks = async (req, res) => {
   try {
     const { status, priority, category, assigned_to } = req.query;
     
-    // Build where clause
     let whereClause = {};
     
     if (status) {

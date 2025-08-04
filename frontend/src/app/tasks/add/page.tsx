@@ -1,9 +1,12 @@
 "use client";
 
+import DateTime from "@/components/AddModal/DateTime";
 import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
+import NumericUpDown from "@/components/AddModal/NumericUpDown";
+import TextArea from "@/components/AddModal/TextArea";
 import { X } from "lucide-react";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface Props {
     onClose: () => void;
@@ -11,69 +14,73 @@ interface Props {
 }
 
 export type DealsForm = {
-    title: string;
-    first_name: string;
-    last_name: string;
-
-    email: string;
-    phone: string;
-    mobile: string;
-    fax: string;
-    website: string;
-
-    job_position: string;
-    company: string;
-    industry: string;
-    number_of_employees: string;
-
-    lead_source: string;
-    stage: string;
-    rating: string;
-
-    street: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
-
-    description: string;
-    owner: string;
-};
+    lead_id: number
+    assigned_to: number
+    title: string
+    description: string
+    category: string
+    priority: string
+    due_date: string // ubah dari `number` jadi `string` karena formatnya `"YYYY-MM-DD HH:mm:ss"`
+}
 
 
-export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
-    const [form, setForm] = useState({
-        title: "",
-        first_name: "",
-        last_name: "",
 
-        email: "",
-        phone: "",
-        mobile: "",
-        fax: "",
-        website: "",
+export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
+    const [form, setForm] = useState<DealsForm>({
+        lead_id: 0,
+        assigned_to: 0,
+        title: '',
+        description: '',
+        category: '',
+        priority: '',
+        due_date: '', // format: '2025-07-30 14:00:00'
+    })
 
-        job_position: "",
-        company: "",
-        industry: "",
-        company_address: "",
-        company_phone: "",
-        company_email: "",
 
-        lead_source: "",
-        stage: "",
-        rating: "",
+    const [companyOptions, setCompanyOptions] = useState<any[]>([])
+    const [contactOptions, setContactOptions] = useState<any[]>([])
 
-        street: "",
-        city: "",
-        state: "",
-        postal_code: "",
-        country: "",
+    useEffect(() => {
+        const fetchCompanies = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/api/companies") // ganti sesuai API-mu
+                const result = await res.json()
 
-        description: "",
+                const data = result.data
 
-        owner: "",
-    });
+                const mappedOptions = data.map((company: any) => ({
+                    value: company.id,
+                    label: company.name,
+                }))
+
+                setCompanyOptions(mappedOptions)
+            } catch (error) {
+                console.error("Failed to fetch companies", error)
+            }
+        }
+
+        const fetchContact = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/api/contacts") // ganti sesuai API-mu
+                const result = await res.json()
+
+                const data = result.data
+
+                const mappedOptions = data.map((contacts: any) => ({
+                    value: contacts.id,
+                    label: contacts.name,
+                }))
+
+                setContactOptions(mappedOptions)
+            } catch (error) {
+                console.error("Failed to fetch companies", error)
+            }
+        }
+
+
+        fetchContact()
+        fetchCompanies()
+    }, [])
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -89,38 +96,43 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
         setIsSubmitting(true);
         setError("");
 
+        if (!form.title || !form.lead_id || !form.assigned_to || !form.due_date) {
+            setError("Please complete all required fields");
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
+            // Konversi tipe agar sesuai kebutuhan
             const submitData = {
                 ...form,
-                // number_of_employees: form.number_of_employees ? parseInt(form.number_of_employees) : null,
-                owner: form.owner ? parseInt(form.owner) : null,
-            };
+                lead_id: Number(form.lead_id),
+                assigned_to: Number(form.assigned_to),
+                due_date: form.due_date.trim(),
+                title: form.title.trim(),
+                description: form.description.trim(),
+                category: form.category,
+                priority: form.priority,
+            }
 
-            // Remove empty string values
-            Object.keys(submitData).forEach(key => {
-                if ((submitData as any)[key] === '') {
-                    delete (submitData as any)[key];
-                }
-            });
+            console.log("Data to submit:", submitData);
 
-            console.log('Data to submit:', submitData);
-
-            const response = await fetch('http://localhost:5000/api/leads', {
-                method: 'POST',
+            const response = await fetch("http://localhost:3000/api/tasks", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
-                credentials: 'include',
+                credentials: "include",
                 body: JSON.stringify(submitData),
-            });
+            })
 
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to create lead');
+                throw new Error(result.message || "Failed to create task")
             }
 
-            console.log('Lead created successfully:', result);
+            console.log("Task created successfully:", result)
 
             if (onLeadCreated) {
                 onLeadCreated();
@@ -128,12 +140,13 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
             onClose();
         } catch (err) {
-            console.error('Error creating lead:', err);
-            setError(err instanceof Error ? err.message : 'Failed to create lead');
+            console.error("Error creating task:", err);
+            setError(err instanceof Error ? err.message : "Failed to create task");
         } finally {
             setIsSubmitting(false);
         }
     }
+
 
     return (
         <>
@@ -174,60 +187,86 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
                                 <div className="mb-8">
                                     <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                                        Organization Information
+                                        Tasks Information
                                     </h3>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3  gap-4">
                                         <Input
-                                            label={"Organization Name"}
-                                            isRequired={true}
-                                            name="organization"
-                                            placeholder="Organization Name"
-                                            value={form.company}
+                                            label={"Task Title"}
+                                            isRequired
+                                            name="title"
+                                            placeholder="Enter task title"
+                                            value={form.title}
                                             onChange={handleChange}
-                                            required
-                                            maxLength={50}
+                                            maxLength={100}
                                         />
 
-                                        <Input
-                                            label="Address"
-                                            isRequired={true}
-                                            name="companyAddress"
-                                            placeholder="Company address"
-                                            value={form.company_address}
+                                        <Dropdown
+                                            label="Category"
+                                            name="category"
+                                            value={form.category}
                                             onChange={handleChange}
-                                            required
-                                            maxLength={255}
+                                            options={[
+                                                { value: "meeting", label: "Meeting" },
+                                                { value: "email", label: "Email" },
+                                                { value: "call", label: "Call" },
+                                                { value: "other", label: "Other" },
+                                            ]}
                                         />
 
-                                        <Input
-                                            label="Phone"
-                                            isRequired={true}
-                                            name="companyPhone"
-                                            placeholder="Company Phone"
-                                            value={form.company_phone}
+                                        <Dropdown
+                                            label="Priority"
+                                            name="priority"
+                                            value={form.priority}
                                             onChange={handleChange}
-                                            required
-                                            maxLength={12}
+                                            options={[
+                                                { value: "low", label: "Low" },
+                                                { value: "medium", label: "Medium" },
+                                                { value: "high", label: "High" },
+                                            ]}
                                         />
 
-                                        <Input
-                                            label="Email"
-                                            isRequired={true}
-                                            name="companyEmail"
-                                            placeholder="Company Email"
-                                            value={form.company_email}
+                                        <DateTime
+                                            label="Due Date"
+                                            name="due_date"
+                                            value={form.due_date}
                                             onChange={handleChange}
-                                            required
-                                            maxLength={255}
+                                            isRequired={false}
                                         />
+
+                                        <Dropdown
+                                            label="Assign To"
+                                            name="assigned_to"
+                                            value={form.assigned_to}
+                                            onChange={handleChange}
+                                            options={contactOptions}
+                                        />
+
+                                        <Dropdown
+                                            label="Lead"
+                                            name="lead_id"
+                                            value={form.lead_id}
+                                            onChange={handleChange}
+                                            options={companyOptions}
+                                        />
+
+                                        <TextArea
+                                            name="description"
+                                            placeholder="Enter description"
+                                            value={form.description}
+                                            onChange={handleChange}
+                                            rows={4}
+                                            label="Description"
+                                        />
+
+
                                     </div>
 
                                 </div>
 
 
                                 {/* Additional Information Section */}
-                                <div className="mb-8">
+                                {/* <div className="mb-8">
                                     <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
                                         Additional Information
                                     </h3>
@@ -242,7 +281,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-vertical"
                                         />
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* Form Actions */}
                                 <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4">

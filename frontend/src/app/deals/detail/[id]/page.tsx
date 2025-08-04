@@ -608,9 +608,6 @@ export default function DealDetailPage() {
                     <ChevronDown className="w-4 h-4 text-gray-400" />
                   </button>
                 </div>
-                <button className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800">
-                  Edit Deal
-                </button>
               </div>
             </div>
           </div>

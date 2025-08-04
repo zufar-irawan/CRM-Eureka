@@ -23,7 +23,7 @@ export default async function updateStage(
         url = `http://localhost:5000/api/tasks/${itemId}`
       }
 
-      if(pathname === "Leads" || "Deals"){
+      if(pathname === "Leads" || pathname === "Deals"){
         const response = await axios.put(
           url,
           { stage: newStage },

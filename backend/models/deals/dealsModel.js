@@ -1,4 +1,4 @@
-// File: models/dealsModel.js
+// File: models/deals/dealsModel.js - Updated with proper foreign key references
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -18,13 +18,19 @@ export const Deals = sequelize.define('Deals', {
     },
     id_contact: {
         type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0
+        allowNull: true, // Changed to allow NULL
+        references: {
+            model: 'contacts',
+            key: 'id'
+        }
     },
     id_company: {
         type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0
+        allowNull: true, // Changed to allow NULL
+        references: {
+            model: 'companies',
+            key: 'id'
+        }
     },
     title: {
         type: DataTypes.STRING(255),
@@ -32,11 +38,13 @@ export const Deals = sequelize.define('Deals', {
     },
     value: {
         type: DataTypes.DECIMAL(18, 2),
-        allowNull: true
+        allowNull: true,
+        defaultValue: 0
     },
     stage: {
         type: DataTypes.STRING(100),
-        allowNull: true
+        allowNull: true,
+        defaultValue: 'proposal'
     },
     owner: {
         type: DataTypes.INTEGER,

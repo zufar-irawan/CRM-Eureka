@@ -1,8 +1,8 @@
-// File: controllers/dealsController.js
-import { Deals, DealComments, Leads, User } from '../models/associations.js';
+// File: controllers/dealsController.js - Updated with proper foreign key handling
+import { Deals, DealComments, Leads, User, Companies, Contacts } from '../models/associations.js';
 import { Op } from 'sequelize';
 
-// GET /api/deals - Get all deals
+// GET /api/deals - Get all deals with company and contact info
 export const getAllDeals = async (req, res) => {
     try {
         const { 
@@ -18,17 +18,14 @@ export const getAllDeals = async (req, res) => {
         const offset = (page - 1) * limit;
         const whereConditions = {};
 
-        // Filter by stage
         if (stage) {
             whereConditions.stage = stage;
         }
 
-        // Filter by owner
         if (owner) {
             whereConditions.owner = owner;
         }
 
-        // Search functionality
         if (search) {
             whereConditions[Op.or] = [
                 { title: { [Op.like]: `%${search}%` } },
@@ -50,6 +47,24 @@ export const getAllDeals = async (req, res) => {
                     attributes: ['id', 'name', 'email']
                 },
                 {
+                    model: Companies,
+                    as: 'company',
+                    attributes: ['id', 'name', 'address', 'phone', 'email'],
+                    required: false // LEFT JOIN instead of INNER JOIN
+                },
+                {
+                    model: Contacts,
+                    as: 'contact',
+                    attributes: ['id', 'name', 'email', 'phone', 'position'],
+                    required: false, // LEFT JOIN instead of INNER JOIN
+                    include: [{
+                        model: Companies,
+                        as: 'company',
+                        attributes: ['id', 'name'],
+                        required: false
+                    }]
+                },
+                {
                     model: DealComments,
                     as: 'comments',
                     include: [{
@@ -58,7 +73,8 @@ export const getAllDeals = async (req, res) => {
                         attributes: ['id', 'name']
                     }],
                     order: [['created_at', 'DESC']],
-                    limit: 3 // Latest 3 comments only
+                    limit: 3,
+                    required: false
                 }
             ],
             limit: parseInt(limit),
@@ -87,7 +103,7 @@ export const getAllDeals = async (req, res) => {
     }
 };
 
-// GET /api/deals/:id - Get single deal
+// GET /api/deals/:id - Get single deal with full company and contact details
 export const getDealById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -105,6 +121,24 @@ export const getDealById = async (req, res) => {
                     attributes: ['id', 'name', 'email']
                 },
                 {
+                    model: Companies,
+                    as: 'company',
+                    attributes: ['id', 'name', 'address', 'phone', 'email', 'created_at'],
+                    required: false
+                },
+                {
+                    model: Contacts,
+                    as: 'contact',
+                    attributes: ['id', 'name', 'email', 'phone', 'position', 'created_at'],
+                    required: false,
+                    include: [{
+                        model: Companies,
+                        as: 'company',
+                        attributes: ['id', 'name'],
+                        required: false
+                    }]
+                },
+                {
                     model: DealComments,
                     as: 'comments',
                     include: [{
@@ -112,7 +146,8 @@ export const getDealById = async (req, res) => {
                         as: 'user',
                         attributes: ['id', 'name']
                     }],
-                    order: [['created_at', 'DESC']]
+                    order: [['created_at', 'DESC']],
+                    required: false
                 }
             ]
         });
@@ -145,10 +180,10 @@ export const createDeal = async (req, res) => {
             lead_id, 
             title, 
             value, 
-            stage = 'proposal_sent', 
+            stage = 'proposal', 
             owner = 0,
-            id_contact = 0,
-            id_company = 0
+            id_contact,
+            id_company
         } = req.body;
 
         // Validate required fields
@@ -170,15 +205,37 @@ export const createDeal = async (req, res) => {
             }
         }
 
+        // Check if company exists (if id_company provided)
+        if (id_company && id_company !== null) {
+            const company = await Companies.findByPk(id_company);
+            if (!company) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Company not found'
+                });
+            }
+        }
+
+        // Check if contact exists (if id_contact provided)
+        if (id_contact && id_contact !== null) {
+            const contact = await Contacts.findByPk(id_contact);
+            if (!contact) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Contact not found'
+                });
+            }
+        }
+
         const deal = await Deals.create({
             lead_id,
             title,
-            value,
+            value: value || 0,
             stage,
             owner,
-            id_contact,
-            id_company,
-            created_by: req.user?.id || 1, // Assuming auth middleware provides user
+            id_contact: id_contact || null,
+            id_company: id_company || null,
+            created_by: req.user?.id || 1,
             created_at: new Date(),
             updated_at: new Date()
         });
@@ -189,12 +246,26 @@ export const createDeal = async (req, res) => {
                 {
                     model: Leads,
                     as: 'lead',
-                    attributes: ['id', 'company', 'fullname', 'email']
+                    attributes: ['id', 'company', 'fullname', 'email'],
+                    required: false
                 },
                 {
                     model: User,
                     as: 'creator',
-                    attributes: ['id', 'name', 'email']
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: Companies,
+                    as: 'company',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: Contacts,
+                    as: 'contact',
+                    attributes: ['id', 'name', 'email', 'position'],
+                    required: false
                 }
             ]
         });
@@ -242,6 +313,32 @@ export const updateDeal = async (req, res) => {
             }
         }
 
+        // Validate company if provided
+        if (updateData.id_company !== undefined) {
+            if (updateData.id_company !== null) {
+                const company = await Companies.findByPk(updateData.id_company);
+                if (!company) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Company not found'
+                    });
+                }
+            }
+        }
+
+        // Validate contact if provided
+        if (updateData.id_contact !== undefined) {
+            if (updateData.id_contact !== null) {
+                const contact = await Contacts.findByPk(updateData.id_contact);
+                if (!contact) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Contact not found'
+                    });
+                }
+            }
+        }
+
         await deal.update(updateData);
 
         // Fetch updated deal with associations
@@ -250,12 +347,26 @@ export const updateDeal = async (req, res) => {
                 {
                     model: Leads,
                     as: 'lead',
-                    attributes: ['id', 'company', 'fullname', 'email']
+                    attributes: ['id', 'company', 'fullname', 'email'],
+                    required: false
                 },
                 {
                     model: User,
                     as: 'creator',
-                    attributes: ['id', 'name', 'email']
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: Companies,
+                    as: 'company',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: Contacts,
+                    as: 'contact',
+                    attributes: ['id', 'name', 'email', 'position'],
+                    required: false
                 }
             ]
         });
@@ -378,7 +489,7 @@ export const getDealComments = async (req, res) => {
 export const addDealComment = async (req, res) => {
     try {
         const { id } = req.params;
-        const { message, user_id, user_name } = req.body; // TAMBAHAN: terima user_id dan user_name dari body
+        const { message, user_id, user_name } = req.body;
 
         if (!message) {
             return res.status(400).json({
@@ -398,7 +509,7 @@ export const addDealComment = async (req, res) => {
 
         const comment = await DealComments.create({
             deal_id: id,
-            user_id: user_id || 1, // PERBAIKAN: default untuk testing
+            user_id: user_id || 1,
             user_name: user_name || 'Test User',
             message,
             created_at: new Date()

@@ -1,4 +1,4 @@
-// File: models/associations.js
+// File: models/associations.js - Updated with proper foreign key associations
 import { Leads } from "./leads/leadsModel.js";
 import { LeadComments } from "./leads/leadsCommentModel.js";
 import { Tasks } from "./tasks/tasksModel.js";
@@ -7,6 +7,8 @@ import { TaskResults } from "./tasks/tasksResultModel.js";
 import { User } from "./usersModel.js";
 import { Deals } from "./deals/dealsModel.js";
 import { DealComments } from "./deals/dealsCommentModel.js";
+import { Companies } from "./companies/companiesModel.js";
+import { Contacts } from "./contacts/contactsModel.js";
 
 export const setupAssociations = () => {
     Leads.hasMany(LeadComments, {
@@ -36,8 +38,6 @@ export const setupAssociations = () => {
         foreignKey: 'user_id',
         as: 'user'
     });
-    
-    // Existing Tasks associations
     Tasks.belongsTo(User, {
         foreignKey: 'assigned_to',
         as: 'assignee'
@@ -70,6 +70,7 @@ export const setupAssociations = () => {
         foreignKey: 'lead_id',
         as: 'lead'
     });
+    
     User.hasMany(Deals, {
         foreignKey: 'created_by',
         as: 'created_deals'
@@ -78,6 +79,7 @@ export const setupAssociations = () => {
         foreignKey: 'created_by',
         as: 'creator'
     });
+    
     Deals.hasMany(DealComments, {
         foreignKey: 'deal_id',
         as: 'comments',
@@ -96,6 +98,46 @@ export const setupAssociations = () => {
         foreignKey: 'user_id',
         as: 'user'
     });
+
+    Companies.hasMany(Contacts, {
+        foreignKey: 'company_id',
+        as: 'contacts'
+    });
+    Contacts.belongsTo(Companies, {
+        foreignKey: 'company_id',
+        as: 'company'
+    });
+    Companies.hasMany(Deals, {
+        foreignKey: 'id_company',
+        as: 'deals'
+    });
+    Deals.belongsTo(Companies, {
+        foreignKey: 'id_company',
+        as: 'company',
+        constraints: false 
+    });
+    Contacts.hasMany(Deals, {
+        foreignKey: 'id_contact',
+        as: 'deals'
+    });
+    Deals.belongsTo(Contacts, {
+        foreignKey: 'id_contact',
+        as: 'contact',
+        constraints: false 
+    });
+
+    console.log('✅ All associations have been set up successfully');
 };
 
-export { Tasks, TaskComments, TaskResults, Leads, LeadComments, User, Deals, DealComments };
+export { 
+    Tasks, 
+    TaskComments, 
+    TaskResults, 
+    Leads, 
+    LeadComments, 
+    User, 
+    Deals, 
+    DealComments,
+    Companies,
+    Contacts
+};

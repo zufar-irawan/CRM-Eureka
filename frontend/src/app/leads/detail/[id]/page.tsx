@@ -99,6 +99,74 @@ export default function LeadDetailPage() {
     return stageMap[stage] || 'New';
   };
 
+  // Function to fetch lead data
+  const fetchLead = async () => {
+    if (!id) {
+      setError("Invalid lead ID");
+      return;
+    }
+
+    try {
+      setError(null);
+
+      console.log(`[DEBUG] Fetching lead with ID: ${id}`);
+
+      const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
+      });
+
+      console.log(`[DEBUG] Response:`, {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Lead with ID ${id} not found`);
+        }
+
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.message || `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(errorMsg);
+      }
+
+      const data = await response.json();
+      console.log('[DEBUG] Successfully received data:', data);
+
+      if (!data || typeof data !== 'object') {
+        throw new Error("Invalid data format received from server");
+      }
+
+      setLead(data);
+
+      if (data.stage) {
+        setSelectedStatus(mapStageToStatus(data.stage));
+      }
+
+    } catch (err: unknown) {
+      let errorMessage = 'An unexpected error occurred';
+
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        errorMessage = 'Network error: Unable to connect to server. Please check if backend server is running on localhost:5000';
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      console.error('[ERROR] Fetch failed:', err);
+      setError(errorMessage);
+
+      if (err instanceof Error && err.message.includes('not found')) {
+        setTimeout(() => router.push('/leads'), 3000);
+      }
+    }
+  };
+
   const updateLeadStage = async (newStatus: string) => {
     if (!lead) return;
 
@@ -175,148 +243,72 @@ export default function LeadDetailPage() {
     await updateLeadStage(newStatus);
   };
 
-  const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
-    if (!lead) return;
-
-    setIsConverting(true);
-    try {
-      console.log('[DEBUG] Converting lead to deal:', {
-        leadId: lead.id,
-        dealTitle,
-        dealValue,
-        dealValueType: typeof dealValue,
-        dealStage
-      });
-
-      const requestBody = {
-        dealTitle: dealTitle.trim(),
-        dealValue: parseFloat(dealValue.toString()),
-        dealStage: dealStage,
-        leadData: {
-          fullname: lead.fullname,
-          company: lead.company,
-          email: lead.email,
-          mobile: lead.mobile,
-          industry: lead.industry,
-          job_position: lead.job_position,
-          website: lead.website
-        }
-      };
-
-      console.log('[DEBUG] Request body being sent:', requestBody);
-
-      const response = await fetch(`http://localhost:5000/api/leads/${lead.id}/convert`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('[DEBUG] Conversion successful:', result);
-
-      if (result.data?.deal?.value) {
-        console.log('[DEBUG] Deal created with value:', result.data.deal.value);
-      }
-
-      setLead(prevLead => prevLead ? {
-        ...prevLead,
-        stage: 'Converted',
-        status: true,
-        updated_at: new Date().toISOString()
-      } : null);
-
-      setSelectedStatus('Converted');
-
-      alert(`Successfully converted lead "${displayValue(lead.fullname)}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`);
-
-      setShowConvertModal(false);
-
-      router.push('/deals');
-
-    } catch (error: unknown) {
-      console.error('[ERROR] Failed to convert lead:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to convert lead to deal';
-      alert(`Error: ${errorMessage}`);
-    } finally {
-      setIsConverting(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!id) {
-      setError("Invalid lead ID");
-      return;
+  // UPDATED: Modified function to handle conversion and refresh data
+  const handleConvertToDeal = async (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => {
+    if (!lead) {
+      console.error('[ERROR] No lead data available for conversion');
+      throw new Error('No lead data available');
     }
 
-    const fetchLead = async () => {
-      try {
-        setError(null);
+    console.log('[DEBUG] Converting lead to deal:', {
+      leadId,
+      dealTitle,
+      dealValue,
+      dealValueType: typeof dealValue,
+      dealStage
+    });
 
-        console.log(`[DEBUG] Fetching lead with ID: ${id}`);
-
-        const response = await fetch(`http://localhost:5000/api/leads/${id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          mode: 'cors',
-        });
-
-        console.log(`[DEBUG] Response:`, {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok
-        });
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error(`Lead with ID ${id} not found`);
-          }
-
-          const errorData = await response.json().catch(() => null);
-          const errorMsg = errorData?.message || `HTTP ${response.status}: ${response.statusText}`;
-          throw new Error(errorMsg);
-        }
-
-        const data = await response.json();
-        console.log('[DEBUG] Successfully received data:', data);
-
-        if (!data || typeof data !== 'object') {
-          throw new Error("Invalid data format received from server");
-        }
-
-        setLead(data);
-
-        if (data.stage) {
-          setSelectedStatus(mapStageToStatus(data.stage));
-        }
-
-      } catch (err: unknown) {
-        let errorMessage = 'An unexpected error occurred';
-
-        if (err instanceof TypeError && err.message.includes('fetch')) {
-          errorMessage = 'Network error: Unable to connect to server. Please check if backend server is running on localhost:5000';
-        } else if (err instanceof Error) {
-          errorMessage = err.message;
-        }
-
-        console.error('[ERROR] Fetch failed:', err);
-        setError(errorMessage);
-
-        if (err instanceof Error && err.message.includes('not found')) {
-          setTimeout(() => router.push('/leads'), 3000);
-        }
+    const requestBody = {
+      dealTitle: dealTitle.trim(),
+      dealValue: parseFloat(dealValue.toString()),
+      dealStage: dealStage,
+      leadData: {
+        fullname: lead.fullname,
+        company: lead.company,
+        email: lead.email,
+        mobile: lead.mobile,
+        industry: lead.industry,
+        job_position: lead.job_position,
+        website: lead.website
       }
     };
 
+    console.log('[DEBUG] Request body being sent:', requestBody);
+
+    const response = await fetch(`http://localhost:5000/api/leads/${leadId}/convert`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('[DEBUG] Response status:', response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      console.error('[DEBUG] Error response:', errorData);
+      throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('[DEBUG] Conversion successful:', result);
+
+    // Return the result for the modal to process
+    return result;
+  };
+
+  // UPDATED: Handle modal close with data refresh
+  const handleModalClose = async () => {
+    setShowConvertModal(false);
+    
+    // Refresh lead data after conversion
+    await fetchLead();
+    
+    console.log('[DEBUG] Lead data refreshed after conversion');
+  };
+
+  useEffect(() => {
     fetchLead();
   }, [id, router]);
 
@@ -662,7 +654,7 @@ export default function LeadDetailPage() {
 
       {showConvertModal && lead && (
         <ConvertToDealModal
-          onClose={() => setShowConvertModal(false)}
+          onClose={handleModalClose}
           onConfirm={handleConvertToDeal}
           selectedCount={1}
           selectedIds={[String(lead?.id || '')]}

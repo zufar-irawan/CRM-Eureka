@@ -163,7 +163,7 @@ export default function MainLeads() {
     setCurrentLead(lead);
     setEditModalOpen(true);
     setActionMenuOpenId(null);
-  };
+  }
 
   const handleSaveLead = (updatedLead: any) => {
     setLeads(prev => prev.map(lead =>
@@ -176,7 +176,7 @@ export default function MainLeads() {
     setLeadsToDelete(ids);
     setDeleteModalOpen(true);
     setActionMenuOpenId(null);
-  };
+  }
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
@@ -540,6 +540,7 @@ export default function MainLeads() {
                             </div>
                           </>
                         )}
+
                       </div>
                     </td>
                   </tr>

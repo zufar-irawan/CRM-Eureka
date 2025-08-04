@@ -19,6 +19,9 @@ import {
   User2Icon,
 } from "lucide-react";
 import EditLeadModal from "../leads/components/EditLeadModal";
+import DesktopTable, { Column } from "@/components/ListTable/DesktopTable";
+import MobileCards, { Field } from "@/components/ListTable/MobileCards";
+import fetchData from "@/components/ListTable/Functions/FetchData";
 
 interface DeleteLeadModalProps {
   selectedCount: number;
@@ -89,6 +92,71 @@ function DeleteLeadModal({
   );
 }
 
+const allColumns: Column[] = [
+  { key: "title", label: "Title" },
+  { key: "description", label: "Description" },
+  { key: "category", label: "Category" },
+  {
+    key: "due_date",
+    label: "Due Date",
+    render: (value) =>
+      new Date(value).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+  },
+  { key: "status", label: "Status" },
+  { key: "priority", label: "Priority" },
+  // { key: "assigned_to", label: "Assigned To" },
+  {
+    key: "updated_at",
+    label: "Last Modified",
+    render: (value) =>
+      new Date(value).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+  },
+]
+
+const allFields: Field[] = [
+  { key: "description", label: "Description" },
+  { key: "category", label: "Category" },
+  {
+    key: "due_date",
+    label: "Due Date",
+    render: (value: string) => new Date(value).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }),
+  },
+  // { key: "status", label: "Status" },
+  // { key: "priority", label: "Priority" },
+  // { key: "assigned_to", label: "Assigned To" },
+  {
+    key: "created_at",
+    label: "Created At",
+    render: (value: string) => new Date(value).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }),
+  },
+  {
+    key: "updated_at",
+    label: "Last Modified",
+    render: (value: string) => new Date(value).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }),
+  },
+]
+
+
 const api = axios.create({
   baseURL: "http://localhost:3000/api",
   headers: {
@@ -112,59 +180,32 @@ export default function TasksList() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLead, setCurrentLead] = useState<any>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [leadsToDelete, setDataToDelete] = useState<string[]>([]);
+  const [leadsToDelete, setDataToDelete] = useState<string[]>([])
+  const [showColumnDropdown, setShowColumnDropdown] = useState(false);
 
-  const stages = ["new", "contacted", "qualification", "unqualified"];
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(
+    allColumns.map(col => col.key)
+  )
 
-  const sortOptions = [
-    "Owner", "Company", "Title", "First Name", "Last Name", "Fullname",
-    "Job Position", "Email", "Phone", "Mobile", "Fax", "Website",
-    "Industry", "Number Of Employees", "Lead Source", "Stage",
-    "Rating", "Street", "City", "State", "Postal Code", "Country",
-    "Description"
-  ];
+  const [visiblieFields, setVisibleFields] = useState<string[]>(
+    allFields.map(col => col.key)
+  )
 
-  const filteredSortOptions = sortOptions.filter((option) =>
-    option.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const toggleColumn = (key: string) => {
+    setVisibleColumns(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    )
 
-  useEffect(() => {
-    fetchLeads();
-
-    const interval = setInterval(() => {
-      fetchLeads();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [selectedStage, searchTerm, sortBy, sortOrder]);
-
-  const fetchLeads = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/tasks/");
-      setData(response.data.data)
-      console.log("fetched data: ", response.data)
-      console.log("fetched data: ", response.data.data)
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setVisibleFields(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    )
   }
 
-  const handleRowClick = (leadId: string) => {
-    router.push(`/leads/detail/${leadId}`);
-  };
-
   const handleRefresh = async () => {
-    await fetchLeads();
-  };
-
-  const handleEditLead = (lead: any) => {
-    setCurrentLead(lead);
-    setEditModalOpen(true);
-    setActionMenuOpenId(null);
-  };
+    await fetchData({
+      setData, setLoading, url: "/tasks/"
+    });
+  }
 
   const handleSaveLead = (updatedLead: any) => {
     setData(prev => prev.map(lead =>
@@ -268,7 +309,7 @@ export default function TasksList() {
     } else {
       setSelectedLeads(data.map((lead) => lead.id.toString()));
     }
-  };
+  }
 
   const getStageColor = (stage: string) => {
     const normalizedStage = stage.toLowerCase();
@@ -297,67 +338,16 @@ export default function TasksList() {
             >
               <RotateCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <button
-              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
-              <Filter className="w-3 h-3" />
-              <span className="hidden sm:inline">Filter</span>
-            </button>
 
-            {showFilterDropdown && (
-              <div className="absolute z-50 mt-12 w-72 bg-white border border-gray-200 rounded-md shadow-lg">
-                <div className="border-b border-gray-100 px-4 py-3">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Stage</p>
-                  <ul className="max-h-40 overflow-y-auto space-y-1">
-                    {stages.map((stage) => (
-                      <li
-                        key={stage}
-                        onClick={() => setSelectedStage(stage)}
-                        className={`text-sm px-2 py-1 rounded cursor-pointer ${selectedStage === stage
-                          ? "bg-blue-100 text-blue-700"
-                          : "hover:bg-gray-100"
-                          }`}
-                      >
-                        {stage.charAt(0).toUpperCase() + stage.slice(1)}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="px-4 py-3">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Owner</p>
-                  <div className="relative mt-2">
-                    <input
-                      type="text"
-                      placeholder="Search by owner"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"
-                    />
-                    {searchTerm && (
-                      <button
-                        onClick={() => setSearchTerm("")}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600 bg-white p-0.5 rounded"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="px-4 py-3 border-t border-gray-100">
-                  <button
-                    onClick={() => {
-                      setSelectedStage(null);
-                      setSearchTerm("");
-                    }}
-                    className="text-sm text-red-500 hover:underline"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="relative">
+              <button
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
+              >
+                <Filter className="w-3 h-3" />
+                <span className="hidden sm:inline">Filter</span>
+              </button>
+            </div>
 
             <div className="relative">
               <button
@@ -367,293 +357,58 @@ export default function TasksList() {
                 <ArrowUpDown className="w-3 h-3" />
                 <span className="hidden sm:inline">Sort</span>
               </button>
+            </div>
 
-              {showSortDropdown && (
-                <div className="absolute z-50 mt-2 w-64 bg-white border border-gray-200 rounded-md shadow-lg sort-dropdown">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-3 py-2 pr-10 border-b border-gray-100 text-sm focus:outline-none"
-                    />
-                    {searchTerm && (
-                      <button
-                        onClick={() => setSearchTerm("")}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600 bg-white p-0.5 rounded z-20 pointer-events-auto"
-                        aria-label="Clear search"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  <ul className="max-h-60 overflow-y-auto">
-                    {filteredSortOptions.map((option) => (
-                      <li
-                        key={option}
-                        className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {
-                          if (sortBy === option.toLowerCase().replace(/ /g, "_")) {
-                            setSortOrder(sortOrder === "ASC" ? "DESC" : "ASC");
-                          } else {
-                            setSortBy(option.toLowerCase().replace(/ /g, "_"));
-                            setSortOrder("ASC");
-                          }
-                          setShowSortDropdown(false);
-                          setSearchTerm("");
-                        }}
-                      >
-                        {option}
-                      </li>
+            <div className="relative">
+              <button onClick={() => setShowColumnDropdown(!showColumnDropdown)} className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
+                <Columns className="w-3 h-3" />
+                <span className="hidden sm:inline">Columns</span>
+              </button>
+
+              {showColumnDropdown && (
+                <div className="absolute mt-2 w-48 bg-white border border-gray-200 rounded shadow z-50">
+
+                  <div className="hidden lg:block py-2 px-3 max-h-64 overflow-y-auto">
+                    {allColumns.map(col => (
+                      <label key={col.key} className="flex items-center space-x-2 mb-2">
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns.includes(col.key)}
+                          onChange={() => toggleColumn(col.key)}
+                          className="rounded border-gray-300 text-blue-600"
+                        />
+                        <span className="text-sm">{col.label}</span>
+                      </label>
                     ))}
-                  </ul>
+                  </div>
+
+                  <div className="block lg:hidden py-2 px-3 max-h-64 overflow-y-auto">
+                    {allFields.map(col => (
+                      <label key={col.key} className="flex items-center space-x-2 mb-2">
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns.includes(col.key)}
+                          onChange={() => toggleColumn(col.key)}
+                          className="rounded border-gray-300 text-blue-600"
+                        />
+                        <span className="text-sm">{col.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
-              <Columns className="w-3 h-3" />
-              <span className="hidden sm:inline">Columns</span>
-            </button>
-            <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
+            {/* <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
               <MoreHorizontal className="w-3 h-3" />
-            </button>
+            </button> */}
           </div>
         </div>
 
-        {/* Desktop Table */}
-        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full relative">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={toggleSelectAll}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
-                ) : data.length === 0 ? (
-                  <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
-                ) : data.map((task) => (
-                  <tr
-                    key={task.id}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => handleRowClick(task.id)}
-                  >
-                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedLeads.includes(task.id.toString())}
-                        onChange={() => toggleSelectLead(task.id.toString())}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="text-xs font-medium text-gray-900">{task.title}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-xs text-gray-900">
-                      {task.status}
-                    </td>
-                    <td className={`px-6 py-4 text-xs ${getStageColor(task.priority)} hover:underline`}>
-                      {task.priority}
-                    </td>
-                    <td className="px-6 py-4 text-xs text-gray-900">
-                      -
-                    </td>
-                    <td className="px-6 py-4 text-xs text-gray-500">
-                      {new Date(task.updated_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500" onClick={(e) => e.stopPropagation()}>
-                      <div className="relative" data-action-menu>
-                        <button
-                          className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActionMenuOpenId(task.id.toString() === actionMenuOpenId ? null : task.id.toString())
-                          }}
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
-
-                        {actionMenuOpenId === task.id.toString() && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-40"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActionMenuOpenId(null);
-                              }}
-                            />
-
-                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${data.indexOf(task) >= data.length - 2
-                              ? 'bottom-full mb-1'
-                              : 'top-full mt-1'
-                              }`}>
-                              <div className="py-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditLead(task);
-                                  }}
-                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDeleteModal([task.id.toString()]);
-                                  }}
-                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DesktopTable pathname="/tasks/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} />
 
         {/* Mobile Cards */}
-        <div className="lg:hidden space-y-4">
-          {loading ? (
-            <p className="text-2xl">Loading...</p>
-          ) : data.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No unconverted leads found</p>
-          ) : data.map((task) => (
-            <div
-              key={task.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer"
-              onClick={() => handleRowClick(task.id)}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedLeads.includes(task.id.toString())}
-                    onChange={() => toggleSelectLead(task.id.toString())}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                    <User className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">{task.title}</h3>
-                    <div className="flex items-center text-xs text-gray-500 mt-1">
-                      {task.status}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(task.priority)}`}>
-                    {task.priority}
-                  </span>
-
-                  <div className="relative" data-action-menu onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActionMenuOpenId(task.id.toString() === actionMenuOpenId ? null : task.id.toString())
-                      }}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-
-                    {actionMenuOpenId === task.id.toString() && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActionMenuOpenId(null);
-                          }}
-                        />
-
-                        <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${data.indexOf(task) >= data.length - 2
-                          ? 'bottom-full mb-1'
-                          : 'top-full mt-1'
-                          }`}>
-                          <div className="py-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditLead(task);
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openDeleteModal([task.id.toString()]);
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center text-gray-600">
-                  <User2Icon className="w-4 h-4 mr-2" />
-                  <span className="text-blue-600">-</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                <span className="text-xs text-gray-500">
-                  {new Date(task.updated_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <MobileCards pathname="/tasks/" fields={allFields} visibleFields={visibleColumns} />
 
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">

@@ -3,7 +3,7 @@
 import Sidebar from "@/components/Sidebar";
 import { AlignJustify, ChevronDown, Kanban } from "lucide-react";
 import { useState } from "react";
-import MainContentDeals from "./Layouts/MainContentDeals";
+import MainContentDeals from "./layouts/MainContentDeals";
 import { redirect } from "next/navigation";
 import DealsKanban from "./kanban/page";
 import CreateDealsModal from "./add/AddDealsModal";

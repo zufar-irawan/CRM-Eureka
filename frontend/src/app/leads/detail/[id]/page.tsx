@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Sidebar from "@/components/Sidebar";
 import ConvertToDealModal from "../../components/ConvertToDealModal";
 
 import {
@@ -14,7 +13,6 @@ import {
   Phone,
   ChevronDown,
   Plus,
-  FileText,
   Edit,
   MessageSquare,
   Database,
@@ -351,7 +349,7 @@ export default function LeadDetailPage() {
         );
     }
   };
-
+  
   const currentLead = lead || {
     id: id || '',
     title: '',
@@ -375,282 +373,280 @@ export default function LeadDetailPage() {
     : statusOptions.filter(option => option.name !== 'Converted');
 
   return (
-    <main className="p-4 overflow-auto lg:p-6 bg-white">
-      <div className={`flex-1 flex`}>
-        {/* Main content area */}
-        <div className="flex-1 bg-white">
-          {/* Header section */}
-          <div className="border-b border-gray-200 p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-2 text-gray-600 text-sm">
-                <span>Leads</span>
-                <span>/</span>
-                <span className="text-gray-900">
-                  {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
-                </span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">CRM-LEAD-{currentLead.id}</div>
-                {currentLead.status === true && (
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
-                    Converted
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-semibold text-gray-900">
-                  {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
-                </h1>
-                <div className="flex items-center space-x-2">
-                  {safeString(currentLead.email) && (
-                    <a href={`mailto:${safeString(currentLead.email)}`}>
-                      <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                    </a>
-                  )}
-                  {safeString(currentLead.website) && (
-                    <a
-                      href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                    </a>
-                  )}
-                  <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <select className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700">
-                  <option>Assign to</option>
-                </select>
-                <div className="relative">
-                  <button
-                    onClick={() => !isUpdatingStage && setIsDropdownOpen(!isDropdownOpen)}
-                    disabled={isUpdatingStage}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isUpdatingStage ? (
-                      <>
-                        <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span>Updating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className={`w-2 h-2 rounded-full ${statusOptions.find(s => s.name === selectedStatus)?.color}`}></div>
-                        <span>{selectedStatus}</span>
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      </>
-                    )}
-                  </button>
-
-                  {isDropdownOpen && !isUpdatingStage && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                      <div className="py-1">
-                        {availableStatusOptions.map((status) => (
-                          <button
-                            key={status.name}
-                            onClick={() => handleStatusChange(status.name)}
-                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
-                              }`}
-                          >
-                            <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
-                            <span>{status.name}</span>
-                            {status.name === selectedStatus && (
-                              <span className="ml-auto text-blue-600">✓</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => setShowConvertModal(true)}
-                  disabled={isConverting || !lead || currentLead.status === true}
-                  className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  {isConverting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Converting...</span>
-                    </>
-                  ) : currentLead.status === true ? (
-                    <span>Already Converted</span>
-                  ) : (
-                    <span>Convert to Deal</span>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Tabs navigation */}
-          <div className="border-b border-gray-200">
-            <div className="flex space-x-0 px-6">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.name}
-                  onClick={() => setActiveTab(tab.name)}
-                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${tab.name === activeTab
-                    ? "border-gray-900 text-gray-900"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  <span>{tab.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tab content */}
-          {renderTabContent()}
-        </div>
-
-        {/* Right sidebar */}
-        <div className="w-80 bg-white border-l border-gray-200 p-6">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-              <span className="text-lg font-semibold text-gray-700">
-                {getFirstChar(currentLead.fullname) || getFirstChar(currentLead.company) || 'L'}
+    <div className="flex-1 flex">
+      {/* Main content area */}
+      <div className="flex-1 bg-white">
+        {/* Header section */}
+        <div className="border-b border-gray-200 p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex items-center space-x-2 text-gray-600 text-sm">
+              <span>Leads</span>
+              <span>/</span>
+              <span className="text-gray-900">
+                {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
               </span>
             </div>
-            <div className="flex space-x-2">
-              {safeString(currentLead.email) && (
-                <a href={`mailto:${safeString(currentLead.email)}`}>
-                  <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                </a>
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-500">CRM-LEAD-{currentLead.id}</div>
+              {currentLead.status === true && (
+                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                  Converted
+                </span>
               )}
-              {safeString(currentLead.website) && (
-                <a
-                  href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                </a>
-              )}
-              <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
             </div>
           </div>
 
-          {/* Details section */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-semibold text-gray-900">Details</h3>
-              <button onClick={() => console.log('Edit details')}>
-                <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Organization</span>
-                <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(currentLead.company)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Website</span>
-                {safeString(currentLead.website) ? (
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {displayValue(currentLead.title)} {displayValue(currentLead.fullname)}
+              </h1>
+              <div className="flex items-center space-x-2">
+                {safeString(currentLead.email) && (
+                  <a href={`mailto:${safeString(currentLead.email)}`}>
+                    <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                  </a>
+                )}
+                {safeString(currentLead.website) && (
                   <a
                     href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline"
                   >
-                    {safeString(currentLead.website)}
+                    <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                   </a>
-                ) : (
-                  <span className="text-sm text-gray-400">Not specified</span>
+                )}
+                <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <select className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700">
+                <option>Assign to</option>
+              </select>
+              <div className="relative">
+                <button
+                  onClick={() => !isUpdatingStage && setIsDropdownOpen(!isDropdownOpen)}
+                  disabled={isUpdatingStage}
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUpdatingStage ? (
+                    <>
+                      <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`w-2 h-2 rounded-full ${statusOptions.find(s => s.name === selectedStatus)?.color}`}></div>
+                      <span>{selectedStatus}</span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </>
+                  )}
+                </button>
+
+                {isDropdownOpen && !isUpdatingStage && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                    <div className="py-1">
+                      {availableStatusOptions.map((status) => (
+                        <button
+                          key={status.name}
+                          onClick={() => handleStatusChange(status.name)}
+                          className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
+                            }`}
+                        >
+                          <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
+                          <span>{status.name}</span>
+                          {status.name === selectedStatus && (
+                            <span className="ml-auto text-blue-600">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-              <div className="flex justify-between items-start">
-                <span className="text-sm text-gray-600 flex-shrink-0">Industry</span>
-                <div className="text-right max-w-48">
-                  <span className="text-sm text-gray-900 font-medium break-words">
-                    {displayValue(currentLead.industry)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Job Title</span>
-                <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(currentLead.job_position)}
+              <button
+                onClick={() => setShowConvertModal(true)}
+                disabled={isConverting || !lead || currentLead.status === true}
+                className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {isConverting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Converting...</span>
+                  </>
+                ) : currentLead.status === true ? (
+                  <span>Already Converted</span>
+                ) : (
+                  <span>Convert to Deal</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs navigation */}
+        <div className="border-b border-gray-200">
+          <div className="flex space-x-0 px-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.name}
+                onClick={() => setActiveTab(tab.name)}
+                className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${tab.name === activeTab
+                  ? "border-gray-900 text-gray-900"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab content */}
+        {renderTabContent()}
+      </div>
+
+      {/* Right sidebar */}
+      <div className="w-80 bg-white border-l border-gray-200 p-6">
+        <div className="flex items-center space-x-3 mb-8">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+            <span className="text-lg font-semibold text-gray-700">
+              {getFirstChar(currentLead.fullname) || getFirstChar(currentLead.company) || 'L'}
+            </span>
+          </div>
+          <div className="flex space-x-2">
+            {safeString(currentLead.email) && (
+              <a href={`mailto:${safeString(currentLead.email)}`}>
+                <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+              </a>
+            )}
+            {safeString(currentLead.website) && (
+              <a
+                href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+              </a>
+            )}
+            <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+          </div>
+        </div>
+
+        {/* Details section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-semibold text-gray-900">Details</h3>
+            <button onClick={() => console.log('Edit details')}>
+              <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Organization</span>
+              <span className="text-sm text-gray-900 font-medium">
+                {displayValue(currentLead.company)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Website</span>
+              {safeString(currentLead.website) ? (
+                <a
+                  href={safeString(currentLead.website).startsWith('http') ? safeString(currentLead.website) : `https://${safeString(currentLead.website)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {safeString(currentLead.website)}
+                </a>
+              ) : (
+                <span className="text-sm text-gray-400">Not specified</span>
+              )}
+            </div>
+            <div className="flex justify-between items-start">
+              <span className="text-sm text-gray-600 flex-shrink-0">Industry</span>
+              <div className="text-right max-w-48">
+                <span className="text-sm text-gray-900 font-medium break-words">
+                  {displayValue(currentLead.industry)}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Lead Owner</span>
-                <div className="flex items-center space-x-2">
-                  <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
-                    {getFirstChar(currentLead.owner, 'A')}
-                  </span>
-                  <span className="text-sm text-gray-900 font-medium">
-                    {displayValue(currentLead.owner, 'Administrator')}
-                  </span>
-                </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Job Title</span>
+              <span className="text-sm text-gray-900 font-medium">
+                {displayValue(currentLead.job_position)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Lead Owner</span>
+              <div className="flex items-center space-x-2">
+                <span className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
+                  {getFirstChar(currentLead.owner, 'A')}
+                </span>
+                <span className="text-sm text-gray-900 font-medium">
+                  {displayValue(currentLead.owner, 'Administrator')}
+                </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Current Stage</span>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${statusOptions.find(s => s.name === selectedStatus)?.color}`}></div>
-                  <span className="text-sm text-gray-900 font-medium">
-                    {selectedStatus}
-                  </span>
-                </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Current Stage</span>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${statusOptions.find(s => s.name === selectedStatus)?.color}`}></div>
+                <span className="text-sm text-gray-900 font-medium">
+                  {selectedStatus}
+                </span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Person section */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-semibold text-gray-900">Person</h3>
-              <button onClick={() => console.log('Edit person')}>
-                <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-              </button>
+        {/* Person section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-semibold text-gray-900">Person</h3>
+            <button onClick={() => console.log('Edit person')}>
+              <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Salutation</span>
+              <span className="text-sm text-gray-900 font-medium">
+                {displayValue(currentLead.title)}
+              </span>
             </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Salutation</span>
-                <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(currentLead.title)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">First Name</span>
-                <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(currentLead.first_name)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Last Name</span>
-                <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(currentLead.last_name)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Email</span>
-                {safeString(currentLead.email) ? (
-                  <a
-                    href={`mailto:${safeString(currentLead.email)}`}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    {safeString(currentLead.email)}
-                  </a>
-                ) : (
-                  <span className="text-sm text-gray-400">Not specified</span>
-                )}
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Mobile No</span>
-                <span className="text-sm text-gray-900 font-medium">
-                  {displayValue(currentLead.mobile)}
-                </span>
-              </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">First Name</span>
+              <span className="text-sm text-gray-900 font-medium">
+                {displayValue(currentLead.first_name)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Last Name</span>
+              <span className="text-sm text-gray-900 font-medium">
+                {displayValue(currentLead.last_name)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Email</span>
+              {safeString(currentLead.email) ? (
+                <a
+                  href={`mailto:${safeString(currentLead.email)}`}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {safeString(currentLead.email)}
+                </a>
+              ) : (
+                <span className="text-sm text-gray-400">Not specified</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Mobile No</span>
+              <span className="text-sm text-gray-900 font-medium">
+                {displayValue(currentLead.mobile)}
+              </span>
             </div>
           </div>
         </div>
@@ -661,9 +657,9 @@ export default function LeadDetailPage() {
           onClose={handleModalClose}
           onConfirm={handleConvertToDeal}
           selectedCount={1}
-          selectedIds={[String(lead.id)]}
+          selectedIds={[String(lead?.id || '')]}
         />
       )}
-    </main>
+    </div>
   );
 }

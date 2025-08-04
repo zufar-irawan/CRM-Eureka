@@ -35,7 +35,7 @@ app.use("/api/leads", leadsRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/api/deals", dealsRouter);
 app.use("/api/users", usersRouter);
-app.use("api/contacts", contactsRouter);
+app.use("/api/contacts", contactsRouter);
 app.use("/api/companies", companiesRouter)
 
 app.listen(process.env.APP_PORT, () => {

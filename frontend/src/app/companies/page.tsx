@@ -13,24 +13,12 @@ import MobileCards, { Field } from "@/components/ListTable/MobileCards";
 import fetchData from "@/components/ListTable/Functions/FetchData";
 
 const allColumns: Column[] = [
-    { key: "title", label: "Title" },
-    { key: "description", label: "Description" },
-    { key: "category", label: "Category" },
+    { key: "name", label: "Name" },
+    { key: "address", label: "Address" },
+    { key: "phone", label: "Phone" },
+    { key: "email", label: "Email" },
     {
-        key: "due_date",
-        label: "Due Date",
-        render: (value) =>
-            new Date(value).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-            }),
-    },
-    { key: "status", label: "Status" },
-    { key: "priority", label: "Priority" },
-    // { key: "assigned_to", label: "Assigned To" },
-    {
-        key: "updated_at",
+        key: "created_at",
         label: "Last Modified",
         render: (value) =>
             new Date(value).toLocaleDateString('en-US', {
@@ -42,41 +30,25 @@ const allColumns: Column[] = [
 ]
 
 const allFields: Field[] = [
-    { key: "description", label: "Description" },
-    { key: "category", label: "Category" },
-    {
-        key: "due_date",
-        label: "Due Date",
-        render: (value: string) => new Date(value).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        }),
-    },
-    // { key: "status", label: "Status" },
-    // { key: "priority", label: "Priority" },
-    // { key: "assigned_to", label: "Assigned To" },
+    { key: "name", label: "Name" },
+    { key: "address", label: "Address" },
+    { key: "phone", label: "Phone" },
+    { key: "email", label: "Email" },
+    { key: "status", label: "Status" },
+    { key: "priority", label: "Priority" },
     {
         key: "created_at",
-        label: "Created At",
-        render: (value: string) => new Date(value).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        }),
-    },
-    {
-        key: "updated_at",
         label: "Last Modified",
-        render: (value: string) => new Date(value).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        }),
+        render: (value) =>
+            new Date(value).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            }),
     },
 ]
 
-export default function TasksList() {
+export default function CompaniesList() {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -192,9 +164,9 @@ export default function TasksList() {
                     </div>
                 </div>
 
-                <DesktopTable pathname="/tasks/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} />
+                <DesktopTable pathname="/companies/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} />
 
-                <MobileCards pathname="/tasks/" fields={allFields} visibleFields={visibleColumns} />
+                <MobileCards pathname="/companies/" fields={allFields} visibleFields={visibleColumns} />
 
                 <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
                     <div className="text-sm text-gray-700">

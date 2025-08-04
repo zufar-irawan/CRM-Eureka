@@ -33,11 +33,13 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
         title = "Contacts"
     }
 
+    console.log(title)
+
     return (
         <header className="px-6 py-4 flex flex-row shadow-sm border-b border-gray-200">
             <div className="flex flex-1 items-center relative">
                 <h2 className="text-md text-gray-500 mr-2">{title} /</h2>
-                {title === "Companies" || "Contacts" ?
+                {title === "Companies" || title === "Contacts" ?
                     (
                         <div className="flex items-center">
                             <AlignJustify size={13} className="text-gray-500 mr-1.5" />
@@ -97,7 +99,7 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                 )}
             </div>
 
-            {title === "Companies" || "Contacts" ? '' : (
+            {title === "Companies" || title === "Contacts" ? '' : (
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="relative inline-block group"

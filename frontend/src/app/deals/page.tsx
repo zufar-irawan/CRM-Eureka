@@ -6,6 +6,7 @@ import { useState } from "react";
 import MainContentDeals from "./Layouts/MainContentDeals";
 import { redirect } from "next/navigation";
 import DealsKanban from "./kanban/page";
+import CreateDealsModal from "./add/AddDealsModal";
 // Import KanbanDeals jika sudah ada
 // import KanbanDeals from "./layouts/KanbanContentDeals";
 
@@ -87,10 +88,9 @@ export default function Deals() {
         </div>
 
         {/* Modal Create Deal */}
-        {/* Uncomment dan sesuaikan jika sudah ada CreateDealModal */}
-        {/* {isModalOpen && (
-          <CreateDealModal onClose={() => setIsModalOpen(false)} />
-        )} */}
+        {isModalOpen && (
+          <CreateDealsModal onClose={() => setIsModalOpen(false)} />
+        )}
       </div>
     </div>
   );

@@ -5,10 +5,10 @@ type dropdownprops = {
     name: string
     value: string
     onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
-    options: [{
-        value: number
+    options: {
+        value: string | number
         label: string
-    }]
+    }[]
 }
 
 export default function Dropdown(

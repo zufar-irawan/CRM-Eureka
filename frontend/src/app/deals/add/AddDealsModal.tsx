@@ -2,6 +2,7 @@
 
 import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
+import NumericUpDown from "@/components/AddModal/NumericUpDown";
 import { X } from "lucide-react";
 import { useState } from "react"
 
@@ -11,69 +12,27 @@ interface Props {
 }
 
 export type DealsForm = {
-    title: string;
-    first_name: string;
-    last_name: string;
-
-    email: string;
-    phone: string;
-    mobile: string;
-    fax: string;
-    website: string;
-
-    job_position: string;
-    company: string;
-    industry: string;
-    number_of_employees: string;
-
-    lead_source: string;
-    stage: string;
-    rating: string;
-
-    street: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
-
-    description: string;
-    owner: string;
-};
+    lead_id: number
+    title: string
+    value: number
+    stage: string
+    owner: number
+    id_contact: number
+    id_company: number
+}
 
 
 export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
-    const [form, setForm] = useState({
-        title: "",
-        first_name: "",
-        last_name: "",
+    const [form, setForm] = useState<DealsForm>({
+        lead_id: 0,
+        title: '',
+        value: 0,
+        stage: '',
+        owner: 0,
+        id_contact: 0,
+        id_company: 0,
+    })
 
-        email: "",
-        phone: "",
-        mobile: "",
-        fax: "",
-        website: "",
-
-        job_position: "",
-        company: "",
-        industry: "",
-        company_address: "",
-        company_phone: "",
-        company_email: "",
-
-        lead_source: "",
-        stage: "",
-        rating: "",
-
-        street: "",
-        city: "",
-        state: "",
-        postal_code: "",
-        country: "",
-
-        description: "",
-
-        owner: "",
-    });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -92,9 +51,8 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
         try {
             const submitData = {
                 ...form,
-                // number_of_employees: form.number_of_employees ? parseInt(form.number_of_employees) : null,
-                owner: form.owner ? parseInt(form.owner) : null,
-            };
+                owner: form.owner
+            }
 
             // Remove empty string values
             Object.keys(submitData).forEach(key => {
@@ -105,7 +63,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
             console.log('Data to submit:', submitData);
 
-            const response = await fetch('http://localhost:5000/api/leads', {
+            const response = await fetch('http://localhost:5000/api/deals', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -179,36 +137,41 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
                                     <div className="grid grid-cols-1 md:grid-cols-3  gap-4">
                                         <Input
-                                            label={"Organization Name"}
+                                            label={"Deals Title"}
                                             isRequired={true}
-                                            name="organization"
-                                            placeholder="Organization Name"
-                                            value={form.company}
+                                            name="title"
+                                            placeholder="Enter Deals Title"
+                                            value={form.title}
                                             onChange={handleChange}
                                             required
                                             maxLength={50}
                                         />
 
-                                        <Input
-                                            label="Address"
+                                        <NumericUpDown
+                                            label="Deals Value"
                                             isRequired={true}
-                                            name="companyAddress"
-                                            placeholder="Company address"
-                                            value={form.company_address}
+                                            name="value"
+                                            placeholder="0"
+                                            value={form.value}
                                             onChange={handleChange}
+                                            min={1000}
+                                            max={1000000000}
+                                            step={500}
                                             required
                                             maxLength={255}
                                         />
 
-                                        <Input
+                                        <Dropdown
                                             label="Phone"
-                                            isRequired={true}
                                             name="companyPhone"
-                                            placeholder="Company Phone"
-                                            value={form.company_phone}
+                                            value={form.stage}
                                             onChange={handleChange}
-                                            required
-                                            maxLength={12}
+                                            options={[
+                                                { value: "proposal", label: "Proposal" },
+                                                { value: "negotiation", label: "Negotiation" },
+                                                { value: "won", label: "Won" },
+                                                { value: "lost", label: "Lost" },
+                                            ]}
                                         />
 
                                         <Input

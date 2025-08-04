@@ -15,7 +15,7 @@ export default function DealsKanban() {
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>
             ,
-            title: 'proposal',
+            title: 'new',
             items: []
         },
         {
@@ -24,7 +24,7 @@ export default function DealsKanban() {
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>
             ,
-            title: 'negotiation',
+            title: 'pending',
             items: []
         },
         {
@@ -33,7 +33,7 @@ export default function DealsKanban() {
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>
             ,
-            title: 'won',
+            title: 'completed',
             items: []
         },
         {
@@ -42,41 +42,50 @@ export default function DealsKanban() {
                 <div className="w-2 h-2 rounded-full bg-white"></div>
             </div>
             ,
-            title: 'lost',
+            title: 'overdue',
+            items: []
+        },
+        {
+            id: `container-${uuidv4()}`,
+            icon: <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+            </div>
+            ,
+            title: 'cancelled',
             items: []
         },
     ])
 
     const handleRefresh = () => {
         fetchKanbanData({
-            url: "http://localhost:5000/api/deals",
+            url: "http://localhost:5000/api/tasks",
             setData: setData,
             setContainers: setContainers,
-            groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
-            mapItem: (deal) => ({
-                id: `item-${deal.id}`,
-                itemId: deal.id,
-                fullname: deal.lead?.fullname || "Unknown",
-                organization: deal.lead?.company || "-",
-                email: deal.lead?.email || "-",
-                mobileno: deal.lead?.phone || "-",
+            groupBy: "status", // bisa diganti "status", "type", dll tergantung API
+            mapItem: (task) => ({
+                id: `item-${task.id}`,
+                itemId: task.id,
+                fullname: task.title || "Unknown",
+                organization: task.category || "-",
+                email: task.description || "-",
+                mobileno: task.priority || "-",
             }),
         })
     }
 
     useEffect(() => {
         fetchKanbanData({
-            url: "http://localhost:5000/api/deals",
+            url: "http://localhost:5000/api/tasks",
             setData: setData,
             setContainers: setContainers,
-            groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
-            mapItem: (deal) => ({
-                id: `item-${deal.id}`,
-                itemId: deal.id,
-                fullname: deal.lead?.fullname || "Unknown",
-                organization: deal.lead?.company || "-",
-                email: deal.lead?.email || "-",
-                mobileno: deal.lead?.phone || "-",
+            groupBy: "status", // bisa diganti "status", "type", dll tergantung API
+            mapItem: (task) => ({
+                id: `item-${task.id}`,
+                itemId: task.id,
+                fullname: task.title || "Unknown",
+                organization: task.category || "-",
+                email: task.description || "-",
+                mobileno: task.priority || "-",
             }),
         })
     }, []);
@@ -106,7 +115,7 @@ export default function DealsKanban() {
                 </div>
             </div>
 
-            <Kanban setContainers={setContainers} setData={setData} containers={containers} pathname='Deals' />
+            <Kanban setContainers={setContainers} setData={setData} containers={containers} pathname='Tasks' />
         </main>
     )
 }

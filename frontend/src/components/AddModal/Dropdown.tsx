@@ -3,7 +3,7 @@
 type dropdownprops = {
     label: string
     name: string
-    value: string
+    value: string | number
     onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
     options: {
         value: string | number

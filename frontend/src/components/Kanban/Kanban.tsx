@@ -62,8 +62,6 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
         setShowConvertModal(true);
     };
 
-
-
     return (
         <>
             <div className="mt-8 overflow-x-auto">

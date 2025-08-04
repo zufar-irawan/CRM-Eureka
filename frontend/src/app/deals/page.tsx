@@ -4,6 +4,8 @@ import Sidebar from "@/components/Sidebar";
 import { AlignJustify, ChevronDown, Kanban } from "lucide-react";
 import { useState } from "react";
 import MainContentDeals from "./Layouts/MainContentDeals";
+import { redirect } from "next/navigation";
+import DealsKanban from "./kanban/page";
 // Import KanbanDeals jika sudah ada
 // import KanbanDeals from "./layouts/KanbanContentDeals";
 
@@ -15,7 +17,7 @@ export default function Deals() {
 
   const handleSelect = (view: "List" | "Kanban") => {
     setSelectedView(view);
-    setIsOpen(false); 
+    setIsOpen(false);
   };
 
   return (
@@ -81,11 +83,7 @@ export default function Deals() {
 
         <div className="flex-1 overflow-y-auto">
           {selectedView === "List" && <MainContentDeals />}
-          {selectedView === "Kanban" && (
-            <div className="p-6 text-center text-gray-500">
-              Kanban view for deals coming soon...
-            </div>
-          )}
+          {selectedView === "Kanban" && <DealsKanban />}
         </div>
 
         {/* Modal Create Deal */}

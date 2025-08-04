@@ -33,6 +33,8 @@ export default async function fetchKanbanData({
       rawData = response.data.leads
     } else if (url === "http://localhost:5000/api/deals"){
       rawData = response.data.data
+    } else if (url === "http://localhost:5000/api/tasks"){
+      rawData = response.data.data
     }
 
     console.log("Fetched data:", rawData);

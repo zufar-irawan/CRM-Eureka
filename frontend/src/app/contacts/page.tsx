@@ -14,39 +14,56 @@ import fetchData from "@/components/ListTable/Functions/FetchData";
 
 const allColumns: Column[] = [
   { key: "name", label: "Name" },
-  { key: "address", label: "Address" },
-  { key: "phone", label: "Phone" },
   { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  {
+    key: "deals.title",
+    label: "Deals",
+    render: (_: any, row: any) => row.deals?.[0]?.title || "-"
+  },
+  {
+    key: "company.name",
+    label: "Company",
+    render: (_: any, row: any) => row.company?.name || "-"
+  },
   {
     key: "created_at",
     label: "Last Modified",
     render: (value) =>
-      new Date(value).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+      new Date(value).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       }),
   },
-]
+];
 
 const allFields: Field[] = [
   { key: "name", label: "Name" },
-  { key: "address", label: "Address" },
-  { key: "phone", label: "Phone" },
   { key: "email", label: "Email" },
-  { key: "status", label: "Status" },
-  { key: "priority", label: "Priority" },
+  { key: "phone", label: "Phone" },
+  {
+    key: "deals.title",
+    label: "Deals",
+    render: (_: any, row: any) => row.deals?.[0]?.title || "-"
+  },
+  {
+    key: "company.name",
+    label: "Company",
+    render: (_: any, row: any) => row.company?.name || "-"
+  },
   {
     key: "created_at",
     label: "Last Modified",
     render: (value) =>
-      new Date(value).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+      new Date(value).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       }),
   },
-]
+];
+
 
 export default function CompaniesList() {
   const [data, setData] = useState<any[]>([]);
@@ -164,9 +181,9 @@ export default function CompaniesList() {
           </div>
         </div>
 
-        <DesktopTable pathname="/companies/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} />
+        <DesktopTable pathname="/contacts/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} />
 
-        <MobileCards pathname="/companies/" fields={allFields} visibleFields={visibleColumns} />
+        <MobileCards pathname="/contacts/" fields={allFields} visibleFields={visibleColumns} />
 
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
           <div className="text-sm text-gray-700">

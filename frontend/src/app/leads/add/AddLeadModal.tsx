@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useState } from "react";
+import Swal from "sweetalert2";
 
 interface Props {
   onClose: () => void;
@@ -112,9 +113,22 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
         onLeadCreated();
       }
 
+      window.dispatchEvent(new Event("lead-created"))
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Successfully created lead'
+      })
+
       onClose();
     } catch (err) {
       console.error('Error creating lead:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: 'Failed to create lead'
+      })
       setError(err instanceof Error ? err.message : 'Failed to create lead');
     } finally {
       setIsSubmitting(false);
@@ -261,7 +275,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     Company Information
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    
+
                     <div className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">Company</label>
                       <input

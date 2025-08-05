@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import CreateLeadModal from "./add/AddLeadModal"
+import React from "react"
 
 export default function LeadsLayout(
   { children }: { children: React.ReactNode }
@@ -35,6 +36,7 @@ export default function LeadsLayout(
 
         <div className="flex-1 overflow-y-auto">
           {children}
+
         </div>
       </div>
 

@@ -18,6 +18,7 @@ import {
   Trash2,
 } from "lucide-react";
 import EditLeadModal from "./components/EditLeadModal";
+import Swal from "sweetalert2";
 
 interface DeleteLeadModalProps {
   selectedCount: number;
@@ -128,8 +129,18 @@ export default function MainLeads() {
   );
 
   useEffect(() => {
-  fetchLeads();
-}, [selectedStage, searchTerm, sortBy, sortOrder, leads.length]);
+    fetchLeads()
+
+    const refreshLeads = () => {
+      fetchLeads()
+    }
+
+    window.addEventListener("lead-created", refreshLeads)
+
+    return () => {
+      window.removeEventListener("lead-created", refreshLeads)
+    }
+  }, [selectedStage, searchTerm, sortBy, sortOrder, leads.length]);
 
   const fetchLeads = async () => {
     try {
@@ -195,7 +206,8 @@ export default function MainLeads() {
           const response = await api.delete(`/leads/${id}`);
           return { success: true, id, data: response.data };
         } catch (error: any) {
-          const errorMessage = error.response?.data?.message || error.message || `Failed to delete lead ${id}`;
+          const errorMessage =
+            error.response?.data?.message || error.message || `Failed to delete lead ${id}`;
           return { success: false, id, error: errorMessage };
         }
       });
@@ -222,16 +234,38 @@ export default function MainLeads() {
       }
 
       if (failed.length === 0) {
-        alert(`Successfully deleted ${successful.length} lead(s)`);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Deleted',
+          text: `Successfully deleted ${successful.length} lead(s).`,
+        });
       } else if (successful.length === 0) {
-        alert(`Failed to delete all leads: ${failed.map(f => f.error).join(', ')}`);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          html: `<p>Failed to delete all leads:</p><ul>${failed
+            .map((f) => `<li>${f.error}</li>`)
+            .join('')}</ul>`,
+        });
       } else {
-        alert(`Partially successful: ${successful.length} deleted, ${failed.length} failed`);
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Partial Success',
+          html: `<p>${successful.length} deleted, ${failed.length} failed.</p><ul>${failed
+            .map((f) => `<li>${f.error}</li>`)
+            .join('')}</ul>`,
+        });
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to delete leads";
-      alert("Failed to delete leads: " + errorMessage);
-      console.error("Bulk delete error:", err);
+      const errorMessage =
+        err.response?.data?.message || err.message || 'Failed to delete leads';
+      console.error('Bulk delete error:', err);
+
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Failed to delete leads: ${errorMessage}`,
+      });
     }
   };
 
@@ -289,7 +323,7 @@ export default function MainLeads() {
     <main className="p-4 overflow-visible lg:p-6 bg-white pb-6 relative">
       <div className="max-w-7xl mx-auto">
         {/* Header Controls */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="z-40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={handleRefresh}
@@ -424,7 +458,7 @@ export default function MainLeads() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="hidden z-40 lg:block bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="overflow-x-auto">
             <table className="w-full relative">
               <thead className="bg-gray-50 border-b border-gray-200">

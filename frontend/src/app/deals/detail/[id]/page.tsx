@@ -42,11 +42,30 @@ interface Deal {
   stage?: string | null;
   probability?: number | null;
   lead?: {
+    id?: number;
     company?: string | null;
     fullname?: string | null;
     email?: string | null;
     phone?: string | null;
     industry?: string | null;
+  } | null;
+  company?: {
+    id?: number;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+  } | null;
+  contact?: {
+    id?: number;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    position?: string | null;
+    company?: {
+      id?: number;
+      name?: string | null;
+    } | null;
   } | null;
   creator?: {
     name?: string | null;
@@ -58,11 +77,33 @@ interface Deal {
   comments?: Comment[] | null;
 }
 
+interface Contact {
+  id: number;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  position?: string | null;
+  company_id?: number | null;
+  company?: {
+    id: number;
+    name: string;
+  } | null;
+  created_at?: string;
+}
+
 interface Comment {
   id: string;
   text: string;
   author: string;
   created_at: string;
+}
+
+interface Company {
+  id: number;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
 }
 
 export default function DealDetailPage() {
@@ -75,9 +116,12 @@ export default function DealDetailPage() {
   
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [commentsLoading, setCommentsLoading] = useState(false);
+  const [contactsLoading, setContactsLoading] = useState(false);
   
   const [isContactsExpanded, setIsContactsExpanded] = useState(true);
   const [isOrgDetailsExpanded, setIsOrgDetailsExpanded] = useState(true);
@@ -226,6 +270,83 @@ export default function DealDetailPage() {
     }
   };
 
+  // Fetch related contacts based on deal's company
+  const fetchRelatedContacts = async () => {
+    if (!deal) return;
+    
+    try {
+      setContactsLoading(true);
+      
+      // Get contacts related to this deal
+      const contactsToFetch: Contact[] = [];
+      
+      // 1. Add the direct contact from deal if exists
+      if (deal.contact && deal.contact.id && deal.contact.name) {
+        contactsToFetch.push({
+          id: deal.contact.id,
+          name: deal.contact.name,
+          email: deal.contact.email,
+          phone: deal.contact.phone,
+          position: deal.contact.position,
+          company: (deal.contact.company && deal.contact.company.id && deal.contact.company.name) ? { id: deal.contact.company.id, name: deal.contact.company.name } : null
+        });
+      }
+      
+      // 2. Fetch all contacts from the same company
+      if (deal.company?.id) {
+        const response = await fetch(`http://localhost:5000/api/contacts/company/${deal.company.id}`);
+        if (response.ok) {
+          const { data } = await response.json();
+          // Add company contacts that aren't already included
+          data.forEach((contact: any) => {
+            if (!contactsToFetch.find(c => c.id === contact.id)) {
+              contactsToFetch.push({
+                id: contact.id,
+                name: contact.name,
+                email: contact.email,
+                phone: contact.phone,
+                position: contact.position,
+                company_id: contact.company_id,
+                company: contact.company,
+                created_at: contact.created_at
+              });
+            }
+          });
+        }
+      }
+      
+      // 3. If no company but deal has lead company info, search contacts by company name
+      else if (deal.lead?.company && !deal.company?.id) {
+        const response = await fetch(`http://localhost:5000/api/contacts?search=${encodeURIComponent(deal.lead.company)}`);
+        if (response.ok) {
+          const { data } = await response.json();
+          data.forEach((contact: any) => {
+            if (contact.company?.name === deal.lead?.company && !contactsToFetch.find(c => c.id === contact.id)) {
+              contactsToFetch.push({
+                id: contact.id,
+                name: contact.name,
+                email: contact.email,
+                phone: contact.phone,
+                position: contact.position,
+                company_id: contact.company_id,
+                company: contact.company,
+                created_at: contact.created_at
+              });
+            }
+          });
+        }
+      }
+      
+      setContacts(contactsToFetch);
+      
+    } catch (err) {
+      console.error('Error fetching related contacts:', err);
+      setContacts([]);
+    } finally {
+      setContactsLoading(false);
+    }
+  };
+
   const addComment = async (text: string) => {
     try {
       const response = await fetch(`http://localhost:5000/api/deals/${id}/comments`, {
@@ -257,6 +378,61 @@ export default function DealDetailPage() {
     }
   };
 
+  const handleCreateContact = async () => {
+    const name = prompt('Enter contact name:');
+    if (!name || !name.trim()) return;
+
+    const email = prompt('Enter contact email (optional):');
+    const phone = prompt('Enter contact phone (optional):');
+    const position = prompt('Enter contact position (optional):');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/contacts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email?.trim() || null,
+          phone: phone?.trim() || null,
+          position: position?.trim() || null,
+          company_id: deal?.company?.id || null
+        }),
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        setContacts(prev => [data, ...prev]);
+        alert('Contact created successfully!');
+      } else {
+        const error = await response.json();
+        alert(`Failed to create contact: ${error.message}`);
+      }
+    } catch (err) {
+      console.error('Error creating contact:', err);
+      alert('Failed to create contact');
+    }
+  };
+
+  const handleContactAction = (contactId: number, action: string) => {
+    switch (action) {
+      case 'view':
+        router.push(`/contacts/${contactId}`);
+        break;
+      case 'edit':
+        // Implement edit contact functionality
+        console.log('Edit contact', contactId);
+        break;
+      case 'delete':
+        // Implement delete contact functionality
+        console.log('Delete contact', contactId);
+        break;
+      default:
+        console.log('Unknown action', action);
+    }
+  };
+
   useEffect(() => {
     if (!id) {
       setError("Invalid deal ID");
@@ -266,6 +442,13 @@ export default function DealDetailPage() {
     fetchDeal();
     fetchComments();
   }, [id]);
+
+  // Fetch related contacts when deal data is loaded
+  useEffect(() => {
+    if (deal) {
+      fetchRelatedContacts();
+    }
+  }, [deal]);
 
   const renderTabContent = () => {
     if (!deal) return null;
@@ -501,6 +684,8 @@ export default function DealDetailPage() {
     stage: 'New',
     probability: 0,
     lead: null,
+    company: null,
+    contact: null,
     creator: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -564,7 +749,7 @@ export default function DealDetailPage() {
                 <span>Deals</span>
                 <span>/</span>
                 <span className="text-gray-900">
-                  {displayValue(currentDeal.title, currentDeal.lead?.company || 'Untitled Deal')}
+                  {displayValue(currentDeal.title, currentDeal.lead?.company || currentDeal.company?.name || 'Untitled Deal')}
                 </span>
               </div>
               <div className="flex items-center space-x-4">
@@ -575,17 +760,17 @@ export default function DealDetailPage() {
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-semibold text-gray-900">
-                  {displayValue(currentDeal.title, currentDeal.lead?.company || 'Untitled Deal')}
+                  {displayValue(currentDeal.title, currentDeal.lead?.company || currentDeal.company?.name || 'Untitled Deal')}
                 </h1>
                 <div className="flex items-center space-x-2">
-                  {currentDeal.lead?.email && (
-                    <a href={`mailto:${currentDeal.lead.email}`}>
+                  {(currentDeal.lead?.email || currentDeal.contact?.email || currentDeal.company?.email) && (
+                    <a href={`mailto:${currentDeal.lead?.email || currentDeal.contact?.email || currentDeal.company?.email}`}>
                       <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                     </a>
                   )}
-                  {currentDeal.lead?.company && (
+                  {(currentDeal.lead?.company || currentDeal.company?.name) && (
                     <a 
-                      href={`https://${currentDeal.lead.company.toLowerCase().replace(/\s+/g, '')}.com`}
+                      href={`https://${(currentDeal.lead?.company || currentDeal.company?.name)?.toLowerCase().replace(/\s+/g, '')}.com`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -636,22 +821,25 @@ export default function DealDetailPage() {
           {renderTabContent()}
         </div>
 
+        {/* Right Sidebar */}
         <div className="w-80 bg-white border-l border-gray-200 p-6">
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
               <span className="text-lg font-semibold text-gray-700">
-                {getFirstChar(currentDeal.title) || getFirstChar(currentDeal.lead?.company) || 'D'}
+                {getFirstChar(currentDeal.title) || 
+                 getFirstChar(currentDeal.lead?.company) || 
+                 getFirstChar(currentDeal.company?.name) || 'D'}
               </span>
             </div>
             <div className="flex space-x-2">
-              {currentDeal.lead?.email && (
-                <a href={`mailto:${currentDeal.lead.email}`}>
+              {(currentDeal.lead?.email || currentDeal.contact?.email || currentDeal.company?.email) && (
+                <a href={`mailto:${currentDeal.lead?.email || currentDeal.contact?.email || currentDeal.company?.email}`}>
                   <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                 </a>
               )}
-              {currentDeal.lead?.company && (
+              {(currentDeal.lead?.company || currentDeal.company?.name) && (
                 <a 
-                  href={`https://${currentDeal.lead.company.toLowerCase().replace(/\s+/g, '')}.com`}
+                  href={`https://${(currentDeal.lead?.company || currentDeal.company?.name)?.toLowerCase().replace(/\s+/g, '')}.com`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -662,7 +850,7 @@ export default function DealDetailPage() {
             </div>
           </div>
 
-          {/* New Contacts Section */}
+          {/* Contacts Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -673,49 +861,94 @@ export default function DealDetailPage() {
                   <ChevronDown className={`w-4 h-4 transition-transform ${isContactsExpanded ? '' : '-rotate-90'}`} />
                 </button>
                 Contacts
+                {contacts.length > 0 && (
+                  <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+                    {contacts.length}
+                  </span>
+                )}
               </h3>
-              <button onClick={() => console.log('Add contact')}>
+              <button onClick={handleCreateContact}>
                 <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600" />
               </button>
             </div>
 
             {isContactsExpanded && (
               <div className="space-y-3">
-                {currentDeal.lead?.fullname && (
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-semibold text-gray-700">
-                          {getFirstChar(currentDeal.lead.fullname)}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {currentDeal.lead.fullname}
-                        </p>
-                        <div className="flex items-center space-x-2">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            Primary
+                {contactsLoading ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-500">Loading contacts...</p>
+                  </div>
+                ) : contacts.length > 0 ? (
+                  contacts.map((contact, index) => (
+                    <div key={contact.id} className="flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg px-2 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-semibold text-gray-700">
+                            {getFirstChar(contact.name)}
                           </span>
                         </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {contact.name}
+                          </p>
+                          <div className="flex items-center space-x-2">
+                            {index === 0 && currentDeal.contact?.id === contact.id && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                Primary
+                              </span>
+                            )}
+                            {contact.position && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                {contact.position}
+                              </span>
+                            )}
+                          </div>
+                          {contact.email && (
+                            <p className="text-xs text-gray-500 mt-1">{contact.email}</p>
+                          )}
+                          {contact.phone && (
+                            <p className="text-xs text-gray-500">{contact.phone}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {contact.email && (
+                          <a href={`mailto:${contact.email}`} title="Send Email">
+                            <Mail className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                          </a>
+                        )}
+                        {contact.phone && (
+                          <a href={`tel:${contact.phone}`} title="Call">
+                            <Phone className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                          </a>
+                        )}
+                        <div className="relative">
+                          <button 
+                            onClick={() => {
+                              const action = prompt('Choose action: view, edit, delete');
+                              if (action) handleContactAction(contact.id, action);
+                            }}
+                            title="More options"
+                          >
+                            <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                          </button>
+                        </div>
+                        <button 
+                          onClick={() => handleContactAction(contact.id, 'view')}
+                          title="View contact details"
+                        >
+                          <ArrowUpRight className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button onClick={() => console.log('More options')}>
-                        <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                      </button>
-                      <button onClick={() => console.log('View contact details')}>
-                        <ArrowUpRight className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {!currentDeal.lead?.fullname && (
+                  ))
+                ) : (
                   <div className="text-center py-4">
+                    <Users className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                     <p className="text-sm text-gray-500 mb-2">No contacts found</p>
                     <button 
-                      onClick={() => console.log('Add contact')}
+                      onClick={handleCreateContact}
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                     >
                       Add Contact
@@ -748,26 +981,32 @@ export default function DealDetailPage() {
                 <div className="grid grid-cols-3 gap-4 items-center">
                   <span className="text-sm text-gray-600 col-span-1">Organization</span>
                   <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {displayValue(currentDeal.lead?.company, 'Not specified')}
+                    {displayValue(
+                      currentDeal.company?.name || currentDeal.lead?.company, 
+                      'Not specified'
+                    )}
                   </span>
                 </div>
                 
                 <div className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm text-gray-600 col-span-1">Contact</span>
+                  <span className="text-sm text-gray-600 col-span-1">Primary Contact</span>
                   <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {displayValue(currentDeal.lead?.fullname, 'Not specified')}
+                    {displayValue(
+                      currentDeal.contact?.name || currentDeal.lead?.fullname, 
+                      'Not specified'
+                    )}
                   </span>
                 </div>
                 
                 <div className="grid grid-cols-3 gap-4 items-center">
                   <span className="text-sm text-gray-600 col-span-1">Email</span>
                   <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {currentDeal.lead?.email ? (
+                    {(currentDeal.contact?.email || currentDeal.lead?.email || currentDeal.company?.email) ? (
                       <a 
-                        href={`mailto:${currentDeal.lead.email}`}
+                        href={`mailto:${currentDeal.contact?.email || currentDeal.lead?.email || currentDeal.company?.email}`}
                         className="text-blue-600 hover:underline"
                       >
-                        {currentDeal.lead.email}
+                        {currentDeal.contact?.email || currentDeal.lead?.email || currentDeal.company?.email}
                       </a>
                     ) : (
                       'Not specified'
@@ -778,7 +1017,23 @@ export default function DealDetailPage() {
                 <div className="grid grid-cols-3 gap-4 items-center">
                   <span className="text-sm text-gray-600 col-span-1">Phone</span>
                   <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {displayValue(currentDeal.lead?.phone, 'Not specified')}
+                    {(currentDeal.contact?.phone || currentDeal.lead?.phone || currentDeal.company?.phone) ? (
+                      <a 
+                        href={`tel:${currentDeal.contact?.phone || currentDeal.lead?.phone || currentDeal.company?.phone}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {currentDeal.contact?.phone || currentDeal.lead?.phone || currentDeal.company?.phone}
+                      </a>
+                    ) : (
+                      'Not specified'
+                    )}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 items-center">
+                  <span className="text-sm text-gray-600 col-span-1">Address</span>
+                  <span className="text-sm text-gray-900 font-medium col-span-2">
+                    {displayValue(currentDeal.company?.address, 'Not specified')}
                   </span>
                 </div>
                 
@@ -794,6 +1049,32 @@ export default function DealDetailPage() {
                   <span className="text-sm text-gray-900 font-medium col-span-2">
                     {displayValue(currentDeal.creator?.name, 'Not assigned')}
                   </span>
+                </div>
+
+                {/* Deal Value and Stage */}
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="grid grid-cols-3 gap-4 items-center mb-3">
+                    <span className="text-sm text-gray-600 col-span-1">Deal Value</span>
+                    <span className="text-sm text-gray-900 font-medium col-span-2">
+                      {formatCurrency(currentDeal.value)}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 items-center mb-3">
+                    <span className="text-sm text-gray-600 col-span-1">Stage</span>
+                    <span className="text-sm text-gray-900 font-medium col-span-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {displayValue(currentDeal.stage, 'New')}
+                      </span>
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 items-center">
+                    <span className="text-sm text-gray-600 col-span-1">Created</span>
+                    <span className="text-sm text-gray-900 font-medium col-span-2">
+                      {formatDate(currentDeal.created_at)}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}

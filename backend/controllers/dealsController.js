@@ -760,7 +760,6 @@ export const addDealComment = async (req, res) => {
                 attributes: ['id', 'name', 'email']
             }]
         });
-
         res.status(201).json({
             success: true,
             message: 'Comment added successfully',

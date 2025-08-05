@@ -3,83 +3,83 @@
 import DateTime from "@/components/AddModal/DateTime";
 import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
-import NumericUpDown from "@/components/AddModal/NumericUpDown";
 import TextArea from "@/components/AddModal/TextArea";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react"
+import Swal from "sweetalert2";
 
 interface Props {
     onClose: () => void;
-    onLeadCreated?: () => void;
+    onTaskCreated?: () => void;
 }
 
-export type DealsForm = {
+export type TasksForm = {
     lead_id: number
     assigned_to: number
     title: string
     description: string
     category: string
+    due_date: string
     priority: string
-    due_date: string // ubah dari `number` jadi `string` karena formatnya `"YYYY-MM-DD HH:mm:ss"`
 }
 
-
-
-export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
-    const [form, setForm] = useState<DealsForm>({
+export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
+    const [form, setForm] = useState<TasksForm>({
         lead_id: 0,
         assigned_to: 0,
         title: '',
         description: '',
         category: '',
+        due_date: '',
         priority: '',
-        due_date: '', // format: '2025-07-30 14:00:00'
     })
 
-
-    const [companyOptions, setCompanyOptions] = useState<any[]>([])
-    const [contactOptions, setContactOptions] = useState<any[]>([])
+    const [leadOptions, setLeadOptions] = useState<any[]>([])
+    const [userOptions, setUserOptions] = useState<any[]>([])
 
     useEffect(() => {
-        const fetchCompanies = async () => {
+        const fetchLeads = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/companies") // ganti sesuai API-mu
+                const res = await fetch("http://localhost:3000/api/leads")
                 const result = await res.json()
+                const data = result.leads
 
-                const data = result.data
-
-                const mappedOptions = data.map((company: any) => ({
-                    value: company.id,
-                    label: company.name,
+                const mappedOptions = data.map((lead: any) => ({
+                    value: lead.id,
+                    label: lead.fullname,
                 }))
 
-                setCompanyOptions(mappedOptions)
+                setLeadOptions(mappedOptions)
             } catch (error) {
-                console.error("Failed to fetch companies", error)
+                console.error("Failed to fetch leads", error)
             }
         }
 
-        const fetchContact = async () => {
+        const fetchUsers = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/contacts") // ganti sesuai API-mu
+                const res = await fetch("http://localhost:3000/api/users")
                 const result = await res.json()
+                console.log("API Result:", result)
 
                 const data = result.data
 
-                const mappedOptions = data.map((contacts: any) => ({
-                    value: contacts.id,
-                    label: contacts.name,
+                if (!Array.isArray(data)) {
+                    throw new Error("Data users is not an array");
+                }
+
+                const mappedOptions = data.map((user: any) => ({
+                    value: user.id,
+                    label: user.name,
                 }))
 
-                setContactOptions(mappedOptions)
+                setUserOptions(mappedOptions)
             } catch (error) {
-                console.error("Failed to fetch companies", error)
+                console.error("Failed to fetch users", error)
             }
         }
 
-
-        fetchContact()
-        fetchCompanies()
+        fetchLeads()
+        fetchUsers()
     }, [])
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,15 +103,13 @@ export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
         }
 
         try {
-            // Konversi tipe agar sesuai kebutuhan
             const submitData = {
-                ...form,
                 lead_id: Number(form.lead_id),
                 assigned_to: Number(form.assigned_to),
-                due_date: form.due_date.trim(),
                 title: form.title.trim(),
                 description: form.description.trim(),
                 category: form.category,
+                due_date: form.due_date.trim(),
                 priority: form.priority,
             }
 
@@ -134,19 +132,30 @@ export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
 
             console.log("Task created successfully:", result)
 
-            if (onLeadCreated) {
-                onLeadCreated();
+            if (onTaskCreated) {
+                onTaskCreated();
             }
 
+            window.dispatchEvent(new Event("create"))
+
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                text: "Successfully create task"
+            })
             onClose();
         } catch (err) {
             console.error("Error creating task:", err);
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: err instanceof Error ? err.message : "Failed to create task"
+            })
             setError(err instanceof Error ? err.message : "Failed to create task");
         } finally {
             setIsSubmitting(false);
         }
     }
-
 
     return (
         <>
@@ -156,15 +165,12 @@ export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
                 onClick={onClose}
             />
 
-            {/* Modal Container - Positioned to center within main content area */}
+            {/* Modal Container */}
             <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-                <div
-                    className="bg-white w-full max-w-6xl rounded-xl shadow-2xl relative transform transition-all duration-300 max-h-[90vh] overflow-hidden pointer-events-auto"
-                // style={{ marginLeft: 'max(1rem, calc((100vw - 64rem) / 2))' }}
-                >
+                <div className="bg-white w-full max-w-6xl rounded-xl shadow-2xl relative transform transition-all duration-300 max-h-[90vh] overflow-hidden pointer-events-auto">
                     {/* Header */}
                     <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                        <h2 className="text-2xl font-semibold text-gray-800">Create Deals</h2>
+                        <h2 className="text-2xl font-semibold text-gray-800">Create Task</h2>
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
@@ -184,21 +190,38 @@ export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
                             )}
 
                             <form onSubmit={handleSubmit}>
-
+                                {/* Task Information Section */}
                                 <div className="mb-8">
                                     <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                                        Tasks Information
+                                        Task Information
                                     </h3>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3  gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Input
-                                            label={"Task Title"}
-                                            isRequired
+                                            label="Task Title"
+                                            isRequired={true}
                                             name="title"
                                             placeholder="Enter task title"
                                             value={form.title}
                                             onChange={handleChange}
+                                            required
                                             maxLength={100}
+                                        />
+
+                                        <Dropdown
+                                            label="Lead"
+                                            name="lead_id"
+                                            value={form.lead_id}
+                                            onChange={handleChange}
+                                            options={leadOptions}
+                                        />
+
+                                        <Dropdown
+                                            label="Assigned To"
+                                            name="assigned_to"
+                                            value={form.assigned_to}
+                                            onChange={handleChange}
+                                            options={userOptions}
                                         />
 
                                         <Dropdown
@@ -207,10 +230,10 @@ export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
                                             value={form.category}
                                             onChange={handleChange}
                                             options={[
-                                                { value: "meeting", label: "Meeting" },
-                                                { value: "email", label: "Email" },
-                                                { value: "call", label: "Call" },
-                                                { value: "other", label: "Other" },
+                                                { value: "Kanvasing", label: "Kanvasing" },
+                                                { value: "Followup", label: "Followup" },
+                                                { value: "Penawaran", label: "Penawaran" },
+                                                { value: "Lainnya", label: "Lainnya" },
                                             ]}
                                         />
 
@@ -228,60 +251,25 @@ export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
 
                                         <DateTime
                                             label="Due Date"
+                                            isRequired={true}
                                             name="due_date"
                                             value={form.due_date}
                                             onChange={handleChange}
-                                            isRequired={false}
+                                            required
                                         />
+                                    </div>
 
-                                        <Dropdown
-                                            label="Assign To"
-                                            name="assigned_to"
-                                            value={form.assigned_to}
-                                            onChange={handleChange}
-                                            options={contactOptions}
-                                        />
-
-                                        <Dropdown
-                                            label="Lead"
-                                            name="lead_id"
-                                            value={form.lead_id}
-                                            onChange={handleChange}
-                                            options={companyOptions}
-                                        />
-
+                                    <div className="mt-4">
                                         <TextArea
-                                            name="description"
-                                            placeholder="Enter description"
-                                            value={form.description}
-                                            onChange={handleChange}
-                                            rows={4}
                                             label="Description"
-                                        />
-
-
-                                    </div>
-
-                                </div>
-
-
-                                {/* Additional Information Section */}
-                                {/* <div className="mb-8">
-                                    <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                                        Additional Information
-                                    </h3>
-                                    <div className="space-y-1">
-                                        <label className="block text-sm font-medium text-gray-600">Description</label>
-                                        <textarea
                                             name="description"
-                                            placeholder="Enter description or additional notes"
+                                            placeholder="Enter task description or additional notes"
                                             value={form.description}
                                             onChange={handleChange}
                                             rows={4}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-vertical"
                                         />
                                     </div>
-                                </div> */}
+                                </div>
 
                                 {/* Form Actions */}
                                 <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4">
@@ -298,16 +286,14 @@ export default function CreateTasksModal({ onClose, onLeadCreated }: Props) {
                                         disabled={isSubmitting}
                                         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {isSubmitting ? 'Creating...' : 'Create Deal'}
+                                        {isSubmitting ? 'Creating...' : 'Create Task'}
                                     </button>
                                 </div>
-
                             </form>
-                            <div />
                         </div>
                     </div>
-                </div >
-            </div >
+                </div>
+            </div>
         </>
     );
 }

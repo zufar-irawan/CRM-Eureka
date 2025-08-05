@@ -6,6 +6,7 @@ import NumericUpDown from "@/components/AddModal/NumericUpDown";
 import TextArea from "@/components/AddModal/TextArea";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react"
+import Swal from "sweetalert2";
 
 interface Props {
     onClose: () => void;
@@ -230,9 +231,21 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                 onLeadCreated();
             }
 
+            window.dispatchEvent(new Event("deals-add"))
+
+            Swal.fire({
+                icon: 'success',
+                title: "Success",
+                text: "Successfully create deal"
+            })
             onClose();
         } catch (err) {
             console.error("Error creating deal:", err);
+            Swal.fire({
+                icon: 'error',
+                title: "Failed",
+                text: err instanceof Error ? err.message : "Failed to create deal"
+            })
             setError(err instanceof Error ? err.message : "Failed to create deal");
         } finally {
             setIsSubmitting(false);

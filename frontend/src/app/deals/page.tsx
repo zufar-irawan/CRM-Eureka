@@ -22,6 +22,7 @@ import EditDealModal from "./components/EditDealModal";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import CreateDealsModal from "./add/AddDealsModal";
+import Swal from "sweetalert2";
 
 interface Deal {
   id: string;
@@ -73,7 +74,7 @@ export default function Deals() {
   };
 
   useEffect(() => {
-    fetchDeals();
+
   }, []);
 
   useEffect(() => {
@@ -84,10 +85,21 @@ export default function Deals() {
         !target.closest("[data-action-menu]")) {
         setActionMenuOpenId(null);
       }
-    };
+    }
+
+    fetchDeals();
+
+    const handleRefresh = () => {
+      fetchDeals()
+    }
+
+    window.addEventListener("deals-add", handleRefresh)
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      window.removeEventListener("deals-add", handleRefresh)
+    };
   }, []);
 
   const fetchDeals = async () => {
@@ -177,9 +189,17 @@ export default function Deals() {
       await Promise.all(deletePromises);
       setDeals((prev) => prev.filter((deal) => !ids.includes(deal.id)));
       setSelectedDeals([]);
-      alert(`Successfully deleted ${ids.length} deal(s)`);
+      Swal.fire({
+        icon: 'success',
+        title: "Success",
+        text: `Successfully deleted ${ids.length} deal(s)`
+      })
     } catch (err: any) {
-      alert("Failed to delete deals: " + err.message);
+      Swal.fire({
+        icon: 'error',
+        title: "Failed",
+        text: "Failed to delete deals: " + err.message
+      })
     }
   };
 

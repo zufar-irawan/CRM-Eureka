@@ -29,7 +29,8 @@ import {
   AlertCircle,
   BarChart3,
   CheckSquare,
-  Database
+  Database,
+  MoreHorizontal
 } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
@@ -78,6 +79,7 @@ export default function DealDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [commentsLoading, setCommentsLoading] = useState(false);
   
+  const [isContactsExpanded, setIsContactsExpanded] = useState(true);
   const [isOrgDetailsExpanded, setIsOrgDetailsExpanded] = useState(true);
 
   const safeString = (value: any): string => {
@@ -660,6 +662,71 @@ export default function DealDetailPage() {
             </div>
           </div>
 
+          {/* New Contacts Section */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <button
+                  onClick={() => setIsContactsExpanded(!isContactsExpanded)}
+                  className="p-1 hover:bg-gray-200 rounded transition-colors"
+                >
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isContactsExpanded ? '' : '-rotate-90'}`} />
+                </button>
+                Contacts
+              </h3>
+              <button onClick={() => console.log('Add contact')}>
+                <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              </button>
+            </div>
+
+            {isContactsExpanded && (
+              <div className="space-y-3">
+                {currentDeal.lead?.fullname && (
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <span className="text-xs font-semibold text-gray-700">
+                          {getFirstChar(currentDeal.lead.fullname)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {currentDeal.lead.fullname}
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            Primary
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button onClick={() => console.log('More options')}>
+                        <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                      </button>
+                      <button onClick={() => console.log('View contact details')}>
+                        <ArrowUpRight className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {!currentDeal.lead?.fullname && (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-500 mb-2">No contacts found</p>
+                    <button 
+                      onClick={() => console.log('Add contact')}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      Add Contact
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Organization Details Section */}
           <div>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">

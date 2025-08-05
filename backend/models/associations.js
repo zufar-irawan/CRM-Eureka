@@ -126,7 +126,7 @@ export const setupAssociations = () => {
         constraints: false 
     });
 
-    console.log('✅ All associations have been set up successfully');
+    console.log('All associations have been set up successfully');
 };
 
 export { 

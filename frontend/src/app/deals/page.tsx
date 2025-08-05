@@ -21,6 +21,8 @@ import DeleteDealModal from "./components/DeleteDealModal";
 import EditDealModal from "./components/EditDealModal";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import CreateDealsModal from "./add/AddDealsModal";
+import Swal from "sweetalert2";
 
 interface Deal {
   id: string;
@@ -56,7 +58,7 @@ export default function Deals() {
 
   const getStatusColor = (status: string) => {
     const normalizedStatus = status.toLowerCase().trim();
-    
+
     switch (normalizedStatus) {
       case 'proposal':
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -67,26 +69,37 @@ export default function Deals() {
       case 'lost':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'; 
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   useEffect(() => {
-    fetchDeals();
+
   }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      
-      if (!target.closest(".action-menu") && 
-          !target.closest("[data-action-menu]")) {
+
+      if (!target.closest(".action-menu") &&
+        !target.closest("[data-action-menu]")) {
         setActionMenuOpenId(null);
       }
-    };
+    }
+
+    fetchDeals();
+
+    const handleRefresh = () => {
+      fetchDeals()
+    }
+
+    window.addEventListener("deals-add", handleRefresh)
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      window.removeEventListener("deals-add", handleRefresh)
+    };
   }, []);
 
   const fetchDeals = async () => {
@@ -111,18 +124,19 @@ export default function Deals() {
 
         return {
           id: String(deal.id),
-          organization: deal.lead?.company || deal.company || "N/A",
+          organization: deal.lead?.company?.name || deal.company?.name || "N/A",
           annualRevenue: annualRevenue,
-          status: deal.stage || "N/A", 
-          email: deal.lead?.email || deal.email || "-",
-          mobile: deal.lead?.phone || deal.lead?.mobile || deal.mobile || "-",
+          status: deal.stage || "N/A",
+          email: deal.lead?.email || deal.contact?.email || deal.email || "-",
+          mobile: deal.lead?.phone || deal.lead?.mobile || deal.contact?.mobile || deal.contact?.phone || deal.mobile || "-",
           assignedTo: deal.creator?.name || deal.owner || "Unassigned",
           updated_at: new Date(deal.updated_at).toLocaleString('en-US', {
             dateStyle: 'medium',
             timeStyle: 'short'
           }),
-          rawData: deal 
-        };
+          rawData: deal
+        }
+
       });
 
       setDeals(formattedDeals);
@@ -175,9 +189,17 @@ export default function Deals() {
       await Promise.all(deletePromises);
       setDeals((prev) => prev.filter((deal) => !ids.includes(deal.id)));
       setSelectedDeals([]);
-      alert(`Successfully deleted ${ids.length} deal(s)`);
+      Swal.fire({
+        icon: 'success',
+        title: "Success",
+        text: `Successfully deleted ${ids.length} deal(s)`
+      })
     } catch (err: any) {
-      alert("Failed to delete deals: " + err.message);
+      Swal.fire({
+        icon: 'error',
+        title: "Failed",
+        text: "Failed to delete deals: " + err.message
+      })
     }
   };
 
@@ -188,7 +210,7 @@ export default function Deals() {
   };
 
   const handleSaveDeal = (updatedDeal: any) => {
-    setDeals(prev => prev.map(deal => 
+    setDeals(prev => prev.map(deal =>
       deal.id === updatedDeal.id ? updatedDeal : deal
     ));
     setEditModalOpen(false);
@@ -215,15 +237,19 @@ export default function Deals() {
   return (
     <div className="flex">
       <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-      
+
+      {isModalOpen ? (
+        <CreateDealsModal onClose={() => setIsModalOpen(false)} />
+      ) : ''}
+
       <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'}`}>
-        <Header 
-          isOpen={isOpen} 
-          setIsOpen={setIsOpen} 
-          setIsModalOpen={setIsModalOpen} 
-          pathname={pathname} 
+        <Header
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          setIsModalOpen={setIsModalOpen}
+          pathname={pathname}
         />
-        
+
         <div className="p-4 overflow-auto lg:p-6 bg-white pb-6">
           <div className="max-w-7xl mx-auto">
             {/* Header Controls */}
@@ -235,7 +261,7 @@ export default function Deals() {
                 >
                   <RotateCcw className="w-3 h-3" />
                 </button>
-                
+
                 <button
                   onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                   className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
@@ -442,19 +468,18 @@ export default function Deals() {
 
                             {actionMenuOpenId === deal.id && (
                               <>
-                                <div 
-                                  className="fixed inset-0 z-40" 
+                                <div
+                                  className="fixed inset-0 z-40"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setActionMenuOpenId(null);
                                   }}
                                 />
-                                
-                                <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
-                                  deals.indexOf(deal) >= deals.length - 2 
-                                    ? 'bottom-full mb-1' 
-                                    : 'top-full mt-1'
-                                }`}>
+
+                                <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${deals.indexOf(deal) >= deals.length - 2
+                                  ? 'bottom-full mb-1'
+                                  : 'top-full mt-1'
+                                  }`}>
                                   <div className="py-1">
                                     <button
                                       onClick={(e) => {
@@ -530,7 +555,7 @@ export default function Deals() {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(deal.status)}`}>
                           {deal.status}
                         </span>
-                        
+
                         <div className="relative" data-action-menu onClick={(e) => e.stopPropagation()}>
                           <button
                             className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -544,19 +569,18 @@ export default function Deals() {
 
                           {actionMenuOpenId === deal.id && (
                             <>
-                              <div 
-                                className="fixed inset-0 z-40" 
+                              <div
+                                className="fixed inset-0 z-40"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setActionMenuOpenId(null);
                                 }}
                               />
-                              
-                              <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
-                                deals.indexOf(deal) >= deals.length - 2 
-                                  ? 'bottom-full mb-1' 
-                                  : 'top-full mt-1'
-                              }`}>
+
+                              <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${deals.indexOf(deal) >= deals.length - 2
+                                ? 'bottom-full mb-1'
+                                : 'top-full mt-1'
+                                }`}>
                                 <div className="py-1">
                                   <button
                                     onClick={(e) => {

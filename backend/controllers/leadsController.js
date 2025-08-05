@@ -110,7 +110,7 @@ export const createLead = async (req, res) => {
             last_name,
             job_position,
             email,
-            work_email, // NEW: Work email field
+            work_email, 
             phone,
             mobile,
             fax,
@@ -128,7 +128,6 @@ export const createLead = async (req, res) => {
             description
         } = req.body;
 
-        // Validation: at least one of email or work_email should be provided
         if (!email && !work_email) {
             await transaction.rollback();
             return res.status(400).json({
@@ -144,7 +143,7 @@ export const createLead = async (req, res) => {
             last_name,
             job_position,
             email,
-            work_email, // NEW: Include work_email
+            work_email, 
             phone,
             mobile,
             fax,
@@ -213,7 +212,7 @@ export const updateLead = async (req, res) => {
             last_name,
             job_position,
             email,
-            work_email, // NEW: Include work_email in update
+            work_email, 
             phone,
             mobile,
             fax,
@@ -239,7 +238,7 @@ export const updateLead = async (req, res) => {
             last_name: last_name !== undefined ? last_name : lead.last_name,
             job_position: job_position !== undefined ? job_position : lead.job_position,
             email: email !== undefined ? email : lead.email,
-            work_email: work_email !== undefined ? work_email : lead.work_email, // NEW: Update work_email
+            work_email: work_email !== undefined ? work_email : lead.work_email, 
             phone: phone !== undefined ? phone : lead.phone,
             mobile: mobile !== undefined ? mobile : lead.mobile,
             fax: fax !== undefined ? fax : lead.fax,
@@ -289,7 +288,6 @@ export const deleteLead = async (req, res) => {
     
     try {
         const leadId = parseInt(req.params.id);
-        
         if (isNaN(leadId)) {
             await transaction.rollback();
             return res.status(400).json({ message: "Invalid lead ID" });
@@ -316,7 +314,6 @@ export const deleteLead = async (req, res) => {
 
 export const convertLead = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
     try {
         const leadId = parseInt(req.params.id);
         
@@ -396,7 +393,7 @@ export const convertLead = async (req, res) => {
                     name: lead.company.trim(),
                     address: companyAddress,
                     phone: lead.phone,
-                    email: lead.work_email || null, // Use work_email for company email
+                    email: lead.work_email || null, 
                     created_at: new Date()
                 }, { transaction });
 
@@ -475,7 +472,6 @@ export const convertLead = async (req, res) => {
             status: true
         }, { transaction });
 
-        // STEP 4: Create deal with company and contact references
         const numericValue = dealValue ? parseFloat(dealValue.toString()) : 0;
         
         console.log('[DEBUG] Creating deal with:', {
@@ -492,8 +488,8 @@ export const convertLead = async (req, res) => {
             value: isNaN(numericValue) ? 0 : numericValue,
             stage: dealStage || 'proposal',
             owner: lead.owner || 0,
-            id_contact: contactId, // Will be null if no contact created
-            id_company: companyId, // Will be null if no company created
+            id_contact: contactId, 
+            id_company: companyId, 
             created_by: req.user?.id || 1,
             created_at: new Date(),
             updated_at: new Date()
@@ -507,8 +503,6 @@ export const convertLead = async (req, res) => {
             contactId,
             value: newDeal.value
         });
-
-        // Fetch created entities to return detailed response
         const createdCompany = companyId ? await Companies.findByPk(companyId) : null;
         const createdContact = contactId ? await Contacts.findByPk(contactId, {
             include: [{
@@ -517,8 +511,6 @@ export const convertLead = async (req, res) => {
                 attributes: ['id', 'name']
             }]
         }) : null;
-
-        // Return detailed response with created entities
         res.status(200).json({
             success: true,
             message: "Lead converted successfully",
@@ -584,8 +576,6 @@ export const updateLeadStage = async (req, res) => {
         }
 
         const { stage } = req.body;
-        
-        // Validate stage
         const validStages = ['New', 'Contacted', 'Qualification', 'Converted', 'Unqualified'];
         if (!stage || !validStages.includes(stage)) {
             await transaction.rollback();
@@ -593,8 +583,6 @@ export const updateLeadStage = async (req, res) => {
                 message: "Invalid stage. Valid stages are: " + validStages.join(', ')
             });
         }
-        
-        // Find lead with row-level locking
         const lead = await Leads.findByPk(leadId, { 
             transaction,
             lock: true
@@ -605,7 +593,6 @@ export const updateLeadStage = async (req, res) => {
             return res.status(404).json({ message: "Lead not found" });
         }
 
-        // Prevent direct conversion through stage update
         if (stage === 'Converted') {
             await transaction.rollback();
             return res.status(400).json({ 
@@ -613,7 +600,6 @@ export const updateLeadStage = async (req, res) => {
             });
         }
 
-        // Prevent updating already converted leads
         if (lead.status === true) {
             await transaction.rollback();
             return res.status(400).json({ 
@@ -623,7 +609,6 @@ export const updateLeadStage = async (req, res) => {
 
         const oldStage = lead.stage;
         
-        // Only update if stage actually changed
         if (oldStage === stage) {
             await transaction.rollback();
             return res.status(200).json({

@@ -37,7 +37,15 @@ export default function DesktopTable({
     const [selectedData, setSelectedData] = useState<string[]>([])
 
     useEffect(() => {
+        const refresh = () => {
+            fetchData({ setData, setLoading, url: pathname })
+        }
+
         fetchData({ setData, setLoading, url: pathname })
+
+        window.addEventListener("create", refresh)
+
+        return () => window.removeEventListener("create", refresh)
     }, [])
 
     const isAllSelected = data.length > 0 && selectedData.length === data.length
@@ -163,8 +171,8 @@ export default function DesktopTable({
 
                                                 <div
                                                     className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${data.indexOf(row) >= data.length - 2
-                                                            ? "bottom-full mb-1"
-                                                            : "top-full mt-1"
+                                                        ? "bottom-full mb-1"
+                                                        : "top-full mt-1"
                                                         }`}
                                                 >
                                                     <div className="py-1">

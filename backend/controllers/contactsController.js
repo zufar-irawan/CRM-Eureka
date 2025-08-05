@@ -1,4 +1,3 @@
-
 import { Contacts } from "../models/contacts/contactsModel.js";
 import { Companies } from "../models/companies/companiesModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
@@ -17,7 +16,6 @@ export const getAllContacts = async (req, res) => {
         } = req.query;
         const offset = (page - 1) * limit;
         let whereClause = {};
-
         if (search) {
             whereClause[Op.or] = [
                 { name: { [Op.like]: `%${search}%` } },
@@ -123,6 +121,7 @@ export const getContactById = async (req, res) => {
 }
 
 export const createContact = async (req, res) => {
+    const transaction = await sequelize.transaction(); // Fixed: Added missing transaction
     try {
         const {
             company_id,
@@ -131,6 +130,7 @@ export const createContact = async (req, res) => {
             phone,
             position
         } = req.body;
+        
         if (!name || !name.trim()) {
             await transaction.rollback();
             return res.status(400).json({
@@ -284,7 +284,7 @@ export const updateContact = async (req, res) => {
             position: position !== undefined ? (position ? position.trim() : null) : contact.position
         }, { transaction });
 
-        await transaction.commit()
+        await transaction.commit();
 
         const updatedContact = await Contacts.findByPk(contactId, {
             include: [
@@ -302,7 +302,7 @@ export const updateContact = async (req, res) => {
             message: "Contact updated successfully",
             data: updatedContact
         });
-} catch (error) {
+    } catch (error) {
         await transaction.rollback();
         
         console.error('Error updating contact:', error);

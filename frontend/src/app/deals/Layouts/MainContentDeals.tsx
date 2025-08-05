@@ -12,8 +12,11 @@ import {
   Mail,
   User,
   Building2,
+  DollarSign,
+  X,
+  Edit,
+  Trash2,
 } from "lucide-react";
-import SelectedActionBar from "@/app/leads/components/SelectedActionBar";
 
 interface Deal {
   id: string;
@@ -27,11 +30,88 @@ interface Deal {
   rawData: any;
 }
 
+interface DeleteDealModalProps {
+  selectedCount: number;
+  selectedIds: string[];
+  onClose: () => void;
+  onConfirm: () => void;
+  type: "deals";
+}
+
+function DeleteDealModal({
+  selectedCount,
+  selectedIds,
+  onClose,
+  onConfirm,
+  type,
+}: DeleteDealModalProps) {
+  const itemType = "Deal";
+  const itemTypePlural = "Deals";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+        <h2 className="text-xl font-bold mb-4">Delete {selectedCount > 1 ? itemTypePlural : itemType}</h2>
+
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-black"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <p className="text-sm text-gray-700 mb-6">
+          {selectedCount === 1 ? (
+            <>
+              Are you sure you want to delete this {itemType.toLowerCase()}?
+            </>
+          ) : (
+            <>
+              Are you sure you want to delete <strong>{selectedCount}</strong> {itemTypePlural.toLowerCase()}?
+            </>
+          )}
+        </p>
+
+        {selectedCount <= 5 && (
+          <div className="mb-4 text-xs text-gray-500">
+            <p className="font-medium mb-1">Selected IDs:</p>
+            <p className="break-all">{selectedIds.join(", ")}</p>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm transition"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Deals() {
   const router = useRouter();
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [dealsToDelete, setDealsToDelete] = useState<string[]>([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const stages = ["proposal", "negotiation", "won", "lost"];
 
   const getStatusColor = (status: string) => {
     const normalizedStatus = status.toLowerCase().trim();
@@ -52,6 +132,20 @@ export default function Deals() {
 
   useEffect(() => {
     fetchDeals();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      if (!target.closest(".action-menu") && 
+          !target.closest("[data-action-menu]")) {
+        setActionMenuOpenId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const fetchDeals = async () => {
@@ -103,9 +197,23 @@ export default function Deals() {
     router.push(`/deals/detail/${id}`);
   };
 
-  const handleBulkDelete = async (ids: string[]) => {
-    if (!window.confirm(`Are you sure you want to delete ${ids.length} deal(s)?`)) return;
+  const openDeleteModal = (ids: string[]) => {
+    setDealsToDelete(ids);
+    setDeleteModalOpen(true);
+    setActionMenuOpenId(null);
+  };
 
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDealsToDelete([]);
+  };
+
+  const confirmDelete = async () => {
+    await handleBulkDelete(dealsToDelete);
+    closeDeleteModal();
+  };
+
+  const handleBulkDelete = async (ids: string[]) => {
     try {
       const deletePromises = ids.map(async (id) => {
         const response = await fetch(`/api/deals/${id}`, {
@@ -132,41 +240,10 @@ export default function Deals() {
     }
   };
 
-  const handleBulkUpdate = async (ids: string[], field: string, value: string) => {
-    try {
-      const fieldMap: { [key: string]: string } = {
-        "Title": "title",
-        "Value": "value",
-        "Stage": "stage",
-        "Owner": "owner"
-      };
-
-      const apiField = fieldMap[field] || field.toLowerCase().replace(/ /g, "_");
-
-      const updatePromises = ids.map(async (id) => {
-        const response = await fetch(`/api/deals/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ [apiField]: value }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || `Failed to update deal ${id}`);
-        }
-
-        return response.json();
-      });
-
-      await Promise.all(updatePromises);
-      await fetchDeals();
-      setSelectedDeals([]);
-      alert(`Successfully updated ${ids.length} deal(s)`);
-    } catch (err: any) {
-      alert("Failed to update deals: " + err.message);
-    }
+  const handleEditDeal = (deal: any) => {
+    // You can implement edit functionality here
+    console.log("Edit deal:", deal);
+    setActionMenuOpenId(null);
   };
 
   const toggleSelectDeal = (id: string) => {
@@ -199,10 +276,71 @@ export default function Deals() {
             >
               <RotateCcw className="w-3 h-3" />
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
+            
+            <button
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
+            >
               <Filter className="w-3 h-3" />
               <span className="hidden sm:inline">Filter</span>
             </button>
+
+            {showFilterDropdown && (
+              <div className="absolute z-50 mt-12 w-72 bg-white border border-gray-200 rounded-md shadow-lg">
+                <div className="border-b border-gray-100 px-4 py-3">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Stage</p>
+                  <ul className="max-h-40 overflow-y-auto space-y-1">
+                    {stages.map((stage) => (
+                      <li
+                        key={stage}
+                        onClick={() => setSelectedStage(stage)}
+                        className={`text-sm px-2 py-1 rounded cursor-pointer ${selectedStage === stage
+                          ? "bg-blue-100 text-blue-700"
+                          : "hover:bg-gray-100"
+                          }`}
+                      >
+                        {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="px-4 py-3">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Search</p>
+                  <div className="relative mt-2">
+                    <input
+                      type="text"
+                      placeholder="Search deals"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600 bg-white p-0.5 rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      setSelectedStage(null);
+                      setSearchTerm("");
+                      setShowFilterDropdown(false);
+                    }}
+                    className="text-sm text-red-500 hover:underline"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
               <ArrowUpDown className="w-3 h-3" />
               <span className="hidden sm:inline">Sort</span>
@@ -264,6 +402,12 @@ export default function Deals() {
                     Loading...
                   </td>
                 </tr>
+              ) : deals.length === 0 ? (
+                <tr>
+                  <td className="px-6 py-4 text-gray-500 text-center" colSpan={9}>
+                    No deals found
+                  </td>
+                </tr>
               ) : (
                 deals.map((deal) => (
                   <tr
@@ -295,6 +439,7 @@ export default function Deals() {
                     </td>
                     <td className="px-6 py-4 text-xs text-gray-900">
                       <div className="flex items-center">
+                        <DollarSign className="w-3.5 h-3.5 text-green-500" />
                         {deal.annualRevenue}
                       </div>
                     </td>
@@ -325,10 +470,57 @@ export default function Deals() {
                       {deal.updated_at}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500" onClick={(e) => e.stopPropagation()}>
-                      <div className="relative">
-                        <button className="text-gray-400 hover:text-gray-600 mx-auto">
+                      <div className="relative" data-action-menu>
+                        <button
+                          className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenId(deal.id === actionMenuOpenId ? null : deal.id);
+                          }}
+                        >
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
+
+                        {actionMenuOpenId === deal.id && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-40" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActionMenuOpenId(null);
+                              }}
+                            />
+                            
+                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
+                              deals.indexOf(deal) >= deals.length - 2 
+                                ? 'bottom-full mb-1' 
+                                : 'top-full mt-1'
+                            }`}>
+                              <div className="py-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditDeal(deal);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openDeleteModal([deal.id]);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -342,6 +534,8 @@ export default function Deals() {
         <div className="lg:hidden space-y-4">
           {loading ? (
             <p className="text-2xl">Loading...</p>
+          ) : deals.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No deals found</p>
           ) : (
             deals.map((deal) => (
               <div
@@ -368,6 +562,7 @@ export default function Deals() {
                         {deal.organization}
                       </h3>
                       <div className="flex items-center text-xs text-gray-500 mt-1">
+                        <DollarSign className="w-3 h-3" />
                         {deal.annualRevenue}
                       </div>
                     </div>
@@ -376,12 +571,59 @@ export default function Deals() {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(deal.status)}`}>
                       {deal.status}
                     </span>
-                    <button 
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
+                    
+                    <div className="relative" data-action-menu onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActionMenuOpenId(deal.id === actionMenuOpenId ? null : deal.id);
+                        }}
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+
+                      {actionMenuOpenId === deal.id && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-40" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActionMenuOpenId(null);
+                            }}
+                          />
+                          
+                          <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
+                            deals.indexOf(deal) >= deals.length - 2 
+                              ? 'bottom-full mb-1' 
+                              : 'top-full mt-1'
+                          }`}>
+                            <div className="py-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditDeal(deal);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openDeleteModal([deal.id]);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -430,15 +672,16 @@ export default function Deals() {
           </div>
         </div>
 
-        {/* Action bar */}
-        <SelectedActionBar
-          selectedCount={selectedDeals.length}
-          selectedIds={selectedDeals}
-          onClearSelection={() => setSelectedDeals([])}
-          onDelete={handleBulkDelete}
-          onUpdate={handleBulkUpdate}
-          type="deals"
-        />
+        {/* Delete Deal Modal */}
+        {deleteModalOpen && (
+          <DeleteDealModal
+            selectedCount={dealsToDelete.length}
+            selectedIds={dealsToDelete}
+            onClose={closeDeleteModal}
+            onConfirm={confirmDelete}
+            type="deals"
+          />
+        )}
       </div>
     </div>
   );

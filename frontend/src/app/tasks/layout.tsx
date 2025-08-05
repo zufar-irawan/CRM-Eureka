@@ -4,6 +4,7 @@ import Header from "@/components/Header"
 import Sidebar from "@/components/Sidebar"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
+import CreateTasksModal from "./add/page"
 
 export default function TasksLayout(
     { children }: { children: React.ReactNode }
@@ -31,6 +32,10 @@ export default function TasksLayout(
                 </div>
 
             </div>
+
+            {isModalOpen && (
+                <CreateTasksModal onClose={() => setIsModalOpen(false)} />
+            )}
         </div>
     )
 }

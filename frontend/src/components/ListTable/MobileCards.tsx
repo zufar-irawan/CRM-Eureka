@@ -1,6 +1,6 @@
 'use client'
 
-import { MoreHorizontal, User, User2Icon } from "lucide-react";
+import { MoreHorizontal, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import fetchData from "./Functions/FetchData";
 
@@ -8,6 +8,10 @@ export interface Field {
     key: string;
     label?: string;
     render?: (value: any, row: any) => React.ReactNode;
+}
+
+function getNestedValue(obj: any, path: string): any {
+    return path.split(".").reduce((acc, part) => acc?.[part], obj);
 }
 
 export default function MobileCards({
@@ -19,13 +23,13 @@ export default function MobileCards({
     fields: Field[];
     visibleFields: string[];
 }) {
-    const [data, setData] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [selectedData, setSelectedData] = useState<string[]>([])
+    const [data, setData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedData, setSelectedData] = useState<string[]>([]);
 
     useEffect(() => {
         fetchData({ setData, setLoading, url: pathname });
-    }, [pathname])
+    }, [pathname]);
 
     const toggleSelectData = (id: string) => {
         setSelectedData((prev) =>
@@ -33,7 +37,7 @@ export default function MobileCards({
                 ? prev.filter((itemId) => itemId !== id)
                 : [...prev, id]
         );
-    }
+    };
 
     return (
         <div className="block lg:hidden space-y-4">
@@ -64,7 +68,7 @@ export default function MobileCards({
                                     {pathname === "/tasks/" ? item.title : item.fullname}
                                 </h3>
                                 <div className="flex items-center text-xs text-gray-500 mt-1">
-                                    {pathname === "/tasks/" ? item.status : item.company}
+                                    {pathname === "/tasks/" ? item.status : getNestedValue(item, "company.name") || "-"}
                                 </div>
                             </div>
                         </div>
@@ -84,28 +88,28 @@ export default function MobileCards({
 
                     {/* Detail Fields */}
                     <div className="space-y-2 text-sm pt-2">
-                        {fields.filter(f => visibleFields.includes(f.key)).map(field => (
-                            <div key={field.key} className="flex items-center text-gray-600">
-                                <span className="pr-2">
-                                    {field.label} :
-                                </span>
-
-                                <span className="text-gray-800">
-                                    {field.render
-                                        ? field.render(item[field.key], item)
-                                        : item[field.key] || "-"}
-                                </span>
-                            </div>
-                        ))}
+                        {fields
+                            .filter((f) => visibleFields.includes(f.key))
+                            .map((field) => {
+                                const value = getNestedValue(item, field.key);
+                                return (
+                                    <div key={field.key} className="flex items-center text-gray-600">
+                                        <span className="pr-2">{field.label ?? field.key} :</span>
+                                        <span className="text-gray-800">
+                                            {field.render ? field.render(value, item) : String(value ?? "-")}
+                                        </span>
+                                    </div>
+                                );
+                            })}
                     </div>
 
                     {/* Footer */}
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                         <span className="text-xs text-gray-500">
-                            {new Date(item.updated_at).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
+                            {new Date(item.updated_at).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
                             })}
                         </span>
                     </div>

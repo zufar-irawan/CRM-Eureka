@@ -1,7 +1,7 @@
 "use client"
 
-import Sidebar from "@/components/Sidebar"
 import Header from "@/components/Header"
+import Sidebar from "@/components/Sidebar"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import CreateLeadModal from "./add/AddLeadModal"
@@ -15,7 +15,7 @@ export default function LeadsLayout(
 
   const pathname = usePathname()
 
-  // Cek apakah sedang di halaman detail (contoh: /leads/123 atau /leads/detail/123)
+  // DETEKSI HALAMAN DETAIL
   const isDetailPage = /^\/leads(\/detail)?\/[^\/]+$/.test(pathname)
 
   return (
@@ -23,7 +23,7 @@ export default function LeadsLayout(
       <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
       <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex flex-col bg-white transition-all duration-300`}>
-        {/* Hanya tampilkan Header jika bukan di halaman detail */}
+        {/* Tampilkan Header hanya jika BUKAN di halaman detail */}
         {!isDetailPage && (
           <Header
             isOpen={isOpen}

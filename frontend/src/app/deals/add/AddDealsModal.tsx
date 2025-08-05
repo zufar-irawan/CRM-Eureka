@@ -4,7 +4,7 @@ import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
 import NumericUpDown from "@/components/AddModal/NumericUpDown";
 import { X } from "lucide-react";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface Props {
     onClose: () => void;
@@ -33,6 +33,50 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
         id_company: 0,
     })
 
+    const [companyOptions, setCompanyOptions] = useState<any[]>([])
+    const [contactOptions, setContactOptions] = useState<any[]>([])
+
+    useEffect(() => {
+        const fetchCompanies = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/api/companies") // ganti sesuai API-mu
+                const result = await res.json()
+
+                const data = result.data
+
+                const mappedOptions = data.map((company: any) => ({
+                    value: company.id,
+                    label: company.name,
+                }))
+
+                setCompanyOptions(mappedOptions)
+            } catch (error) {
+                console.error("Failed to fetch companies", error)
+            }
+        }
+
+        const fetchContact = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/api/contacts") // ganti sesuai API-mu
+                const result = await res.json()
+
+                const data = result.data
+
+                const mappedOptions = data.map((contacts: any) => ({
+                    value: contacts.id,
+                    label: contacts.name,
+                }))
+
+                setContactOptions(mappedOptions)
+            } catch (error) {
+                console.error("Failed to fetch companies", error)
+            }
+        }
+
+
+        fetchContact()
+        fetchCompanies()
+    }, [])
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -48,37 +92,41 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
         setIsSubmitting(true);
         setError("");
 
+        if (!form.title || form.value <= 0 || form.id_contact <= 0 || form.id_company <= 0) {
+            setError("Please complete all required fields correctly");
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
+            // Konversi tipe agar sesuai kebutuhan
             const submitData = {
                 ...form,
-                owner: form.owner
-            }
+                value: Number(form.value),
+                id_contact: Number(form.id_contact),
+                id_company: Number(form.id_company),
+                stage: form.stage.trim(),
+                title: form.title.trim(),
+            };
 
-            // Remove empty string values
-            Object.keys(submitData).forEach(key => {
-                if ((submitData as any)[key] === '') {
-                    delete (submitData as any)[key];
-                }
-            });
+            console.log("Data to submit:", submitData);
 
-            console.log('Data to submit:', submitData);
-
-            const response = await fetch('http://localhost:5000/api/deals', {
-                method: 'POST',
+            const response = await fetch("http://localhost:3000/api/deals", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
-                credentials: 'include',
+                credentials: "include",
                 body: JSON.stringify(submitData),
-            });
+            })
 
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to create lead');
+                throw new Error(result.message || "Failed to create deal")
             }
 
-            console.log('Lead created successfully:', result);
+            console.log("Deal created successfully:", result)
 
             if (onLeadCreated) {
                 onLeadCreated();
@@ -86,12 +134,13 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
             onClose();
         } catch (err) {
-            console.error('Error creating lead:', err);
-            setError(err instanceof Error ? err.message : 'Failed to create lead');
+            console.error("Error creating deal:", err);
+            setError(err instanceof Error ? err.message : "Failed to create deal");
         } finally {
             setIsSubmitting(false);
         }
     }
+
 
     return (
         <>
@@ -132,7 +181,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
                                 <div className="mb-8">
                                     <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                                        Organization Information
+                                        Deals Information
                                     </h3>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3  gap-4">
@@ -162,8 +211,8 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                         />
 
                                         <Dropdown
-                                            label="Phone"
-                                            name="companyPhone"
+                                            label="Stage"
+                                            name="stage"
                                             value={form.stage}
                                             onChange={handleChange}
                                             options={[
@@ -174,23 +223,29 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                             ]}
                                         />
 
-                                        <Input
-                                            label="Email"
-                                            isRequired={true}
-                                            name="companyEmail"
-                                            placeholder="Company Email"
-                                            value={form.company_email}
+                                        <Dropdown
+                                            label="Contact"
+                                            name="id_contact"
+                                            value={form.id_contact}
                                             onChange={handleChange}
-                                            required
-                                            maxLength={255}
+                                            options={contactOptions}
                                         />
+
+                                        <Dropdown
+                                            label="Company"
+                                            name="id_company"
+                                            value={form.id_company}
+                                            onChange={handleChange}
+                                            options={companyOptions}
+                                        />
+
                                     </div>
 
                                 </div>
 
 
                                 {/* Additional Information Section */}
-                                <div className="mb-8">
+                                {/* <div className="mb-8">
                                     <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
                                         Additional Information
                                     </h3>
@@ -205,7 +260,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-vertical"
                                         />
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* Form Actions */}
                                 <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4">

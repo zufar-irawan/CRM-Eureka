@@ -393,7 +393,7 @@ export const convertLead = async (req, res) => {
                     name: lead.company.trim(),
                     address: companyAddress,
                     phone: lead.phone,
-                    email: lead.work_email || null, // Use work_email for company email
+                    email: lead.work_email || null, 
                     created_at: new Date()
                 }, { transaction });
 

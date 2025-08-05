@@ -593,7 +593,6 @@ export const updateLeadStage = async (req, res) => {
             return res.status(404).json({ message: "Lead not found" });
         }
 
-        // Prevent direct conversion through stage update
         if (stage === 'Converted') {
             await transaction.rollback();
             return res.status(400).json({ 
@@ -601,7 +600,6 @@ export const updateLeadStage = async (req, res) => {
             });
         }
 
-        // Prevent updating already converted leads
         if (lead.status === true) {
             await transaction.rollback();
             return res.status(400).json({ 
@@ -611,7 +609,6 @@ export const updateLeadStage = async (req, res) => {
 
         const oldStage = lead.stage;
         
-        // Only update if stage actually changed
         if (oldStage === stage) {
             await transaction.rollback();
             return res.status(200).json({

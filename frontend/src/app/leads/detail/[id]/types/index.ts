@@ -32,6 +32,29 @@ export interface Comment {
   parent_user?: string | null;      // NEW: Parent comment user name
 }
 
+// NEW: Task interfaces
+export interface Task {
+  id: number;
+  lead_id: number;
+  assigned_to: number;
+  assigned_user_name?: string;
+  title: string;
+  description?: string;
+  category: string;
+  due_date: string;
+  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskStats {
+  total: number;
+  completed: number;
+  pending: number;
+  overdue: number;
+}
+
 export interface CommentStats {
   total_comments: number;
   top_level_comments: number;

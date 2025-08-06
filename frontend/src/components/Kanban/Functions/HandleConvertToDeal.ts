@@ -1,3 +1,4 @@
+import Swal from "sweetalert2";
 import { DNDType } from "../Kanban";
 import fetchKanbanData from "./FetchKanbanData";
 
@@ -83,55 +84,45 @@ export default function handleConvertToDeal({
             console.log("[DEBUG] Conversion successful:", result);
 
             // Show success message
-            alert(
-                `Successfully converted lead "${leadData.fullname
-                }" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`
-            );
+            Swal.fire({
+                icon:'success',
+                title:"Success",
+                text:`Successfully converted lead "${leadData.fullname}" to deal "${dealTitle}" with value $${dealValue.toLocaleString()}!`
+            })
 
             // Close modal
             setShowConvertModal(false);
             setConvertingLeadId(null);
 
             // Refresh data to show updated status
-            setTimeout(() => {
-                fetchKanbanData({
-                    url: "http://localhost:5000/api/leads",
-                    setData: setData,
-                    setContainers: setContainers,
-                    groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
-                    mapItem: (lead) => ({
-                        id: `item-${lead.id}`,
-                        itemId: lead.id,
-                        fullname: lead.lead?.fullname || "Unknown",
-                        organization: lead.lead?.company || "-",
-                        email: lead.lead?.email || "-",
-                        mobileno: lead.lead?.phone || "-",
-                    }),
-                });
-            }, 500);
+            // setTimeout(() => {
+            //     fetchKanbanData({
+            //         url: "http://localhost:5000/api/leads",
+            //         setData: setData,
+            //         setContainers: setContainers,
+            //         groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
+            //         mapItem: (lead) => ({
+            //             id: `item-${lead.id}`,
+            //             itemId: lead.id,
+            //             fullname: lead.lead?.fullname || "Unknown",
+            //             organization: lead.lead?.company || "-",
+            //             email: lead.lead?.email || "-",
+            //             mobileno: lead.lead?.phone || "-",
+            //         }),
+            //     });
+            // }, 500);
         } catch (error: unknown) {
             console.error("[ERROR] Failed to convert lead:", error);
             const errorMessage =
                 error instanceof Error
                     ? error.message
                     : "Failed to convert lead to deal";
-            alert(`Error: ${errorMessage}`);
 
-            // Revert UI changes by refetching data
-            fetchKanbanData({
-                url: "http://localhost:5000/api/leads",
-                setData: setData,
-                setContainers: setContainers,
-                groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
-                mapItem: (lead) => ({
-                    id: `item-${lead.id}`,
-                    itemId: lead.id,
-                    fullname: lead.lead?.fullname || "Unknown",
-                    organization: lead.lead?.company || "-",
-                    email: lead.lead?.email || "-",
-                    mobileno: lead.lead?.phone || "-",
-                }),
-            });
+            Swal.fire({
+                icon:'error',
+                title:'Failed',
+                text:`Error: ${errorMessage}`
+            })
         } finally {
             setIsConverting(false);
         }

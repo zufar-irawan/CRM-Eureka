@@ -17,7 +17,7 @@ export default function LeadsLayout(
   const pathname = usePathname()
 
   // DETEKSI HALAMAN DETAIL
-  const isDetailPage = /^\/leads(\/detail)?\/[^\/]+$/.test(pathname)
+  const isDetailPage = pathname.includes("/detail")
 
   return (
     <div className="flex h-screen">

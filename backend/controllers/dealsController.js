@@ -735,7 +735,6 @@ export const addDealComment = async (req, res) => {
             });
         }
 
-        // Check if deal exists
         const deal = await Deals.findByPk(id);
         if (!deal) {
             return res.status(404).json({
@@ -752,7 +751,6 @@ export const addDealComment = async (req, res) => {
             created_at: new Date()
         });
 
-        // Fetch created comment with user info
         const createdComment = await DealComments.findByPk(comment.id, {
             include: [{
                 model: User,

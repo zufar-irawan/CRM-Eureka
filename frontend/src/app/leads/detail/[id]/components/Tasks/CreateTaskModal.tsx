@@ -34,7 +34,7 @@ export default function CreateTaskModal({
     assigned_to: currentUser?.id || 0,
     title: '',
     description: '',
-    category: '',
+    category: 'Lainnya',
     due_date: '',
     priority: 'medium',
   });
@@ -107,15 +107,17 @@ export default function CreateTaskModal({
         priority: form.priority,
       };
 
-      // Try to submit to tasks API
-      const response = await fetch("http://localhost:3000/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(submitData),
-      });
+      // Menggunakan backend API yang benar
+      const response = await makeAuthenticatedRequest(
+        "http://localhost:5000/api/tasks",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(submitData),
+        }
+      );
 
       if (!response.ok) {
         const result = await response.json();
@@ -217,7 +219,6 @@ export default function CreateTaskModal({
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="">Select category</option>
                       <option value="Kanvasing">Kanvasing</option>
                       <option value="Followup">Followup</option>
                       <option value="Penawaran">Penawaran</option>

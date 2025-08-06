@@ -1,8 +1,7 @@
 // hooks/useTasks.ts
 import { useState, useCallback } from 'react';
-import type { Task, TaskStats } from '../types'; // perhatikan path ini
+import type { Task, TaskStats } from '../types';
 import { makeAuthenticatedRequest } from '../utils/auth';
-import { API_ENDPOINTS } from '../utils/constants';
 
 export const useTasks = (leadId: string | string[] | undefined) => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -39,20 +38,37 @@ export const useTasks = (leadId: string | string[] | undefined) => {
     setTasksError(null);
 
     try {
+      // Perbaikan: Gunakan endpoint yang benar dan tambahkan parameter lead_id
       const response = await makeAuthenticatedRequest(
         `http://localhost:5000/api/tasks?lead_id=${leadId}`
       );
 
       if (response.ok) {
-        const data = await response.json();
-        const tasksList = Array.isArray(data) ? data : data.tasks || [];
-        setTasks(tasksList);
+        const result = await response.json();
+        
+        // Handle response structure dari backend
+        if (result.success && result.data) {
+          const tasksList = Array.isArray(result.data) ? result.data : [];
+          
+          // Transform data untuk menambahkan assigned_user_name jika perlu
+          const transformedTasks = tasksList.map((task: any) => ({
+            ...task,
+            assigned_user_name: task.assignee?.name || task.assigned_user_name || 'Unknown User'
+          }));
+          
+          setTasks(transformedTasks);
+        } else {
+          // Fallback untuk format lama
+          const tasksList = Array.isArray(result) ? result : result.tasks || [];
+          setTasks(tasksList);
+        }
       } else {
-        throw new Error('Failed to fetch tasks');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch tasks');
       }
     } catch (error) {
       console.error('Error fetching tasks:', error);
-      setTasksError('Failed to load tasks. Please try again.');
+      setTasksError(error instanceof Error ? error.message : 'Failed to load tasks. Please try again.');
       setTasks([]);
     } finally {
       setTasksLoading(false);
@@ -66,28 +82,38 @@ export const useTasks = (leadId: string | string[] | undefined) => {
           `http://localhost:5000/api/tasks/${taskId}/updateStatus`,
           {
             method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify({ status }),
           }
         );
 
         if (response.ok) {
-          setTasks((prev): Task[] =>
-            prev.map((task) =>
-              task.id === taskId
-                ? {
-                    ...task,
-                    status,
-                    updated_at: new Date().toISOString(),
-                  }
-                : task
-            )
-          );
+          const result = await response.json();
+          
+          if (result.success) {
+            setTasks((prev): Task[] =>
+              prev.map((task) =>
+                task.id === taskId
+                  ? {
+                      ...task,
+                      status,
+                      updated_at: new Date().toISOString(),
+                    }
+                  : task
+              )
+            );
+          } else {
+            throw new Error(result.message || 'Failed to update task status');
+          }
         } else {
-          throw new Error('Failed to update task status');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to update task status');
         }
       } catch (error) {
         console.error('Error updating task status:', error);
-        setTasksError('Failed to update task status. Please try again.');
+        setTasksError(error instanceof Error ? error.message : 'Failed to update task status. Please try again.');
       }
     },
     []
@@ -105,11 +131,12 @@ export const useTasks = (leadId: string | string[] | undefined) => {
       if (response.ok) {
         setTasks((prev) => prev.filter((task) => task.id !== taskId));
       } else {
-        throw new Error('Failed to delete task');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete task');
       }
     } catch (error) {
       console.error('Error deleting task:', error);
-      setTasksError('Failed to delete task. Please try again.');
+      setTasksError(error instanceof Error ? error.message : 'Failed to delete task. Please try again.');
     }
   }, []);
 

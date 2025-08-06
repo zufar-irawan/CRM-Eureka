@@ -12,7 +12,6 @@ import { Companies } from "./companies/companiesModel.js";
 import { Contacts } from "./contacts/contactsModel.js";
 
 export const setupAssociations = () => {
-    // User and Role associations (Many-to-Many)
     User.belongsToMany(Role, {
         through: UserRole,
         foreignKey: 'user_id',
@@ -27,7 +26,6 @@ export const setupAssociations = () => {
         as: 'users'
     });
 
-    // Direct associations for UserRole
     User.hasMany(UserRole, {
         foreignKey: 'user_id',
         as: 'userRoles'

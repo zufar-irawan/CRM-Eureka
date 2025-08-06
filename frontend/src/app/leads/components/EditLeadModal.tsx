@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 
 interface Props {
   lead: any;
@@ -140,9 +141,24 @@ export default function EditLeadModal({ lead, isOpen, onClose, onSave }: Props) 
         onSave(result);
       }
 
+      window.dispatchEvent(new Event("lead-created"))
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: "Successfully edit lead"
+      })
+
       onClose();
     } catch (err) {
       console.error('Error updating lead:', err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: err instanceof Error ? err.message : 'Failed to update lead'
+      })
+
       setError(err instanceof Error ? err.message : 'Failed to update lead');
     } finally {
       setIsSubmitting(false);
@@ -503,24 +519,6 @@ export default function EditLeadModal({ lead, isOpen, onClose, onSave }: Props) 
                         maxLength={100}
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Additional Information Section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Additional Information
-                  </h3>
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-600">Description</label>
-                    <textarea
-                      name="description"
-                      placeholder="Enter description or additional notes"
-                      value={form.description}
-                      onChange={handleChange}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-vertical"
-                    />
                   </div>
                 </div>
 

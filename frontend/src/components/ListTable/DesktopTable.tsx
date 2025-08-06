@@ -24,13 +24,15 @@ export default function DesktopTable({
     columns,
     visibleColumns,
     loading,
-    setLoading
+    setLoading,
+    onEdit
 }: {
     pathname: string
     columns: Column[]
     visibleColumns: string[]
     loading: boolean
     setLoading: React.Dispatch<React.SetStateAction<boolean>>
+    onEdit?: (row: any) => void
 }) {
     const [data, setData] = useState<any[]>([])
     const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null)
@@ -179,7 +181,8 @@ export default function DesktopTable({
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
-                                                                console.log("Edit clicked") // ganti sesuai kebutuhan
+                                                                onEdit?.(row)
+                                                                setActionMenuOpenId(null)
                                                             }}
                                                             className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                         >

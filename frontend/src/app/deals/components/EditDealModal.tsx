@@ -3,56 +3,105 @@
 import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
 import NumericUpDown from "@/components/AddModal/NumericUpDown";
+import { useDealEditStore } from "@/Store/dealModalStore";
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 
 interface Props {
   deal: any;
   isOpen: boolean;
-  onClose: () => void;
+  closeModal: () => void;
   onSave: (updatedDeal: any) => void;
 }
 
 export type DealsForm = {
-  deal_id: number;
   title: string;
   value: number;
   stage: string;
-  owner: number;
   id_contact: number;
   id_company: number;
-  description: string;
 }
 
-export default function EditDealModal({ deal, isOpen, onClose, onSave }: Props) {
+export default function EditDealModal() {
   const [form, setForm] = useState<DealsForm>({
-    deal_id: 0,
-    title: '',
+    title: "",
     value: 0,
-    stage: '',
-    owner: 0,
+    stage: "",
     id_contact: 0,
     id_company: 0,
-    description: '',
-  });
+  })
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState("")
+
+  const { id, isOpen, closeModal } = useDealEditStore();
+
+  const [companyOptions, setCompanyOptions] = useState<any[]>([])
+  const [contactOptions, setContactOptions] = useState<any[]>([])
 
   useEffect(() => {
-    if (deal) {
-      setForm({
-        deal_id: deal.deal_id || 0,
-        title: deal.title || '',
-        value: deal.value || 0,
-        stage: deal.stage || '',
-        owner: deal.owner || 0,
-        id_contact: deal.id_contact || 0,
-        id_company: deal.id_company || 0,
-        description: deal.description || '',
-      });
+    if (id && isOpen) {
+      const fetchDeal = async () => {
+        try {
+          const res = await fetch(`http://localhost:3000/api/deals/${id}`);
+          const result = await res.json();
+          const data = result.data;
+
+          setForm({
+            title: data.title || "",
+            value: data.value || 0,
+            stage: data.stage || "",
+            id_contact: data.id_contact || 0,
+            id_company: data.id_company || 0,
+          });
+        } catch (error) {
+          console.error("Failed to fetch deal by ID", error);
+          Swal.fire("Failed", "Cannot load deal data", "error");
+          closeModal();
+        }
+      }
+
+      fetchDeal()
     }
-  }, [deal]);
+
+    const fetchCompanies = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/companies")
+        const result = await res.json()
+        const data = result.data
+
+        const mappedOptions = data.map((company: any) => ({
+          value: company.id,
+          label: company.name,
+        }))
+
+        setCompanyOptions(mappedOptions)
+      } catch (error) {
+        console.error("Failed to fetch companies", error)
+      }
+    }
+
+    const fetchContact = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/contacts")
+        const result = await res.json()
+        const data = result.data
+
+        const mappedOptions = data.map((contacts: any) => ({
+          value: contacts.id,
+          label: contacts.name,
+        }))
+
+        setContactOptions(mappedOptions)
+      } catch (error) {
+        console.error("Failed to fetch contacts", error)
+      }
+    }
+
+    fetchContact()
+    fetchCompanies()
+  }, [id, isOpen]);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -65,46 +114,51 @@ export default function EditDealModal({ deal, isOpen, onClose, onSave }: Props) 
     setIsSubmitting(true);
     setError("");
 
+    if (!form.title || !form.value || !form.stage || !form.id_contact || !form.id_company) {
+      setError("Please complete all required fields");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const submitData = {
-        ...form,
-        owner: form.owner
+        title: form.title.trim(),
+        value: form.value,
+        stage: form.stage,
+        id_contact: form.id_contact,
+        id_company: form.id_company,
       };
 
-      // Remove empty string values
-      Object.keys(submitData).forEach(key => {
-        if ((submitData as any)[key] === '') {
-          delete (submitData as any)[key];
-        }
-      });
-
-      console.log('Data to submit:', submitData);
-
-      const response = await fetch(`http://localhost:5000/api/deals/${deal.id}`, {
-        method: 'PUT',
+      const response = await fetch(`http://localhost:3000/api/deals/${id}`, {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(submitData),
       });
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to update deal');
-      }
+      if (!response.ok) throw new Error(result.message || "Failed to update task");
 
-      console.log('Deal updated successfully:', result);
+      window.dispatchEvent(new Event("deals-add"));
 
-      if (onSave) {
-        onSave(result);
-      }
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Successfully updated task",
+      });
 
-      onClose();
+      closeModal();
     } catch (err) {
-      console.error('Error updating deal:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update deal');
+      console.error("Error updating task:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: err instanceof Error ? err.message : "Failed to update task",
+      });
+      setError(err instanceof Error ? err.message : "Failed to update task");
     } finally {
       setIsSubmitting(false);
     }
@@ -117,7 +171,7 @@ export default function EditDealModal({ deal, isOpen, onClose, onSave }: Props) 
       {/* Transparent Backdrop */}
       <div
         className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={closeModal}
       />
 
       {/* Modal Container - Positioned to center within main content area */}
@@ -129,7 +183,7 @@ export default function EditDealModal({ deal, isOpen, onClose, onSave }: Props) 
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
             <h2 className="text-2xl font-semibold text-gray-800">Edit Deal</h2>
             <button
-              onClick={onClose}
+              onClick={closeModal}
               className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
             >
               <X className="w-5 h-5 text-gray-600" />
@@ -191,62 +245,20 @@ export default function EditDealModal({ deal, isOpen, onClose, onSave }: Props) 
                       ]}
                     />
 
-                    <Input
-                      label="Deal ID"
-                      isRequired={false}
-                      name="deal_id"
-                      placeholder="Deal ID"
-                      value={form.deal_id.toString()}
-                      onChange={handleChange}
-                      maxLength={255}
-                    />
-
-                    <Input
-                      label="Owner ID"
-                      isRequired={false}
-                      name="owner"
-                      placeholder="Owner ID"
-                      value={form.owner.toString()}
-                      onChange={handleChange}
-                      maxLength={255}
-                    />
-
-                    <Input
-                      label="Contact ID"
-                      isRequired={false}
+                    <Dropdown
+                      label="Select Contact"
                       name="id_contact"
-                      placeholder="Contact ID"
-                      value={form.id_contact.toString()}
+                      value={form.id_contact || ''}
                       onChange={handleChange}
-                      maxLength={255}
+                      options={contactOptions}
                     />
 
-                    <Input
-                      label="Company ID"
-                      isRequired={false}
+                    <Dropdown
+                      label="Select Company"
                       name="id_company"
-                      placeholder="Company ID"
-                      value={form.id_company.toString()}
+                      value={form.id_company || ''}
                       onChange={handleChange}
-                      maxLength={255}
-                    />
-                  </div>
-                </div>
-
-                {/* Additional Information Section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Additional Information
-                  </h3>
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-600">Description</label>
-                    <textarea
-                      name="description"
-                      placeholder="Enter description or additional notes"
-                      value={form.description}
-                      onChange={handleChange}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-vertical"
+                      options={companyOptions}
                     />
                   </div>
                 </div>
@@ -255,7 +267,7 @@ export default function EditDealModal({ deal, isOpen, onClose, onSave }: Props) 
                 <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4">
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={closeModal}
                     disabled={isSubmitting}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors duration-200 font-medium disabled:opacity-50"
                   >

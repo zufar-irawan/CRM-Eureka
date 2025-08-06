@@ -5,6 +5,7 @@ import fetchKanbanData from "@/components/Kanban/Functions/FetchKanbanData";
 import Kanban, { DNDType } from "@/components/Kanban/Kanban"
 import { Filter, KanbanIcon, RotateCcw } from "lucide-react"
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 
 export default function DealsKanban() {
     const [data, setData] = useState<any[]>([])
@@ -55,6 +56,8 @@ export default function DealsKanban() {
             items: []
         },
     ])
+
+    // const Kanban = dynamic(() => import('@/components/Kanban/Kanban'), {ssr: false})
 
     const handleRefresh = () => {
         fetchKanbanData({

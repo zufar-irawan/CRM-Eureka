@@ -11,6 +11,8 @@ import EditLeadModal from "../leads/components/EditLeadModal";
 import DesktopTable, { Column } from "@/components/ListTable/DesktopTable";
 import MobileCards, { Field } from "@/components/ListTable/MobileCards";
 import fetchData from "@/components/ListTable/Functions/FetchData";
+import EditTasksModal from "./edit/editModal";
+import { useTaskModalStore } from "@/Store/taskModalStore";
 
 const allColumns: Column[] = [
   { key: "title", label: "Title" },
@@ -84,6 +86,8 @@ export default function TasksList() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLead, setCurrentLead] = useState<any>(null);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+
+  const openModal = useTaskModalStore((state) => state.openModal)
 
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
     allColumns.map(col => col.key)
@@ -192,7 +196,14 @@ export default function TasksList() {
           </div>
         </div>
 
-        <DesktopTable pathname="/tasks/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} />
+        <DesktopTable
+          pathname="/tasks/"
+          columns={allColumns}
+          visibleColumns={visibleColumns}
+          loading={loading}
+          setLoading={setLoading}
+          onEdit={(row) => openModal(row)}
+        />
 
         <MobileCards pathname="/tasks/" fields={allFields} visibleFields={visibleColumns} />
 
@@ -213,15 +224,6 @@ export default function TasksList() {
             </button>
           </div>
         </div>
-
-        {currentLead && (
-          <EditLeadModal
-            lead={currentLead}
-            isOpen={editModalOpen}
-            onClose={() => setEditModalOpen(false)}
-            onSave={handleSaveLead}
-          />
-        )}
       </div>
     </main>
   );

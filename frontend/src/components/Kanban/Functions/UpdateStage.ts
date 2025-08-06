@@ -1,5 +1,6 @@
 import axios from "axios";
 import path from "path";
+import Swal from "sweetalert2";
 
 type updateStageProps = {
     itemId: number
@@ -16,11 +17,11 @@ export default async function updateStage(
 
       let url = ''
       if(pathname === "Leads"){
-        url = `http://localhost:5000/api/leads/${itemId}/stage`
+        url = `http://localhost:3000/api/leads/${itemId}`
       } else if( pathname === "Deals"){
-        url = `http://localhost:5000/api/deals/${itemId}`
+        url = `http://localhost:3000/api/deals/${itemId}`
       } else if(pathname === "Tasks"){
-        url = `http://localhost:5000/api/tasks/${itemId}`
+        url = `http://localhost:3000/api/tasks/${itemId}`
       }
 
       if(pathname === "Leads" || pathname === "Deals"){
@@ -61,10 +62,20 @@ export default async function updateStage(
 
       if (error.response) {
         console.error("Error response:", error.response.data);
-        alert(`Failed to update: ${error.response.data.message || "Unknown error"}`);
+
+        Swal.fire({
+          icon:'error',
+          title:'Failed',
+          text:`Failed to update: ${error.response.data.message || "Unknown error"}`
+        })
       } else {
         console.error("Network error:", error.message);
-        alert(`Network error: ${error.message}`);
+
+        Swal.fire({
+          icon:'error',
+          title:'Failed',
+          text:`Network error: ${error.message}`
+        })
       }
 
       throw error;

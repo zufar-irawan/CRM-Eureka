@@ -8,11 +8,12 @@ import LeadHeader from "./components/LeadHeader";
 import LeadTabs from "./components/LeadTabs";
 import LeadSidebar from "./components/LeadSidebar";
 import CommentsTab from "./components/Comments/CommentTab";
+import TasksTab from "./components/Tasks/TasksTab";
 import ConvertToDealModal from "../../components/ConvertToDealModal";
 import { makeAuthenticatedRequest } from "./utils/auth";
 import { API_ENDPOINTS } from "./utils/constants";
 
-// Tab Components (simplified for now - you can expand these later)
+// Tab Components
 const ActivityTab = ({ lead }: { lead: any }) => (
   <div className="p-6">
     <h3 className="text-lg font-medium text-gray-900">
@@ -45,14 +46,6 @@ const CallsTab = ({ lead }: { lead: any }) => (
   </div>
 );
 
-const TasksTab = ({ lead }: { lead: any }) => (
-  <div className="p-6">
-    <h3 className="text-lg font-medium text-gray-900">
-      Tasks content for {lead?.fullname || 'this lead'}
-    </h3>
-  </div>
-);
-
 const NotesTab = ({ lead }: { lead: any }) => (
   <div className="p-6">
     <h3 className="text-lg font-medium text-gray-900">
@@ -77,25 +70,21 @@ export default function LeadDetailPage() {
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
 
-  // Custom hooks
   const { currentUser, userLoading } = useAuth();
   const { lead, error, fetchLead, refreshLead, mapStageToStatus, setLead } = useLead(id);
 
-  // Initialize lead data
   useEffect(() => {
     if (!userLoading) {
       fetchLead();
     }
   }, [id, userLoading]);
 
-  // Update selected status when lead changes
   useEffect(() => {
     if (lead?.stage) {
       setSelectedStatus(mapStageToStatus(lead.stage));
     }
   }, [lead, mapStageToStatus]);
 
-  // Handle status change
   const handleStatusChange = async (newStatus: string) => {
     if (!lead) return;
 
@@ -134,7 +123,6 @@ export default function LeadDetailPage() {
 
       setSelectedStatus(newStatus);
       alert(`Lead stage updated to "${newStatus}" successfully!`);
-
     } catch (error: unknown) {
       console.error('[ERROR] Failed to update lead stage:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to update lead stage';
@@ -148,11 +136,8 @@ export default function LeadDetailPage() {
     }
   };
 
-  // Handle convert to deal
   const handleConvertToDeal = async (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => {
-    if (!lead) {
-      throw new Error('No lead data available');
-    }
+    if (!lead) throw new Error('No lead data available');
 
     const requestBody = {
       dealTitle: dealTitle.trim(),
@@ -182,13 +167,14 @@ export default function LeadDetailPage() {
     return await response.json();
   };
 
-  // Render tab content
   const renderTabContent = () => {
     if (!lead) return null;
 
     switch (activeTab) {
       case "Comments":
         return <CommentsTab leadId={id} currentUser={currentUser} />;
+      case "Tasks":
+        return <TasksTab currentUser={currentUser} />; // ✅ Updated: leadId tidak perlu dikirim manual
       case "Activity":
         return <ActivityTab lead={lead} />;
       case "Emails":
@@ -197,8 +183,6 @@ export default function LeadDetailPage() {
         return <DataTab lead={lead} />;
       case "Calls":
         return <CallsTab lead={lead} />;
-      case "Tasks":
-        return <TasksTab lead={lead} />;
       case "Notes":
         return <NotesTab lead={lead} />;
       case "Attachments":
@@ -214,7 +198,6 @@ export default function LeadDetailPage() {
     }
   };
 
-  // Show loading while user is being initialized
   if (userLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -226,7 +209,6 @@ export default function LeadDetailPage() {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -245,7 +227,6 @@ export default function LeadDetailPage() {
 
   return (
     <div className="flex-1 flex">
-      {/* Main content area */}
       <div className="flex-1 bg-white">
         <LeadHeader
           lead={lead}
@@ -264,13 +245,11 @@ export default function LeadDetailPage() {
         {renderTabContent()}
       </div>
 
-      {/* Right sidebar */}
       <LeadSidebar
         lead={lead}
         selectedStatus={selectedStatus}
       />
 
-      {/* Convert to Deal Modal */}
       {showConvertModal && lead && (
         <ConvertToDealModal
           onClose={async () => {

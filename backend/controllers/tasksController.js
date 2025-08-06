@@ -1,14 +1,20 @@
 import { Tasks } from "../models/tasks/tasksModel.js";
 import { TaskComments } from "../models/tasks/tasksCommentModel.js";
 import { TaskResults } from "../models/tasks/tasksResultModel.js";
+import { User } from "../models/usersModel.js";
 import { Op } from "sequelize";
 
-// GET /api/tasks - List task berdasarkan user
+// GET /api/tasks - List task berdasarkan filter
 export const getTasks = async (req, res) => {
   try {
-    const { status, priority, category, assigned_to } = req.query;
+    const { status, priority, category, assigned_to, lead_id } = req.query;
     
     let whereClause = {};
+    
+    // Filter berdasarkan lead_id (PENTING untuk detail lead)
+    if (lead_id) {
+      whereClause.lead_id = lead_id;
+    }
     
     if (status) {
       whereClause.status = status;
@@ -30,6 +36,12 @@ export const getTasks = async (req, res) => {
       where: whereClause,
       include: [
         {
+          model: User,
+          as: 'assignee',
+          attributes: ['id', 'name', 'email'],
+          required: false
+        },
+        {
           model: TaskComments,
           as: 'comments',
           required: false
@@ -43,11 +55,22 @@ export const getTasks = async (req, res) => {
       order: [['created_at', 'DESC']]
     });
     
+    // Transform data untuk menambahkan assigned_user_name
+    const transformedTasks = tasks.map(task => {
+      const taskData = task.toJSON();
+      return {
+        ...taskData,
+        assigned_user_name: taskData.assignee ? taskData.assignee.name : 'Unassigned'
+      };
+    });
+    
     res.status(200).json({
       success: true,
-      data: tasks
+      data: transformedTasks,
+      message: `Found ${transformedTasks.length} tasks`
     });
   } catch (error) {
+    console.error('Error fetching tasks:', error);
     res.status(500).json({ 
       success: false,
       message: "Error fetching tasks", 
@@ -76,22 +99,38 @@ export const createTask = async (req, res) => {
     }
 
     const newTask = await Tasks.create({
-      lead_id,
-      assigned_to,
+      lead_id: parseInt(lead_id),
+      assigned_to: parseInt(assigned_to),
       title,
       description,
-      category: category || 'Kanvasing',
+      category: category || 'Lainnya',
       due_date,
-      priority: priority || 'low',
-      status: 'new'
+      priority: priority || 'medium',
+      status: 'pending'
     });
+
+    // Ambil data task dengan include user untuk response
+    const taskWithUser = await Tasks.findOne({
+      where: { id: newTask.id },
+      include: [
+        {
+          model: User,
+          as: 'assignee',
+          attributes: ['id', 'name', 'email']
+        }
+      ]
+    });
+
+    const responseData = taskWithUser.toJSON();
+    responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
 
     res.status(201).json({
       success: true,
       message: "Task berhasil dibuat",
-      data: newTask
+      data: responseData
     });
   } catch (error) {
+    console.error('Error creating task:', error);
     res.status(500).json({
       success: false,
       message: "Error creating task",
@@ -100,7 +139,7 @@ export const createTask = async (req, res) => {
   }
 };
 
-// PUT /api/tasks/:id - Update status & hasil kerja
+// PUT /api/tasks/:id - Update task
 export const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -117,12 +156,28 @@ export const updateTask = async (req, res) => {
 
     await task.update(updateData);
 
+    // Ambil data terbaru dengan include
+    const updatedTask = await Tasks.findOne({
+      where: { id },
+      include: [
+        {
+          model: User,
+          as: 'assignee',
+          attributes: ['id', 'name', 'email']
+        }
+      ]
+    });
+
+    const responseData = updatedTask.toJSON();
+    responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
+
     res.status(200).json({
       success: true,
       message: "Task berhasil diupdate",
-      data: task
+      data: responseData
     });
   } catch (error) {
+    console.error('Error updating task:', error);
     res.status(500).json({
       success: false,
       message: "Error updating task",
@@ -140,16 +195,21 @@ export const getTaskById = async (req, res) => {
       where: { id },
       include: [
         {
+          model: User,
+          as: 'assignee',
+          attributes: ['id', 'name', 'email']
+        },
+        {
           model: TaskComments,
           as: 'comments',
           required: false,
-          order: [['commented_at', 'ASC']]
+          order: [['created_at', 'ASC']]
         },
         {
           model: TaskResults,
           as: 'results',
           required: false,
-          order: [['result_date', 'ASC']]
+          order: [['created_at', 'ASC']]
         }
       ]
     });
@@ -161,14 +221,106 @@ export const getTaskById = async (req, res) => {
       });
     }
 
+    const responseData = task.toJSON();
+    responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
+
     res.status(200).json({
       success: true,
-      data: task
+      data: responseData
     });
   } catch (error) {
+    console.error('Error fetching task:', error);
     res.status(500).json({
       success: false,
       message: "Error fetching task",
+      error: error.message
+    });
+  }
+};
+
+// PUT /api/tasks/:id/updateStatus - Update status task
+export const updateTaskStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['pending', 'completed', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status tidak valid. Valid statuses: " + validStatuses.join(', ')
+      });
+    }
+
+    const task = await Tasks.findByPk(id);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task tidak ditemukan"
+      });
+    }
+
+    const oldStatus = task.status;
+
+    // Update status
+    await task.update({ status });
+
+    // Ambil data terbaru
+    const updatedTask = await Tasks.findOne({
+      where: { id },
+      include: [
+        {
+          model: User,
+          as: 'assignee',
+          attributes: ['id', 'name', 'email']
+        }
+      ]
+    });
+
+    const responseData = updatedTask.toJSON();
+    responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
+
+    console.log(`✅ Task ${id} status updated from "${oldStatus}" to "${status}"`);
+    
+    res.status(200).json({
+      success: true,
+      message: "Status task berhasil diupdate",
+      data: responseData
+    });
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating task status",
+      error: error.message
+    });
+  }
+};
+
+// DELETE /api/tasks/:id - Delete task
+export const deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const task = await Tasks.findByPk(id);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task tidak ditemukan"
+      });
+    }
+
+    await task.destroy();
+
+    res.status(200).json({
+      success: true,
+      message: "Task berhasil dihapus"
+    });
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting task",
       error: error.message
     });
   }
@@ -181,7 +333,7 @@ export const getTaskComments = async (req, res) => {
     
     const comments = await TaskComments.findAll({
       where: { task_id: id },
-      order: [['commented_at', 'ASC']]
+      order: [['created_at', 'ASC']]
     });
 
     res.status(200).json({
@@ -189,6 +341,7 @@ export const getTaskComments = async (req, res) => {
       data: comments
     });
   } catch (error) {
+    console.error('Error fetching task comments:', error);
     res.status(500).json({
       success: false,
       message: "Error fetching task comments",
@@ -231,6 +384,7 @@ export const addTaskComment = async (req, res) => {
       data: newComment
     });
   } catch (error) {
+    console.error('Error adding comment:', error);
     res.status(500).json({
       success: false,
       message: "Error adding comment",
@@ -268,6 +422,7 @@ export const updateTaskComment = async (req, res) => {
       data: comment
     });
   } catch (error) {
+    console.error('Error updating comment:', error);
     res.status(500).json({
       success: false,
       message: "Error updating comment",
@@ -297,6 +452,7 @@ export const deleteTaskComment = async (req, res) => {
       message: "Komentar berhasil dihapus"
     });
   } catch (error) {
+    console.error('Error deleting comment:', error);
     res.status(500).json({
       success: false,
       message: "Error deleting comment",
@@ -304,58 +460,3 @@ export const deleteTaskComment = async (req, res) => {
     });
   }
 };
-
-export const updateTaskStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const validStatuses = ['new', 'pending', 'completed', 'overdue', 'cancelled'];
-    if (!status || !validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "invalid status. Valid statuses are: " + validStatuses.join(', ')
-      });
-    }
-
-    const task = await Tasks.findByPk(id);
-    if(!task) {
-      return res.status(404).json({
-        success: false,
-        message: "task tidak ditemukan"
-      })
-    }
-    const oldStatus = task.status;
-
-    if (oldStatus === status) {
-      return res.status(200).json({
-        success: true,
-        message: "no status change detected",
-        data: {
-          task_id: id,
-          status: status,
-          update_at: task.update_at
-        }
-      })
-    }
-
-    console.log(`✅ Task ${id} status updated from "${oldStatus}" to "${status}"`);
-    res.status(200).json({
-      success: true,
-      message: "Task status updated successfully",
-      data: {
-        task_id: id,
-        old_status: oldStatus,
-        new_status: status,
-        updated_at: new Date()
-      }
-    })
-  } catch (error) {
-    console.error('Error updating task status:', error);
-    res.status(500).json({
-      success: false,
-      message: "Error updating task status",
-      error: error.message
-    });
-  }
-}

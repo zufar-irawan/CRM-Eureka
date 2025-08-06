@@ -1,16 +1,47 @@
-// File: models/associations.js - Updated with proper foreign key associations
+// File: models/associations.js - Updated with proper foreign key associations including roles
 import { Leads } from "./leads/leadsModel.js";
 import { LeadComments } from "./leads/leadsCommentModel.js";
 import { Tasks } from "./tasks/tasksModel.js";
 import { TaskComments } from "./tasks/tasksCommentModel.js";
 import { TaskResults } from "./tasks/tasksResultModel.js";
 import { User } from "./usersModel.js";
+import { Role, UserRole } from "./rolesModel.js"; // Import dari file terpisah
 import { Deals } from "./deals/dealsModel.js";
 import { DealComments } from "./deals/dealsCommentModel.js";
 import { Companies } from "./companies/companiesModel.js";
 import { Contacts } from "./contacts/contactsModel.js";
 
 export const setupAssociations = () => {
+    User.belongsToMany(Role, {
+        through: UserRole,
+        foreignKey: 'user_id',
+        otherKey: 'role_id',
+        as: 'roles'
+    });
+
+    Role.belongsToMany(User, {
+        through: UserRole,
+        foreignKey: 'role_id',
+        otherKey: 'user_id',
+        as: 'users'
+    });
+
+    User.hasMany(UserRole, {
+        foreignKey: 'user_id',
+        as: 'userRoles'
+    });
+
+    UserRole.belongsTo(User, {
+        foreignKey: 'user_id',
+        as: 'user'
+    });
+
+    UserRole.belongsTo(Role, {
+        foreignKey: 'role_id',
+        as: 'role'
+    });
+
+    // Leads associations
     Leads.hasMany(LeadComments, {
         foreignKey: 'lead_id',  
         as: 'comments'
@@ -38,6 +69,8 @@ export const setupAssociations = () => {
         foreignKey: 'user_id',
         as: 'user'
     });
+
+    // Tasks associations
     Tasks.belongsTo(User, {
         foreignKey: 'assigned_to',
         as: 'assignee'
@@ -61,6 +94,8 @@ export const setupAssociations = () => {
         foreignKey: 'task_id',
         as: 'task'
     });
+
+    // Deals associations
     Leads.hasMany(Deals, {
         foreignKey: 'lead_id',
         as: 'deals'
@@ -98,6 +133,7 @@ export const setupAssociations = () => {
         as: 'user'
     });
 
+    // Companies and Contacts associations
     Companies.hasMany(Contacts, {
         foreignKey: 'company_id',
         as: 'contacts'
@@ -135,6 +171,8 @@ export {
     Leads, 
     LeadComments, 
     User, 
+    Role,
+    UserRole,
     Deals, 
     DealComments,
     Companies,

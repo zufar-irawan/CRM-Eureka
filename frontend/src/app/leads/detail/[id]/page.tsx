@@ -108,7 +108,6 @@ const fetchCurrentUserFromAPI = async (): Promise<CurrentUser | null> => {
 
     const userData = await response.json();
     
-    // Store updated user data
     const userToStore = JSON.stringify(userData);
     localStorage.setItem('currentUser', userToStore);
     

@@ -385,7 +385,6 @@ export const convertLead = async (req, res) => {
                     await existingCompany.update(updateData, { transaction });
                 }
             } else {
-                // Create new company from lead data
                 const addressParts = [lead.street, lead.city, lead.state, lead.postal_code].filter(Boolean);
                 const companyAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
 
@@ -402,9 +401,7 @@ export const convertLead = async (req, res) => {
             }
         }
 
-        // STEP 2: Create Contact if personal information exists
         if (lead.fullname || lead.first_name || lead.last_name || lead.email) {
-            // Build contact name
             const contactName = lead.fullname || `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
             
             if (contactName) {
@@ -452,9 +449,9 @@ export const convertLead = async (req, res) => {
                 } else {
                     // Create new contact
                     const newContact = await Contacts.create({
-                        company_id: companyId, // Link to company
+                        company_id: companyId, 
                         name: contactName,
-                        email: lead.email, // Personal email for contact
+                        email: lead.email, 
                         phone: lead.mobile || lead.phone,
                         position: lead.job_position,
                         created_at: new Date()

@@ -12,7 +12,7 @@ import { Contacts } from "./contacts/contactsModel.js";
 
 export const setupAssociations = () => {
     Leads.hasMany(LeadComments, {
-        foreignKey: 'lead_id',
+        foreignKey: 'lead_id',  
         as: 'comments'
     });
     LeadComments.belongsTo(Leads, {
@@ -42,7 +42,6 @@ export const setupAssociations = () => {
         foreignKey: 'assigned_to',
         as: 'assignee'
     });
-    
     Tasks.hasMany(TaskComments, {
         foreignKey: 'task_id',
         as: 'comments',

@@ -58,7 +58,6 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                             <h2 className="text-md text-gray-900 mr-1">{["/deals", "/leads", "/tasks"].includes(pathname) ? "List" : "Kanban"}</h2>
                             <ChevronDown size={16} className="text-gray-500" />
                         </button>
-
                     )
                 }
 
@@ -70,7 +69,13 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                                 <button
                                     onClick={() => {
                                         setIsOpen(false);
-                                        redirect(pathname)
+                                        redirect(
+                                            pathname.startsWith("/leads") ? path[0] : (
+                                                pathname.startsWith("/deals") ? path[1] : (
+                                                    pathname.startsWith("/tasks") ? path[2] : (
+                                                        pathname.startsWith("/companies") ? path[3] : ""
+                                                    )
+                                                )))
                                     }}
                                     className="w-full px-4 py-2 text-left hover:bg-gray-100"
                                 >

@@ -5,6 +5,8 @@ import Sidebar from "@/components/Sidebar"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import CreateTasksModal from "./add/page"
+import EditTasksModal from "./edit/editModal"
+import { useTaskModalStore } from "@/Store/taskModalStore"
 
 export default function TasksLayout(
     { children }: { children: React.ReactNode }
@@ -12,6 +14,7 @@ export default function TasksLayout(
     const [isMinimized, setIsMinimized] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
+    const { isOpens, editData, closeModal } = useTaskModalStore();
 
     const PathName = usePathname()
 
@@ -35,6 +38,14 @@ export default function TasksLayout(
 
             {isModalOpen && (
                 <CreateTasksModal onClose={() => setIsModalOpen(false)} />
+            )}
+
+            {isOpens && editData && (
+                <EditTasksModal
+                    data={editData}
+                    onClose={closeModal}
+                    onUpdated={() => window.dispatchEvent(new Event("create"))}
+                />
             )}
         </div>
     )

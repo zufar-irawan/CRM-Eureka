@@ -23,6 +23,7 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import CreateDealsModal from "./add/AddDealsModal";
 import Swal from "sweetalert2";
+import { useDealEditStore } from "@/Store/dealModalStore";
 
 interface Deal {
   id: string;
@@ -53,6 +54,7 @@ export default function Deals() {
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const openEditModal = useDealEditStore((state) => state.openModal)
 
   const stages = ["proposal", "negotiation", "won", "lost"];
 
@@ -484,7 +486,8 @@ export default function Deals() {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleEditDeal(deal);
+                                        openEditModal(deal.id);
+                                        setActionMenuOpenId(null)
                                       }}
                                       className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                     >
@@ -656,14 +659,7 @@ export default function Deals() {
             </div>
 
             {/* Edit Deal Modal */}
-            {currentDeal && (
-              <EditDealModal
-                deal={currentDeal}
-                isOpen={editModalOpen}
-                onClose={() => setEditModalOpen(false)}
-                onSave={handleSaveDeal}
-              />
-            )}
+            <EditDealModal />
 
             {/* Delete Deal Modal */}
             {deleteModalOpen && (

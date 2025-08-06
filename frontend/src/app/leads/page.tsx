@@ -459,286 +459,284 @@ export default function MainLeads() {
 
         {/* Desktop Table */}
         <div className="hidden z-40 lg:block bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full relative">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={toggleSelectAll}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile No</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
-                ) : leads.length === 0 ? (
-                  <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
-                ) : leads.map((lead) => (
-                  <tr
-                    key={lead.id}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => handleRowClick(lead.id)}
-                  >
-                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedLeads.includes(lead.id.toString())}
-                        onChange={() => toggleSelectLead(lead.id.toString())}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                          <User className="w-3 h-3 text-blue-600" />
-                        </div>
-                        <div className="text-xs font-medium text-gray-900">{lead.title + " " + lead.fullname}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
-                        {lead.stage}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-xs text-blue-600 hover:underline">{lead.email}</td>
-                    <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
-                    <td className="px-6 py-4 text-xs text-gray-500">
-                      {new Date(lead.updated_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500" onClick={(e) => e.stopPropagation()}>
-                      <div className="relative" data-action-menu>
-                        <button
-                          className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
-                          }}
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
-
-                        {actionMenuOpenId === lead.id.toString() && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-40"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActionMenuOpenId(null);
-                              }}
-                            />
-
-                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
-                              ? 'bottom-full mb-1'
-                              : 'top-full mt-1'
-                              }`}>
-                              <div className="py-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditLead(lead);
-                                  }}
-                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDeleteModal([lead.id.toString()]);
-                                  }}
-                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          </>
-                        )}
-
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Mobile Cards */}
-        <div className="lg:hidden space-y-4">
-          {loading ? (
-            <p className="text-2xl">Loading...</p>
-          ) : leads.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No unconverted leads found</p>
-          ) : leads.map((lead) => (
-            <div
-              key={lead.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer"
-              onClick={() => handleRowClick(lead.id)}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center">
+          <table className="w-full relative">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedLeads.includes(lead.id.toString())}
-                    onChange={() => toggleSelectLead(lead.id.toString())}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
-                    onClick={(e) => e.stopPropagation()}
+                    checked={isAllSelected}
+                    onChange={toggleSelectAll}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                    <User className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">{lead.fullname}</h3>
-                    <div className="flex items-center text-xs text-gray-500 mt-1">
-                      <Building2 className="w-3 h-3 mr-1" />
-                      {lead.company}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile No</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr><td className="px-6 py-4" colSpan={8}>Loading...</td></tr>
+              ) : leads.length === 0 ? (
+                <tr><td className="px-6 py-4 text-gray-500 text-center" colSpan={8}>No unconverted leads found</td></tr>
+              ) : leads.map((lead) => (
+                <tr
+                  key={lead.id}
+                  className="hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => handleRowClick(lead.id)}
+                >
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedLeads.includes(lead.id.toString())}
+                      onChange={() => toggleSelectLead(lead.id.toString())}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <User className="w-3 h-3 text-blue-600" />
+                      </div>
+                      <div className="text-xs font-medium text-gray-900">{lead.title + " " + lead.fullname}</div>
                     </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
-                    {lead.stage}
-                  </span>
+                  </td>
+                  <td className="px-6 py-4 text-xs text-gray-900">{lead.company}</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
+                      {lead.stage}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-xs text-blue-600 hover:underline">{lead.email}</td>
+                  <td className="px-6 py-4 text-xs text-gray-900">{lead.mobile}</td>
+                  <td className="px-6 py-4 text-xs text-gray-500">
+                    {new Date(lead.updated_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative" data-action-menu>
+                      <button
+                        className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                        }}
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
 
-                  <div className="relative" data-action-menu onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
-                      }}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
+                      {actionMenuOpenId === lead.id.toString() && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActionMenuOpenId(null);
+                            }}
+                          />
 
-                    {actionMenuOpenId === lead.id.toString() && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActionMenuOpenId(null);
-                          }}
-                        />
-
-                        <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
-                          ? 'bottom-full mb-1'
-                          : 'top-full mt-1'
-                          }`}>
-                          <div className="py-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditLead(lead);
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openDeleteModal([lead.id.toString()]);
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Delete
-                            </button>
+                          <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                            ? 'bottom-full mb-1'
+                            : 'top-full mt-1'
+                            }`}>
+                            <div className="py-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditLead(lead);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openDeleteModal([lead.id.toString()]);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
+
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="lg:hidden space-y-4">
+        {loading ? (
+          <p className="text-2xl">Loading...</p>
+        ) : leads.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No unconverted leads found</p>
+        ) : leads.map((lead) => (
+          <div
+            key={lead.id}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer"
+            onClick={() => handleRowClick(lead.id)}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedLeads.includes(lead.id.toString())}
+                  onChange={() => toggleSelectLead(lead.id.toString())}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <User className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">{lead.fullname}</h3>
+                  <div className="flex items-center text-xs text-gray-500 mt-1">
+                    <Building2 className="w-3 h-3 mr-1" />
+                    {lead.company}
                   </div>
                 </div>
               </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center text-gray-600">
-                  <Mail className="w-4 h-4 mr-2" />
-                  <span className="text-blue-600">{lead.email}</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Phone className="w-4 h-4 mr-2" />
-                  {lead.mobile}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                <span className="text-xs text-gray-500">
-                  {new Date(lead.updated_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
+                  {lead.stage}
                 </span>
+
+                <div className="relative" data-action-menu onClick={(e) => e.stopPropagation()}>
+                  <button
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                    }}
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+
+                  {actionMenuOpenId === lead.id.toString() && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActionMenuOpenId(null);
+                        }}
+                      />
+
+                      <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                        ? 'bottom-full mb-1'
+                        : 'top-full mt-1'
+                        }`}>
+                        <div className="py-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditLead(lead);
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDeleteModal([lead.id.toString()]);
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Pagination */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">{leads.length}</span> of{" "}
-            <span className="font-medium">{leads.length}</span> results
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center text-gray-600">
+                <Mail className="w-4 h-4 mr-2" />
+                <span className="text-blue-600">{lead.email}</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Phone className="w-4 h-4 mr-2" />
+                {lead.mobile}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+              <span className="text-xs text-gray-500">
+                {new Date(lead.updated_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              Previous
-            </button>
-            <button className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              1
-            </button>
-            <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              Next
-            </button>
-          </div>
-        </div>
-
-        {/* Edit Lead Modal */}
-        {currentLead && (
-          <EditLeadModal
-            lead={currentLead}
-            isOpen={editModalOpen}
-            onClose={() => setEditModalOpen(false)}
-            onSave={handleSaveLead}
-          />
-        )}
-
-        {/* Delete Lead Modal */}
-        {deleteModalOpen && (
-          <DeleteLeadModal
-            selectedCount={leadsToDelete.length}
-            selectedIds={leadsToDelete}
-            onClose={closeDeleteModal}
-            onConfirm={confirmDelete}
-            type="leads"
-          />
-        )}
+        ))}
       </div>
-    </main>
+
+      {/* Pagination */}
+      <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+        <div className="text-sm text-gray-700">
+          Showing <span className="font-medium">1</span> to <span className="font-medium">{leads.length}</span> of{" "}
+          <span className="font-medium">{leads.length}</span> results
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Previous
+          </button>
+          <button className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            1
+          </button>
+          <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* Edit Lead Modal */}
+      {currentLead && (
+        <EditLeadModal
+          lead={currentLead}
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          onSave={handleSaveLead}
+        />
+      )}
+
+      {/* Delete Lead Modal */}
+      {deleteModalOpen && (
+        <DeleteLeadModal
+          selectedCount={leadsToDelete.length}
+          selectedIds={leadsToDelete}
+          onClose={closeDeleteModal}
+          onConfirm={confirmDelete}
+          type="leads"
+        />
+      )}
+    </main >
   );
 }

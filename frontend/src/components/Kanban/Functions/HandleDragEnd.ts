@@ -114,7 +114,6 @@ export default async function handleDragEnd({
 
     } catch (error) {
         console.error('Failed to update stage:', error);
-        alert('Failed to move item. Changes have been reverted.');
     }
 
 }

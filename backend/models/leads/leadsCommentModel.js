@@ -1,3 +1,4 @@
+// File: models/leads/leadsCommentModel.js - Updated dengan nested replies support
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -14,6 +15,25 @@ export const LeadComments = sequelize.define('LeadComment', {
       model: 'leads',
       key: 'id'
     }
+  },
+  parent_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'lead_comments',
+      key: 'id'
+    },
+    comment: 'Parent comment ID for nested replies'
+  },
+  reply_level: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    validate: {
+      min: 0,
+      max: 5 // Batasi maksimal 5 level nesting
+    },
+    comment: 'Nesting level: 0=top level, 1=reply, 2=reply to reply, etc'
   },
   user_id: {
     type: DataTypes.INTEGER,
@@ -40,5 +60,31 @@ export const LeadComments = sequelize.define('LeadComment', {
   tableName: 'lead_comments',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: false
+  updatedAt: false,
+  indexes: [
+    {
+      fields: ['lead_id']
+    },
+    {
+      fields: ['parent_id']
+    },
+    {
+      fields: ['user_id']
+    },
+    {
+      fields: ['lead_id', 'parent_id'] // Composite index untuk query efisien
+    }
+  ]
+});
+
+// Self-referencing association untuk nested comments
+LeadComments.hasMany(LeadComments, {
+  as: 'replies',
+  foreignKey: 'parent_id',
+  onDelete: 'CASCADE'
+});
+
+LeadComments.belongsTo(LeadComments, {
+  as: 'parent',
+  foreignKey: 'parent_id'
 });

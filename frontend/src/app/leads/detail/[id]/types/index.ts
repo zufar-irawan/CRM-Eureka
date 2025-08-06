@@ -17,15 +17,65 @@ export interface Lead {
   status?: boolean;
 }
 
+// Updated types.ts untuk support nested comments
 export interface Comment {
   id: number;
   lead_id: number;
-  user_id?: number;
-  user_name?: string;
+  parent_id: number | null;         // NEW: Parent comment ID
+  reply_level: number;              // NEW: Nesting level
+  user_id: number | null;
+  user_name: string | null;
   message: string;
   created_at: string;
-  parent_id?: number | null;
-  replies?: Comment[];
+  replies?: Comment[];              // NEW: Nested replies
+  is_reply?: boolean;               // NEW: Helper flag
+  parent_user?: string | null;      // NEW: Parent comment user name
+}
+
+export interface CommentStats {
+  total_comments: number;
+  top_level_comments: number;
+  total_replies: number;
+}
+
+export interface CommentResponse {
+  comments: Comment[];
+  stats: CommentStats;
+}
+
+export interface CommentThread {
+  thread: Comment;
+  stats: {
+    total_comments: number;
+    replies_count: number;
+  };
+}
+
+// Updated request interfaces
+export interface AddCommentRequest {
+  message: string;
+  user_id?: number;
+  user_name?: string;
+  parent_id?: number;               // NEW: For replies
+}
+
+export interface ReplyToCommentRequest extends AddCommentRequest {
+  parent_id: number;                // Required for replies
+}
+
+// Helper interfaces for frontend state
+export interface CommentFormState {
+  message: string;
+  submitting: boolean;
+  parentId?: number;
+}
+
+export interface ReplyState {
+  [commentId: number]: {
+    message: string;
+    submitting: boolean;
+    visible: boolean;
+  };
 }
 
 export interface CurrentUser {
@@ -52,10 +102,6 @@ export interface StatusOption {
 export interface TabConfig {
   name: string;
   icon: any; // LucideIcon type
-}
-
-export interface ReplyState {
-  [key: number]: string;
 }
 
 export interface SubmittingState {

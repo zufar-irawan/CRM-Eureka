@@ -7,6 +7,43 @@ import { Contacts } from "../models/contacts/contactsModel.js";
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js'; 
 
+const buildCommentTree = (comments) => {
+  const commentMap = {};
+  const rootComments = [];
+
+  // First pass: create map of all comments
+  comments.forEach(comment => {
+    commentMap[comment.id] = {
+      ...comment.toJSON(),
+      replies: []
+    };
+  });
+
+  // Second pass: build tree structure
+  comments.forEach(comment => {
+    if (comment.parent_id === null) {
+      // Top level comment
+      rootComments.push(commentMap[comment.id]);
+    } else if (commentMap[comment.parent_id]) {
+      // Reply to another comment
+      commentMap[comment.parent_id].replies.push(commentMap[comment.id]);
+    }
+  });
+
+  // Sort replies by created_at (oldest first for natural conversation flow)
+  const sortReplies = (comments) => {
+    comments.forEach(comment => {
+      if (comment.replies && comment.replies.length > 0) {
+        comment.replies.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        sortReplies(comment.replies);
+      }
+    });
+  };
+
+  sortReplies(rootComments);
+  return rootComments;
+};
+
 export const getLeads = async (req, res) => {
     try {
         const {
@@ -653,12 +690,26 @@ export const getLeadComments = async (req, res) => {
             return res.status(404).json({ message: "Lead not found" });
         }
 
+        // Fetch all comments for this lead (including replies)
         const comments = await LeadComments.findAll({
             where: { lead_id: leadId },
-            order: [['created_at', 'DESC']]
+            order: [['created_at', 'DESC']] // Top-level comments newest first
         });
 
-        res.status(200).json(comments);
+        // Build nested tree structure
+        const nestedComments = buildCommentTree(comments);
+
+        // Add statistics
+        const stats = {
+            total_comments: comments.length,
+            top_level_comments: comments.filter(c => c.parent_id === null).length,
+            total_replies: comments.filter(c => c.parent_id !== null).length
+        };
+
+        res.status(200).json({
+            comments: nestedComments,
+            stats
+        });
     } catch (error) {
         console.error('Error fetching lead comments:', error);
         res.status(500).json({ message: error.message });
@@ -676,7 +727,7 @@ export const addLeadComment = async (req, res) => {
             return res.status(400).json({ message: "Invalid lead ID" });
         }
 
-        const { message, user_id, user_name } = req.body;
+        const { message, user_id, user_name, parent_id } = req.body;
         
         if (!message || !message.trim()) {
             await transaction.rollback();
@@ -689,8 +740,39 @@ export const addLeadComment = async (req, res) => {
             return res.status(404).json({ message: "Lead not found" });
         }
 
+        let reply_level = 0;
+        let parentComment = null;
+
+        // If this is a reply to another comment
+        if (parent_id) {
+            parentComment = await LeadComments.findOne({
+                where: { 
+                    id: parent_id,
+                    lead_id: leadId // Ensure parent belongs to same lead
+                },
+                transaction
+            });
+
+            if (!parentComment) {
+                await transaction.rollback();
+                return res.status(400).json({ message: "Parent comment not found" });
+            }
+
+            reply_level = parentComment.reply_level + 1;
+
+            // Limit nesting depth (e.g., max 3 levels: comment -> reply -> reply to reply)
+            if (reply_level > 3) {
+                await transaction.rollback();
+                return res.status(400).json({ 
+                    message: "Maximum reply depth exceeded. Please reply to a higher level comment." 
+                });
+            }
+        }
+
         const comment = await LeadComments.create({
             lead_id: leadId,
+            parent_id: parent_id || null,
+            reply_level,
             user_id,
             user_name,
             message: message.trim()
@@ -699,15 +781,72 @@ export const addLeadComment = async (req, res) => {
         await transaction.commit();
         
         res.status(201).json({
-            message: "Comment added successfully",
-            comment: comment
+            message: parent_id ? "Reply added successfully" : "Comment added successfully",
+            comment: {
+                ...comment.toJSON(),
+                replies: [],
+                is_reply: !!parent_id,
+                parent_user: parentComment ? parentComment.user_name : null
+            }
         });
     } catch (error) {
         await transaction.rollback();
         console.error('Error adding lead comment:', error);
         res.status(500).json({ message: error.message });
     }
-}
+};
+
+export const getCommentThread = async (req, res) => {
+    try {
+        const commentId = parseInt(req.params.commentId);
+        
+        if (isNaN(commentId)) {
+            return res.status(400).json({ message: "Invalid comment ID" });
+        }
+
+        const comment = await LeadComments.findByPk(commentId);
+        if (!comment) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+
+        // Get the root comment if this is a reply
+        let rootComment = comment;
+        if (comment.parent_id) {
+            rootComment = await LeadComments.findOne({
+                where: { 
+                    id: comment.parent_id,
+                    lead_id: comment.lead_id,
+                    parent_id: null // Ensure we get the root
+                }
+            });
+        }
+
+        // Get all comments in this thread
+        const threadComments = await LeadComments.findAll({
+            where: {
+                lead_id: comment.lead_id,
+                [Op.or]: [
+                    { id: rootComment.id }, // Root comment
+                    { parent_id: rootComment.id } // Direct replies
+                ]
+            },
+            order: [['created_at', 'ASC']]
+        });
+
+        const thread = buildCommentTree(threadComments);
+
+        res.status(200).json({
+            thread: thread[0], // Should be single root comment with nested replies
+            stats: {
+                total_comments: threadComments.length,
+                replies_count: threadComments.length - 1
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching comment thread:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
 
 export const deleteLeadComment = async (req, res) => {
     const transaction = await sequelize.transaction();

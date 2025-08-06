@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, MessageSquare } from 'lucide-react';
+import { useEffect } from 'react';
 import type { CurrentUser } from '../../types';
 import { useComments } from '../../hooks/useComments';
 import CommentForm from './CommentForm';
@@ -30,8 +31,14 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
     handleAddComment,
     handleReplyToComment,
     handleDeleteComment,
-    findCommentById
   } = useComments(leadId);
+
+  // Fetch comments on initial load and when leadId changes
+  useEffect(() => {
+    if (leadId) {
+      fetchComments();
+    }
+  }, [leadId]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -49,7 +56,6 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-xl font-semibold text-gray-900">Comments</h2>
         <button
@@ -61,14 +67,12 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
         </button>
       </div>
 
-      {/* Loading State */}
       {commentsLoading && (
         <div className="flex justify-center py-8">
           <div className="w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
         </div>
       )}
 
-      {/* Error State */}
       {commentsError && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <p className="text-red-700 text-sm">{commentsError}</p>
@@ -81,24 +85,24 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
         </div>
       )}
 
-      {/* New Comment Form */}
       {showNewComment && (
-        <CommentForm
-          value={newComment}
-          onChange={setNewComment}
-          onSubmit={() => handleAddComment(currentUser)}
-          onCancel={() => {
-            setShowNewComment(false);
-            setNewComment('');
-          }}
-          onKeyPress={handleKeyPress}
-          currentUser={currentUser}
-          submitting={submitting}
-          placeholder="Add a comment..."
-        />
+        <div className="mb-6">
+          <CommentForm
+            value={newComment}
+            onChange={setNewComment}
+            onSubmit={() => handleAddComment(currentUser)}
+            onCancel={() => {
+              setShowNewComment(false);
+              setNewComment('');
+            }}
+            onKeyPress={handleKeyPress}
+            currentUser={currentUser}
+            submitting={submitting}
+            placeholder="Add a comment..."
+          />
+        </div>
       )}
 
-      {/* Comments List */}
       {!commentsLoading && comments.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -113,7 +117,7 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-2">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}
@@ -139,7 +143,6 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
         </div>
       )}
 
-      {/* Bottom Action Buttons */}
       {!showNewComment && comments.length > 0 && !replyingTo && (
         <div className="flex items-center space-x-4 mt-6 pt-6 border-t border-gray-200">
           <button

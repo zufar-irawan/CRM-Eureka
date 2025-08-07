@@ -10,8 +10,6 @@ import { sequelize } from '../config/db.js';
 const buildCommentTree = (comments) => {
   const commentMap = {};
   const rootComments = [];
-
-  // First pass: create map of all comments
   comments.forEach(comment => {
     commentMap[comment.id] = {
       ...comment.toJSON(),
@@ -19,18 +17,14 @@ const buildCommentTree = (comments) => {
     };
   });
 
-  // Second pass: build tree structure
   comments.forEach(comment => {
     if (comment.parent_id === null) {
-      // Top level comment
       rootComments.push(commentMap[comment.id]);
     } else if (commentMap[comment.parent_id]) {
-      // Reply to another comment
       commentMap[comment.parent_id].replies.push(commentMap[comment.id]);
     }
   });
 
-  // Sort replies by created_at (oldest first for natural conversation flow)
   const sortReplies = (comments) => {
     comments.forEach(comment => {
       if (comment.replies && comment.replies.length > 0) {

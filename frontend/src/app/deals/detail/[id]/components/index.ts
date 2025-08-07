@@ -1,0 +1,10 @@
+export { default as DealHeader } from './DealHeader';
+export { default as TabNavigation } from './TabNavigation';
+export { default as TabContent } from './TabContent';
+export { default as ActivityTab } from './ActivityTab';
+export { default as EmailsTab } from './EmailsTab';
+export { default as CommentsTab } from './CommentsTab';
+export { default as DataTab } from './DataTab';
+export { default as ContactsSidebar } from './ContactSidebar';
+export { default as OrganizationDetails } from './OrganizationDetails';
+export { default as RightSidebar } from './RightSidebar';

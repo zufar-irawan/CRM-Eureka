@@ -3,7 +3,7 @@
 import { Plus, MessageSquare, Users, MessageCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import type { CurrentUser } from '../../types';
-import { useDealComments } from '../../hooks/useDealComments';
+import { useComments } from '../../hooks/useComments';
 import DealCommentForm from './DealCommentForm';
 import DealCommentItem from './DealCommentItem';
 
@@ -35,7 +35,7 @@ export default function DealCommentsTab({ dealId, currentUser }: DealCommentsTab
     handleReplyToComment,
     handleDeleteComment,
     handleReplyKeyPress,
-  } = useDealComments(dealId);
+  } = useComments(dealId);
 
   // Fetch comments on initial load and when dealId changes
   useEffect(() => {

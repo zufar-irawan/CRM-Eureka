@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { User } from '../../types';
 import { getFirstChar } from '../../utils/formatting';
 import { makeAuthenticatedRequest } from '../../utils/auth';
-import { API_ENDPOINTS, FALLBACK_USERS } from '../../utils/constants';
+import { API_ENDPOINTS, FALLBACK_USERS } from '../../utils/constant';
 
 interface DealUserSelectorProps {
   show: boolean;

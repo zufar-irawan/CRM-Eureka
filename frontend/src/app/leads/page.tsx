@@ -111,7 +111,7 @@ const ALL_COLUMNS = {
   stage: { key: 'stage', label: 'Status', default: true, sortable: true },
   email: { key: 'email', label: 'Email', default: true, sortable: true },
   mobile: { key: 'mobile', label: 'Mobile No', default: true, sortable: true },
-  updated_at: { key: 'updated_at', label: 'Last Modified', default: true, sortable: true },
+  updated_at: { key: 'updated_at', label: 'Last Modified', default: true, sortable: false },
   owner: { key: 'owner', label: 'Owner', default: false, sortable: true },
   title: { key: 'title', label: 'Title', default: false, sortable: true },
   first_name: { key: 'first_name', label: 'First Name', default: false, sortable: true },
@@ -122,7 +122,7 @@ const ALL_COLUMNS = {
   fax: { key: 'fax', label: 'Fax', default: false, sortable: false },
   website: { key: 'website', label: 'Website', default: false, sortable: true },
   industry: { key: 'industry', label: 'Industry', default: false, sortable: true },
-  number_of_employees: { key: 'number_of_employees', label: 'Number of Employees', default: false, sortable: true },
+  number_of_employees: { key: 'number_of_employees', label: 'Number of Employees', default: false, sortable: false },
   lead_source: { key: 'lead_source', label: 'Lead Source', default: false, sortable: true },
   rating: { key: 'rating', label: 'Rating', default: false, sortable: true },
   street: { key: 'street', label: 'Street', default: false, sortable: false },
@@ -131,8 +131,8 @@ const ALL_COLUMNS = {
   postal_code: { key: 'postal_code', label: 'Postal Code', default: false, sortable: false },
   country: { key: 'country', label: 'Country', default: false, sortable: true },
   description: { key: 'description', label: 'Description', default: false, sortable: false },
-  created_at: { key: 'created_at', label: 'Created At', default: false, sortable: true },
-} as const;
+  created_at: { key: 'created_at', label: 'Created At', default: false, sortable: false },
+} as const
 
 export default function MainLeads() {
   const router = useRouter();
@@ -188,7 +188,11 @@ export default function MainLeads() {
       setOriginalLeads(response.data.leads);
       setLeads(response.data.leads);
     } catch (err: any) {
-      alert(err.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: err.message
+      })
     } finally {
       setLoading(false);
     }
@@ -693,6 +697,7 @@ export default function MainLeads() {
                 </div>
               )}
             </div>
+
           </div>
         </div>
 
@@ -709,6 +714,7 @@ export default function MainLeads() {
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
+
                 {visibleColumns.map((columnKey) => {
                   const column = ALL_COLUMNS[columnKey as keyof typeof ALL_COLUMNS];
                   return (
@@ -729,6 +735,7 @@ export default function MainLeads() {
                     </th>
                   );
                 })}
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10">
                   Actions
                 </th>
@@ -760,11 +767,13 @@ export default function MainLeads() {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </td>
+
                   {visibleColumns.map((columnKey) => (
                     <td key={columnKey} className="px-6 py-4 whitespace-nowrap">
                       {renderCellContent(lead, columnKey)}
                     </td>
                   ))}
+
                   <td className="px-6 py-4 text-sm text-gray-500 sticky right-0 bg-white z-10" onClick={(e) => e.stopPropagation()}>
                     <div className="relative" data-action-menu>
                       <button

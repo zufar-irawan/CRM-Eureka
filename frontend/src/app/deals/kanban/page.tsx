@@ -111,7 +111,7 @@ export default function DealsKanban() {
                                     <RotateCcw className="w-3 h-3" />
                                 </button>
 
-                                <button className="flex items-center gap-2 px-3 py-2 text-xs border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
+                                {/* <button className="flex items-center gap-2 px-3 py-2 text-xs border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
                                     <Filter className="w-3 h-3" />
                                     <span className="hidden sm:inline">Filter</span>
                                 </button>
@@ -119,7 +119,7 @@ export default function DealsKanban() {
                                 <button className="flex items-center gap-2 px-3 py-2 text-xs border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
                                     <KanbanIcon className="w-3 h-3" />
                                     <span className="hidden sm:inline">Kanban Settings</span>
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </div>

@@ -3,13 +3,19 @@
 import { useEffect, useState } from "react"
 import fetchData from "./Functions/FetchData"
 import deleteData from "./Functions/DeleteData"
-import { Edit, MoreHorizontal, Trash2 } from "lucide-react"
+import { Edit, MoreHorizontal, Trash2, ChevronUp, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 
 export interface Column {
     key: string
     label: string
     render?: (value: any, row: any) => React.ReactNode
+    sortable?: boolean // Optional: untuk mengontrol kolom mana yang bisa di-sort
 }
+
+type SortConfig = {
+    key: string
+    direction: 'asc' | 'desc'
+} | null
 
 // ✅ Helper: Mendukung key seperti "company.name" atau "deals[0].title"
 function getNestedValue(obj: any, path: string): any {
@@ -19,13 +25,54 @@ function getNestedValue(obj: any, path: string): any {
         .reduce((acc, key) => acc?.[key], obj)
 }
 
+// ✅ Helper: Sorting function
+function sortData(data: any[], sortConfig: SortConfig): any[] {
+    if (!sortConfig) return data
+
+    return [...data].sort((a, b) => {
+        const aValue = getNestedValue(a, sortConfig.key)
+        const bValue = getNestedValue(b, sortConfig.key)
+
+        // Handle null/undefined values
+        if (aValue == null && bValue == null) return 0
+        if (aValue == null) return 1
+        if (bValue == null) return -1
+
+        // Handle dates
+        if (sortConfig.key.includes('date') || sortConfig.key.includes('_at')) {
+            const aDate = new Date(aValue)
+            const bDate = new Date(bValue)
+            return sortConfig.direction === 'asc'
+                ? aDate.getTime() - bDate.getTime()
+                : bDate.getTime() - aDate.getTime()
+        }
+
+        // Handle numbers
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+            return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue
+        }
+
+        // Handle strings (case insensitive)
+        const aString = String(aValue).toLowerCase()
+        const bString = String(bValue).toLowerCase()
+
+        if (aString < bString) return sortConfig.direction === 'asc' ? -1 : 1
+        if (aString > bString) return sortConfig.direction === 'asc' ? 1 : -1
+        return 0
+    })
+}
+
 export default function DesktopTable({
     pathname,
     columns,
     visibleColumns,
     loading,
     setLoading,
-    onEdit
+    onEdit,
+    selectedStatus,
+    selectedCategory,
+    selectedPriority,
+    searchTerm,
 }: {
     pathname: string
     columns: Column[]
@@ -33,22 +80,91 @@ export default function DesktopTable({
     loading: boolean
     setLoading: React.Dispatch<React.SetStateAction<boolean>>
     onEdit?: (row: any) => void
+    selectedStatus?: string | null
+    searchTerm?: string
+    selectedCategory?: string | null
+    selectedPriority?: string | null
 }) {
     const [data, setData] = useState<any[]>([])
+    const [originalData, setOriginalData] = useState<any[]>([])
     const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null)
     const [selectedData, setSelectedData] = useState<string[]>([])
+    const [sortConfig, setSortConfig] = useState<SortConfig>(null)
 
     useEffect(() => {
         const refresh = () => {
-            fetchData({ setData, setLoading, url: pathname })
+            fetchData({
+                setData: (newData) => {
+                    setOriginalData(newData)
+                    setData(newData)
+                },
+                setLoading,
+                url: pathname,
+                selectedStatus,
+                selectedCategory,
+                selectedPriority,
+                searchTerm
+            })
         }
 
-        fetchData({ setData, setLoading, url: pathname })
+        fetchData({
+            setData: (newData) => {
+                setOriginalData(newData)
+                setData(newData)
+            },
+            setLoading,
+            url: pathname,
+            selectedStatus,
+            selectedCategory,
+            selectedPriority,
+            searchTerm
+        })
 
         window.addEventListener("create", refresh)
 
         return () => window.removeEventListener("create", refresh)
-    }, [])
+    }, [selectedStatus, selectedCategory, selectedPriority, searchTerm])
+
+    // Apply sorting when sortConfig or originalData changes
+    useEffect(() => {
+        if (originalData.length > 0) {
+            const sortedData = sortData(originalData, sortConfig)
+            setData(sortedData)
+        }
+    }, [sortConfig, originalData])
+
+    const handleSort = (columnKey: string) => {
+        setSortConfig(prevConfig => {
+            if (!prevConfig || prevConfig.key !== columnKey) {
+                return { key: columnKey, direction: 'asc' }
+            }
+
+            if (prevConfig.direction === 'asc') {
+                return { key: columnKey, direction: 'desc' }
+            }
+
+            if (prevConfig.direction === 'desc') {
+                return null;
+            }
+
+            return { key: columnKey, direction: 'asc' }
+        })
+    }
+
+    const getSortIcon = (columnKey: string) => {
+        if (!sortConfig || sortConfig.key !== columnKey) {
+            return (
+                <ArrowUpDown className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            )
+        }
+
+        return sortConfig.direction === 'asc' ? (
+            <ArrowUp className="w-3 h-3 text-blue-600" />
+        ) : (
+            <ArrowDown className="w-3 h-3 text-blue-600" />
+        )
+    }
+
 
     const isAllSelected = data.length > 0 && selectedData.length === data.length
 
@@ -67,7 +183,9 @@ export default function DesktopTable({
             url: pathname,
             ids,
             onSuccess: () => {
-                setData((prev) => prev.filter((item) => !ids.includes(item.id.toString())))
+                const updatedData = originalData.filter((item) => !ids.includes(item.id.toString()))
+                setOriginalData(updatedData)
+                setData(sortData(updatedData, sortConfig))
                 setSelectedData((prev) => prev.filter((id) => !ids.includes(id)))
                 setActionMenuOpenId(null)
             },
@@ -95,9 +213,15 @@ export default function DesktopTable({
                             .map((col) => (
                                 <th
                                     key={col.key}
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    className={`group px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${col.sortable !== false ? 'cursor-pointer hover:bg-gray-100 select-none' : ''
+                                        }`}
+                                    onClick={() => col.sortable !== false && handleSort(col.key)}
                                 >
-                                    {col.label}
+
+                                    <div className="flex items-center justify-between">
+                                        <span>{col.label}</span>
+                                        {col.sortable !== false && getSortIcon(col.key)}
+                                    </div>
                                 </th>
                             ))}
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

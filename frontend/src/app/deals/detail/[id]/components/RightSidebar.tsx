@@ -2,7 +2,7 @@
 
 import { Deal, Contact } from '../types';
 import { Mail, Link2, Paperclip } from 'lucide-react';
-import ContactsSidebar from './ContactSidebar';
+import ContactsSidebar from './ContactsSidebar';
 import OrganizationDetails from './OrganizationDetails';
 
 interface RightSidebarProps {

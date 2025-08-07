@@ -3,6 +3,37 @@ import { Deals, DealComments, Leads, User, Companies, Contacts } from '../models
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js';
 
+const buildCommentTree = (comments) => {
+  const commentMap = {};
+  const rootComments = [];
+  comments.forEach(comment => {
+    commentMap[comment.id] = {
+      ...comment.toJSON(),
+      replies: []
+    };
+  });
+
+  comments.forEach(comment => {
+    if (comment.parent_id === null) {
+      rootComments.push(commentMap[comment.id]);
+    } else if (commentMap[comment.parent_id]) {
+      commentMap[comment.parent_id].replies.push(commentMap[comment.id]);
+    }
+  });
+
+  const sortReplies = (comments) => {
+    comments.forEach(comment => {
+      if (comment.replies && comment.replies.length > 0) {
+        comment.replies.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        sortReplies(comment.replies);
+      }
+    });
+  };
+
+  sortReplies(rootComments);
+  return rootComments;
+};
+
 // GET /api/deals - Get all deals with company and contact info
 export const getAllDeals = async (req, res) => {
     try {
@@ -70,6 +101,7 @@ export const getAllDeals = async (req, res) => {
                 {
                     model: DealComments,
                     as: 'comments',
+                    where: { parent_id: null }, // Only get top-level comments for listing
                     include: [{
                         model: User,
                         as: 'user',
@@ -146,11 +178,24 @@ export const getDealById = async (req, res) => {
                 {
                     model: DealComments,
                     as: 'comments',
-                    include: [{
-                        model: User,
-                        as: 'user',
-                        attributes: ['id', 'name']
-                    }],
+                    where: { parent_id: null }, // Only top-level comments for deal details
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: ['id', 'name']
+                        },
+                        {
+                            model: DealComments,
+                            as: 'replies',
+                            include: [{
+                                model: User,
+                                as: 'user',
+                                attributes: ['id', 'name']
+                            }],
+                            order: [['created_at', 'ASC']]
+                        }
+                    ],
                     order: [['created_at', 'DESC']],
                     required: false
                 }
@@ -698,19 +743,43 @@ export const getDealComments = async (req, res) => {
     try {
         const { id } = req.params;
         
+        const dealId = parseInt(id);
+        if (isNaN(dealId)) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Invalid deal ID" 
+            });
+        }
+
+        const deal = await Deals.findByPk(dealId);
+        if (!deal) {
+            return res.status(404).json({ 
+                success: false,
+                message: "Deal not found" 
+            });
+        }
+
         const comments = await DealComments.findAll({
-            where: { deal_id: id },
+            where: { deal_id: dealId },
             include: [{
                 model: User,
                 as: 'user',
                 attributes: ['id', 'name', 'email']
             }],
-            order: [['created_at', 'DESC']]
+            order: [['created_at', 'DESC']] 
         });
+
+        const nestedComments = buildCommentTree(comments);
+        const stats = {
+            total_comments: comments.length,
+            top_level_comments: comments.filter(c => c.parent_id === null).length,
+            total_replies: comments.filter(c => c.parent_id !== null).length
+        };
 
         res.json({
             success: true,
-            data: comments
+            data: nestedComments,
+            stats
         });
     } catch (error) {
         console.error('Error fetching deal comments:', error);
@@ -724,32 +793,81 @@ export const getDealComments = async (req, res) => {
 
 // POST /api/deals/:id/comments - Add comment to deal
 export const addDealComment = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
     try {
         const { id } = req.params;
-        const { message, user_id, user_name } = req.body;
-
-        if (!message) {
-            return res.status(400).json({
+        const dealId = parseInt(id);
+        
+        if (isNaN(dealId)) {
+            await transaction.rollback();
+            return res.status(400).json({ 
                 success: false,
-                message: 'Message is required'
+                message: "Invalid deal ID" 
             });
         }
 
-        const deal = await Deals.findByPk(id);
-        if (!deal) {
-            return res.status(404).json({
+        const { message, user_id, user_name, parent_id } = req.body;
+        
+        if (!message || !message.trim()) {
+            await transaction.rollback();
+            return res.status(400).json({ 
                 success: false,
-                message: 'Deal not found'
+                message: "Comment message is required" 
             });
+        }
+
+        const deal = await Deals.findByPk(dealId, { transaction });
+        if (!deal) {
+            await transaction.rollback();
+            return res.status(404).json({ 
+                success: false,
+                message: "Deal not found" 
+            });
+        }
+
+        let reply_level = 0;
+        let parentComment = null;
+
+        // If this is a reply to another comment
+        if (parent_id) {
+            parentComment = await DealComments.findOne({
+                where: { 
+                    id: parent_id,
+                    deal_id: dealId // Ensure parent belongs to same deal
+                },
+                transaction
+            });
+
+            if (!parentComment) {
+                await transaction.rollback();
+                return res.status(400).json({ 
+                    success: false,
+                    message: "Parent comment not found" 
+                });
+            }
+
+            reply_level = parentComment.reply_level + 1;
+
+            if (reply_level > 3) {
+                await transaction.rollback();
+                return res.status(400).json({ 
+                    success: false,
+                    message: "Maximum reply depth exceeded. Please reply to a higher level comment." 
+                });
+            }
         }
 
         const comment = await DealComments.create({
-            deal_id: id,
+            deal_id: dealId,
+            parent_id: parent_id || null,
+            reply_level,
             user_id: user_id || 1,
             user_name: user_name || 'Test User',
-            message,
-            created_at: new Date()
-        });
+            message: message.trim()
+        }, { transaction });
+
+        await transaction.commit();
 
         const createdComment = await DealComments.findByPk(comment.id, {
             include: [{
@@ -758,12 +876,19 @@ export const addDealComment = async (req, res) => {
                 attributes: ['id', 'name', 'email']
             }]
         });
+        
         res.status(201).json({
             success: true,
-            message: 'Comment added successfully',
-            data: createdComment
+            message: parent_id ? "Reply added successfully" : "Comment added successfully",
+            data: {
+                ...createdComment.toJSON(),
+                replies: [],
+                is_reply: !!parent_id,
+                parent_user: parentComment ? parentComment.user_name : null
+            }
         });
     } catch (error) {
+        await transaction.rollback();
         console.error('Error adding deal comment:', error);
         res.status(500).json({
             success: false,
@@ -773,32 +898,126 @@ export const addDealComment = async (req, res) => {
     }
 };
 
-// DELETE /api/deals/:id/comments/:commentId - Delete deal comment
-export const deleteDealComment = async (req, res) => {
+export const getDealCommentThread = async (req, res) => {
     try {
         const { id, commentId } = req.params;
+        const dealId = parseInt(id);
+        const commentIdInt = parseInt(commentId);
+        
+        if (isNaN(dealId) || isNaN(commentIdInt)) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Invalid deal ID or comment ID" 
+            });
+        }
+
+        const comment = await DealComments.findOne({
+            where: {
+                id: commentIdInt,
+                deal_id: dealId
+            }
+        });
+        
+        if (!comment) {
+            return res.status(404).json({ 
+                success: false,
+                message: "Comment not found" 
+            });
+        }
+
+        // Get the root comment if this is a reply
+        let rootComment = comment;
+        if (comment.parent_id) {
+            rootComment = await DealComments.findOne({
+                where: { 
+                    id: comment.parent_id,
+                    deal_id: dealId,
+                    parent_id: null // Ensure we get the root
+                }
+            });
+        }
+
+        // Get all comments in this thread
+        const threadComments = await DealComments.findAll({
+            where: {
+                deal_id: dealId,
+                [Op.or]: [
+                    { id: rootComment.id }, // Root comment
+                    { parent_id: rootComment.id } // Direct replies
+                ]
+            },
+            include: [{
+                model: User,
+                as: 'user',
+                attributes: ['id', 'name', 'email']
+            }],
+            order: [['created_at', 'ASC']]
+        });
+
+        const thread = buildCommentTree(threadComments);
+
+        res.json({
+            success: true,
+            data: {
+                thread: thread[0], // Should be single root comment with nested replies
+                stats: {
+                    total_comments: threadComments.length,
+                    replies_count: threadComments.length - 1
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching deal comment thread:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching comment thread',
+            error: error.message
+        });
+    }
+};
+
+// DELETE /api/deals/:id/comments/:commentId - Delete deal comment
+export const deleteDealComment = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
+    try {
+        const { id, commentId } = req.params;
+        const dealId = parseInt(id);
+        const commentIdInt = parseInt(commentId);
+        
+        if (isNaN(dealId) || isNaN(commentIdInt)) {
+            await transaction.rollback();
+            return res.status(400).json({ 
+                success: false,
+                message: "Invalid deal ID or comment ID" 
+            });
+        }
         
         const comment = await DealComments.findOne({
             where: { 
-                id: commentId, 
-                deal_id: id 
-            }
+                id: commentIdInt, 
+                deal_id: dealId 
+            },
+            transaction
         });
 
         if (!comment) {
+            await transaction.rollback();
             return res.status(404).json({
                 success: false,
                 message: 'Comment not found'
             });
         }
 
-        await comment.destroy();
+        await comment.destroy({ transaction });
+        await transaction.commit();
 
         res.json({
             success: true,
             message: 'Comment deleted successfully'
         });
     } catch (error) {
+        await transaction.rollback();
         console.error('Error deleting deal comment:', error);
         res.status(500).json({
             success: false,
@@ -807,3 +1026,16 @@ export const deleteDealComment = async (req, res) => {
         });
     }
 };
+
+/*
+export {
+    createDeal,
+    createDealFromLead,
+    updateDeal,
+    updateDealStage,
+    deleteDeal,
+    getDealComments,
+    addDealComment,
+    getDealCommentThread,
+    deleteDealComment
+};*/

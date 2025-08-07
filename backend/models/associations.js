@@ -132,8 +132,6 @@ export const setupAssociations = () => {
         foreignKey: 'user_id',
         as: 'user'
     });
-
-    // Companies and Contacts associations
     Companies.hasMany(Contacts, {
         foreignKey: 'company_id',
         as: 'contacts'

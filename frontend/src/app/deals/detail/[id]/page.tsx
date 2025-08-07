@@ -2,109 +2,14 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Mail,
-  Link2,
-  ChevronDown,
-  Plus,
-  Edit,
-  MessageSquare,
-  Check,
-  User,
-  Building2,
-  Bell,
-  Calendar,
-  ChevronRight,
-  ArrowUpRight,
-  X,
-  CheckCircle,
-  Circle,
-  Activity,
-  Zap,
-  FileText,
-  Phone,
-  Users,
-  Paperclip,
-  StickyNote,
-  AlertCircle,
-  BarChart3,
-  CheckSquare,
-  Database,
-  MoreHorizontal
-} from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
-
-interface Deal {
-  id: string | number;
-  title?: string | null;
-  value?: number | null;
-  stage?: string | null;
-  probability?: number | null;
-  lead?: {
-    id?: number;
-    company?: string | null;
-    fullname?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    industry?: string | null;
-  } | null;
-  company?: {
-    id?: number;
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    address?: string | null;
-  } | null;
-  contact?: {
-    id?: number;
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    position?: string | null;
-    company?: {
-      id?: number;
-      name?: string | null;
-    } | null;
-  } | null;
-  creator?: {
-    name?: string | null;
-    email?: string | null;
-  } | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  description?: string | null;
-  comments?: Comment[] | null;
-}
-
-interface Contact {
-  id: number;
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  position?: string | null;
-  company_id?: number | null;
-  company?: {
-    id: number;
-    name: string;
-  } | null;
-  created_at?: string;
-}
-
-interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  created_at: string;
-}
-
-interface Company {
-  id: number;
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-}
+import DealHeader from "./components/DealHeader";
+import TabNavigation from "./components/TabNavigation";
+import TabContent from "./components/TabContent";
+import RightSidebar from "./components/RightSidebar";
+import { Deal, Contact, Comment, Company } from "./types";
 
 export default function DealDetailPage() {
   const { id } = useParams();
@@ -126,6 +31,7 @@ export default function DealDetailPage() {
   const [isContactsExpanded, setIsContactsExpanded] = useState(true);
   const [isOrgDetailsExpanded, setIsOrgDetailsExpanded] = useState(true);
 
+  // Utility functions
   const safeString = (value: any): string => {
     if (value === null || value === undefined) return '';
     return String(value);
@@ -179,17 +85,7 @@ export default function DealDetailPage() {
     return formatDate(dateString);
   };
 
-  const tabs = [
-    { name: "Activity", icon: BarChart3 },
-    { name: "Emails", icon: Mail },
-    { name: "Comments", icon: MessageSquare },
-    { name: "Data", icon: Database },
-    { name: "Calls", icon: Phone },
-    { name: "Tasks", icon: CheckSquare },
-    { name: "Notes", icon: StickyNote },
-    { name: "Attachments", icon: Paperclip }
-  ];
-
+  // API Functions
   const fetchDeal = async () => {
     try {
       setIsLoading(true);
@@ -270,17 +166,15 @@ export default function DealDetailPage() {
     }
   };
 
-  // Fetch related contacts based on deal's company
   const fetchRelatedContacts = async () => {
     if (!deal) return;
     
     try {
       setContactsLoading(true);
       
-      // Get contacts related to this deal
       const contactsToFetch: Contact[] = [];
       
-      // 1. Add the direct contact from deal if exists
+      // Add the direct contact from deal if exists
       if (deal.contact && deal.contact.id && deal.contact.name) {
         contactsToFetch.push({
           id: deal.contact.id,
@@ -292,12 +186,11 @@ export default function DealDetailPage() {
         });
       }
       
-      // 2. Fetch all contacts from the same company
+      // Fetch all contacts from the same company
       if (deal.company?.id) {
         const response = await fetch(`http://localhost:5000/api/contacts/company/${deal.company.id}`);
         if (response.ok) {
           const { data } = await response.json();
-          // Add company contacts that aren't already included
           data.forEach((contact: any) => {
             if (!contactsToFetch.find(c => c.id === contact.id)) {
               contactsToFetch.push({
@@ -315,7 +208,7 @@ export default function DealDetailPage() {
         }
       }
       
-      // 3. If no company but deal has lead company info, search contacts by company name
+      // If no company but deal has lead company info, search contacts by company name
       else if (deal.lead?.company && !deal.company?.id) {
         const response = await fetch(`http://localhost:5000/api/contacts?search=${encodeURIComponent(deal.lead.company)}`);
         if (response.ok) {
@@ -415,24 +308,7 @@ export default function DealDetailPage() {
     }
   };
 
-  const handleContactAction = (contactId: number, action: string) => {
-    switch (action) {
-      case 'view':
-        router.push(`/contacts/${contactId}`);
-        break;
-      case 'edit':
-        // Implement edit contact functionality
-        console.log('Edit contact', contactId);
-        break;
-      case 'delete':
-        // Implement delete contact functionality
-        console.log('Delete contact', contactId);
-        break;
-      default:
-        console.log('Unknown action', action);
-    }
-  };
-
+  // Effects
   useEffect(() => {
     if (!id) {
       setError("Invalid deal ID");
@@ -443,239 +319,11 @@ export default function DealDetailPage() {
     fetchComments();
   }, [id]);
 
-  // Fetch related contacts when deal data is loaded
   useEffect(() => {
     if (deal) {
       fetchRelatedContacts();
     }
   }, [deal]);
-
-  const renderTabContent = () => {
-    if (!deal) return null;
-
-    switch (activeTab) {
-      case "Activity":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Activity</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>New Activity</span>
-              </button>
-            </div>
-
-            <div className="space-y-8">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
-                  <User className="w-5 h-5 text-gray-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">
-                    <span className="font-semibold">{displayValue(deal.creator?.name, 'Unknown')}</span> created this deal
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">{formatTimeAgo(deal.created_at)}</p>
-                </div>
-              </div>
-
-              {deal.updated_at && deal.updated_at !== deal.created_at && (
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
-                    <Zap className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-semibold">{displayValue(deal.creator?.name, 'Unknown')}</span> updated deal stage to {displayValue(deal.stage, 'Unknown')}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">{formatTimeAgo(deal.updated_at)}</p>
-                  </div>
-                </div>
-              )}
-
-              {deal.value && deal.value > 0 && (
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-semibold">System</span> set deal value to {formatCurrency(deal.value)}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">{formatTimeAgo(deal.created_at)}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {(!deal.created_at && !deal.updated_at) && (
-              <div className="text-center py-16">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">
-                  Activity for {displayValue(deal.title, 'this deal')}
-                </h3>
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                  Create Activity
-                </button>
-              </div>
-            )}
-          </div>
-        );
-
-      case "Emails":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Emails</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Plus className="w-4 h-4" />
-                <span>Compose</span>
-              </button>
-            </div>
-            <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Mail className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">
-                Emails for {displayValue(deal.title, 'this deal')}
-              </h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Send Email
-              </button>
-            </div>
-          </div>
-        );
-
-      case "Comments":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Comments</h2>
-              <button 
-                onClick={() => {
-                  const commentText = prompt('Enter your comment:');
-                  if (commentText) {
-                    addComment(commentText).catch(() => alert('Failed to add comment'));
-                  }
-                }}
-                className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Comment</span>
-              </button>
-            </div>
-
-            {commentsLoading ? (
-              <div className="text-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading comments...</p>
-              </div>
-            ) : comments.length > 0 ? (
-              <div className="space-y-6">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-semibold text-blue-600">
-                          {getFirstChar(comment.author)}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold text-gray-900">{comment.author}</span>
-                          <span className="text-sm text-gray-500">
-                            {formatTimeAgo(comment.created_at)}
-                          </span>
-                        </div>
-                        <p className="text-gray-700">{comment.text}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <MessageSquare className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">
-                  Comments for {displayValue(deal.title, 'this deal')}
-                </h3>
-                <button 
-                  onClick={() => {
-                    const commentText = prompt('Enter your comment:');
-                    if (commentText) {
-                      addComment(commentText).catch(() => alert('Failed to add comment'));
-                    }
-                  }}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  Add Comment
-                </button>
-              </div>
-            )}
-          </div>
-        );
-
-      case "Data":
-        return (
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Deal Data</h2>
-              <button className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800">
-                <Edit className="w-4 h-4" />
-                <span>Edit</span>
-              </button>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200">
-              <div className="grid grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Deal Value</label>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(deal.value)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Probability</label>
-                  <p className="text-2xl font-bold text-gray-900">{formatPercentage(deal.probability || 0)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Created Date</label>
-                  <p className="text-base text-gray-600">{formatDate(deal.created_at)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Last Updated</label>
-                  <p className="text-base text-gray-600">{formatDate(deal.updated_at)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Stage</label>
-                  <p className="text-base text-gray-600">{displayValue(deal.stage)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Deal Owner</label>
-                  <p className="text-base text-gray-600">{displayValue(deal.creator?.name)}</p>
-                </div>
-              </div>
-              
-              {deal.description && (
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Description</label>
-                  <p className="text-gray-700 leading-relaxed">{deal.description}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="p-6">
-            <h3 className="text-lg font-medium text-gray-900">
-              {activeTab} content for {displayValue(deal.title, 'this deal')}
-            </h3>
-          </div>
-        );
-    }
-  };
 
   const currentDeal = deal || {
     id: id || '',
@@ -743,343 +391,47 @@ export default function DealDetailPage() {
 
       <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex`}>
         <div className="flex-1 bg-white">
-          <div className="border-b border-gray-200 p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-2 text-gray-600 text-sm">
-                <span>Deals</span>
-                <span>/</span>
-                <span className="text-gray-900">
-                  {displayValue(currentDeal.title, currentDeal.lead?.company || currentDeal.company?.name || 'Untitled Deal')}
-                </span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">CRM-DEAL-{currentDeal.id}</div>
-              </div>
-            </div>
+          <DealHeader
+            deal={currentDeal}
+            isDropdownOpen={isDropdownOpen}
+            setIsDropdownOpen={setIsDropdownOpen}
+            displayValue={displayValue}
+          />
 
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-semibold text-gray-900">
-                  {displayValue(currentDeal.title, currentDeal.lead?.company || currentDeal.company?.name || 'Untitled Deal')}
-                </h1>
-                <div className="flex items-center space-x-2">
-                  {(currentDeal.lead?.email || currentDeal.contact?.email || currentDeal.company?.email) && (
-                    <a href={`mailto:${currentDeal.lead?.email || currentDeal.contact?.email || currentDeal.company?.email}`}>
-                      <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                    </a>
-                  )}
-                  {(currentDeal.lead?.company || currentDeal.company?.name) && (
-                    <a 
-                      href={`https://${(currentDeal.lead?.company || currentDeal.company?.name)?.toLowerCase().replace(/\s+/g, '')}.com`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                    </a>
-                  )}
-                  <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <select className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700">
-                  <option>Assign to</option>
-                </select>
-                <div className="relative">
-                  <button 
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span>{displayValue(currentDeal.stage, 'New')}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <TabNavigation
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+          />
 
-          <div className="border-b border-gray-200">
-            <div className="flex space-x-0 px-6">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.name}
-                  onClick={() => setActiveTab(tab.name)}
-                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    tab.name === activeTab
-                      ? "border-gray-900 text-gray-900"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  <span>{tab.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {renderTabContent()}
+          <TabContent
+            activeTab={activeTab}
+            deal={currentDeal}
+            comments={comments}
+            commentsLoading={commentsLoading}
+            displayValue={displayValue}
+            formatTimeAgo={formatTimeAgo}
+            formatCurrency={formatCurrency}
+            formatPercentage={formatPercentage}
+            formatDate={formatDate}
+            getFirstChar={getFirstChar}
+            addComment={addComment}
+          />
         </div>
 
-        {/* Right Sidebar */}
-        <div className="w-80 bg-white border-l border-gray-200 p-6">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-              <span className="text-lg font-semibold text-gray-700">
-                {getFirstChar(currentDeal.title) || 
-                 getFirstChar(currentDeal.lead?.company) || 
-                 getFirstChar(currentDeal.company?.name) || 'D'}
-              </span>
-            </div>
-            <div className="flex space-x-2">
-              {(currentDeal.lead?.email || currentDeal.contact?.email || currentDeal.company?.email) && (
-                <a href={`mailto:${currentDeal.lead?.email || currentDeal.contact?.email || currentDeal.company?.email}`}>
-                  <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                </a>
-              )}
-              {(currentDeal.lead?.company || currentDeal.company?.name) && (
-                <a 
-                  href={`https://${(currentDeal.lead?.company || currentDeal.company?.name)?.toLowerCase().replace(/\s+/g, '')}.com`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                </a>
-              )}
-              <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-            </div>
-          </div>
-
-          {/* Contacts Section */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <button
-                  onClick={() => setIsContactsExpanded(!isContactsExpanded)}
-                  className="p-1 hover:bg-gray-200 rounded transition-colors"
-                >
-                  <ChevronDown className={`w-4 h-4 transition-transform ${isContactsExpanded ? '' : '-rotate-90'}`} />
-                </button>
-                Contacts
-                {contacts.length > 0 && (
-                  <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-                    {contacts.length}
-                  </span>
-                )}
-              </h3>
-              <button onClick={handleCreateContact}>
-                <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-              </button>
-            </div>
-
-            {isContactsExpanded && (
-              <div className="space-y-3">
-                {contactsLoading ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                    <p className="text-sm text-gray-500">Loading contacts...</p>
-                  </div>
-                ) : contacts.length > 0 ? (
-                  contacts.map((contact, index) => (
-                    <div key={contact.id} className="flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg px-2 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-semibold text-gray-700">
-                            {getFirstChar(contact.name)}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">
-                            {contact.name}
-                          </p>
-                          <div className="flex items-center space-x-2">
-                            {index === 0 && currentDeal.contact?.id === contact.id && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                Primary
-                              </span>
-                            )}
-                            {contact.position && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                {contact.position}
-                              </span>
-                            )}
-                          </div>
-                          {contact.email && (
-                            <p className="text-xs text-gray-500 mt-1">{contact.email}</p>
-                          )}
-                          {contact.phone && (
-                            <p className="text-xs text-gray-500">{contact.phone}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {contact.email && (
-                          <a href={`mailto:${contact.email}`} title="Send Email">
-                            <Mail className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                          </a>
-                        )}
-                        {contact.phone && (
-                          <a href={`tel:${contact.phone}`} title="Call">
-                            <Phone className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                          </a>
-                        )}
-                        <div className="relative">
-                          <button 
-                            onClick={() => {
-                              const action = prompt('Choose action: view, edit, delete');
-                              if (action) handleContactAction(contact.id, action);
-                            }}
-                            title="More options"
-                          >
-                            <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                          </button>
-                        </div>
-                        <button 
-                          onClick={() => handleContactAction(contact.id, 'view')}
-                          title="View contact details"
-                        >
-                          <ArrowUpRight className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4">
-                    <Users className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                    <p className="text-sm text-gray-500 mb-2">No contacts found</p>
-                    <button 
-                      onClick={handleCreateContact}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                    >
-                      Add Contact
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Organization Details Section */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <button
-                  onClick={() => setIsOrgDetailsExpanded(!isOrgDetailsExpanded)}
-                  className="p-1 hover:bg-gray-200 rounded transition-colors"
-                >
-                  <ChevronDown className={`w-4 h-4 transition-transform ${isOrgDetailsExpanded ? '' : '-rotate-90'}`} />
-                </button>
-                Organization Details
-              </h3>
-              <button onClick={() => console.log('Edit organization')}>
-                <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-              </button>
-            </div>
-
-            {isOrgDetailsExpanded && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm text-gray-600 col-span-1">Organization</span>
-                  <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {displayValue(
-                      currentDeal.company?.name || currentDeal.lead?.company, 
-                      'Not specified'
-                    )}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm text-gray-600 col-span-1">Primary Contact</span>
-                  <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {displayValue(
-                      currentDeal.contact?.name || currentDeal.lead?.fullname, 
-                      'Not specified'
-                    )}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm text-gray-600 col-span-1">Email</span>
-                  <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {(currentDeal.contact?.email || currentDeal.lead?.email || currentDeal.company?.email) ? (
-                      <a 
-                        href={`mailto:${currentDeal.contact?.email || currentDeal.lead?.email || currentDeal.company?.email}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {currentDeal.contact?.email || currentDeal.lead?.email || currentDeal.company?.email}
-                      </a>
-                    ) : (
-                      'Not specified'
-                    )}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm text-gray-600 col-span-1">Phone</span>
-                  <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {(currentDeal.contact?.phone || currentDeal.lead?.phone || currentDeal.company?.phone) ? (
-                      <a 
-                        href={`tel:${currentDeal.contact?.phone || currentDeal.lead?.phone || currentDeal.company?.phone}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {currentDeal.contact?.phone || currentDeal.lead?.phone || currentDeal.company?.phone}
-                      </a>
-                    ) : (
-                      'Not specified'
-                    )}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm text-gray-600 col-span-1">Address</span>
-                  <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {displayValue(currentDeal.company?.address, 'Not specified')}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm text-gray-600 col-span-1">Industry</span>
-                  <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {displayValue(currentDeal.lead?.industry, 'Not specified')}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm text-gray-600 col-span-1">Deal Owner</span>
-                  <span className="text-sm text-gray-900 font-medium col-span-2">
-                    {displayValue(currentDeal.creator?.name, 'Not assigned')}
-                  </span>
-                </div>
-
-                {/* Deal Value and Stage */}
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="grid grid-cols-3 gap-4 items-center mb-3">
-                    <span className="text-sm text-gray-600 col-span-1">Deal Value</span>
-                    <span className="text-sm text-gray-900 font-medium col-span-2">
-                      {formatCurrency(currentDeal.value)}
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 items-center mb-3">
-                    <span className="text-sm text-gray-600 col-span-1">Stage</span>
-                    <span className="text-sm text-gray-900 font-medium col-span-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {displayValue(currentDeal.stage, 'New')}
-                      </span>
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 items-center">
-                    <span className="text-sm text-gray-600 col-span-1">Created</span>
-                    <span className="text-sm text-gray-900 font-medium col-span-2">
-                      {formatDate(currentDeal.created_at)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <RightSidebar
+          deal={currentDeal}
+          contacts={contacts}
+          contactsLoading={contactsLoading}
+          isContactsExpanded={isContactsExpanded}
+          setIsContactsExpanded={setIsContactsExpanded}
+          isOrgDetailsExpanded={isOrgDetailsExpanded}
+          setIsOrgDetailsExpanded={setIsOrgDetailsExpanded}
+          getFirstChar={getFirstChar}
+          displayValue={displayValue}
+          formatCurrency={formatCurrency}
+          formatDate={formatDate}
+          handleCreateContact={handleCreateContact}
+        />
       </div>
     </div>
   );

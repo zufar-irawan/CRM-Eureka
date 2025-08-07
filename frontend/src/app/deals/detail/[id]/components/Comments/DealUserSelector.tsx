@@ -12,6 +12,8 @@ interface DealUserSelectorProps {
   onUserSelect: (user: User) => void;
   searchTerm: string;
   selectedUsers?: User[];
+  placeholder?: string;
+  maxHeight?: string;
 }
 
 export default function DealUserSelector({
@@ -19,7 +21,9 @@ export default function DealUserSelector({
   onClose,
   onUserSelect,
   searchTerm,
-  selectedUsers = []
+  selectedUsers = [],
+  placeholder = 'Start typing to search users',
+  maxHeight = 'max-h-60'
 }: DealUserSelectorProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -78,7 +82,7 @@ export default function DealUserSelector({
   if (!show) return null;
 
   return (
-    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 max-h-60 overflow-y-auto">
+    <div className={`absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 ${maxHeight} overflow-y-auto`}>
       {loading ? (
         <div className="p-4 text-center text-sm text-gray-500">
           <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
@@ -90,7 +94,7 @@ export default function DealUserSelector({
         </div>
       ) : filteredUsers.length === 0 ? (
         <div className="p-4 text-center text-sm text-gray-500">
-          {searchTerm.trim() ? 'No users found' : 'Start typing to search users'}
+          {searchTerm.trim() ? 'No users found' : placeholder}
         </div>
       ) : (
         <div className="py-1">

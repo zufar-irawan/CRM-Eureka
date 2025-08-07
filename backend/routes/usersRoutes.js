@@ -10,12 +10,8 @@ import {
     searchUsers,
     updateUser 
 } from '../controllers/usersController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-
-// Apply authentication middleware to all routes
-router.use(authMiddleware);
 
 // Get all users (with pagination and optional roles)
 router.get('/', getAllUsers);

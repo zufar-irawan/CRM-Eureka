@@ -1,6 +1,6 @@
 // File: routes/dealRoutes.js - Updated with enhanced comment system
 import express from 'express';
-import {
+import { 
     getAllDeals,
     getDealById,
     createDeal,

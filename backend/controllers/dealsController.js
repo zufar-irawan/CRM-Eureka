@@ -742,7 +742,6 @@ export const deleteDeal = async (req, res) => {
 export const getDealComments = async (req, res) => {
     try {
         const { id } = req.params;
-        
         const dealId = parseInt(id);
         if (isNaN(dealId)) {
             return res.status(400).json({ 
@@ -750,7 +749,6 @@ export const getDealComments = async (req, res) => {
                 message: "Invalid deal ID" 
             });
         }
-
         const deal = await Deals.findByPk(dealId);
         if (!deal) {
             return res.status(404).json({ 
@@ -758,7 +756,6 @@ export const getDealComments = async (req, res) => {
                 message: "Deal not found" 
             });
         }
-
         const comments = await DealComments.findAll({
             where: { deal_id: dealId },
             include: [{
@@ -805,8 +802,7 @@ export const addDealComment = async (req, res) => {
                 success: false,
                 message: "Invalid deal ID" 
             });
-        }
-
+        } 
         const { message, user_id, user_name, parent_id } = req.body;
         
         if (!message || !message.trim()) {
@@ -829,16 +825,14 @@ export const addDealComment = async (req, res) => {
         let reply_level = 0;
         let parentComment = null;
 
-        // If this is a reply to another comment
         if (parent_id) {
             parentComment = await DealComments.findOne({
                 where: { 
                     id: parent_id,
-                    deal_id: dealId // Ensure parent belongs to same deal
+                    deal_id: dealId 
                 },
                 transaction
             });
-
             if (!parentComment) {
                 await transaction.rollback();
                 return res.status(400).json({ 
@@ -925,14 +919,13 @@ export const getDealCommentThread = async (req, res) => {
             });
         }
 
-        // Get the root comment if this is a reply
         let rootComment = comment;
         if (comment.parent_id) {
             rootComment = await DealComments.findOne({
                 where: { 
                     id: comment.parent_id,
                     deal_id: dealId,
-                    parent_id: null // Ensure we get the root
+                    parent_id: null 
                 }
             });
         }
@@ -942,8 +935,8 @@ export const getDealCommentThread = async (req, res) => {
             where: {
                 deal_id: dealId,
                 [Op.or]: [
-                    { id: rootComment.id }, // Root comment
-                    { parent_id: rootComment.id } // Direct replies
+                    { id: rootComment.id }, 
+                    { parent_id: rootComment.id }
                 ]
             },
             include: [{
@@ -959,7 +952,7 @@ export const getDealCommentThread = async (req, res) => {
         res.json({
             success: true,
             data: {
-                thread: thread[0], // Should be single root comment with nested replies
+                thread: thread[0],
                 stats: {
                     total_comments: threadComments.length,
                     replies_count: threadComments.length - 1
@@ -984,7 +977,7 @@ export const deleteDealComment = async (req, res) => {
         const { id, commentId } = req.params;
         const dealId = parseInt(id);
         const commentIdInt = parseInt(commentId);
-        
+
         if (isNaN(dealId) || isNaN(commentIdInt)) {
             await transaction.rollback();
             return res.status(400).json({ 
@@ -1011,7 +1004,6 @@ export const deleteDealComment = async (req, res) => {
 
         await comment.destroy({ transaction });
         await transaction.commit();
-
         res.json({
             success: true,
             message: 'Comment deleted successfully'

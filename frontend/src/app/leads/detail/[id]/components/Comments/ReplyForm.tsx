@@ -18,14 +18,6 @@ interface ReplyFormProps {
   depth: number;
 }
 
-interface SelectedRecipient {
-  id: number;
-  name: string;
-  email: string;
-  role?: string;
-  primaryRole?: string;
-}
-
 export default function ReplyForm({
   value,
   onChange,
@@ -38,7 +30,7 @@ export default function ReplyForm({
   depth
 }: ReplyFormProps) {
   const [toField, setToField] = useState('');
-  const [selectedRecipients, setSelectedRecipients] = useState<SelectedRecipient[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<User[]>([]);
   const [showToDropdown, setShowToDropdown] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -92,16 +84,8 @@ export default function ReplyForm({
       return;
     }
 
-    const newRecipient: SelectedRecipient = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      primaryRole: user.primaryRole
-    };
-
     // Add to recipients
-    const updatedRecipients = [...selectedRecipients, newRecipient];
+    const updatedRecipients = [...selectedRecipients, user];
     setSelectedRecipients(updatedRecipients);
     
     // Update TO field to show all selected recipients
@@ -248,7 +232,7 @@ export default function ReplyForm({
               {/* Selected recipients chips with enhanced styling */}
               {selectedRecipients.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {selectedRecipients.map((recipient, index) => {
+                  {selectedRecipients.map((recipient: User) => {
                     const isOriginalCommenter = recipient.id === originalComment.user_id;
                     return (
                       <div

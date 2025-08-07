@@ -8,7 +8,7 @@ import Sidebar from "@/components/Sidebar";
 import DealHeader from "./components/DealHeader";
 import TabNavigation from "./components/TabNavigation";
 import TabContent from "./components/TabContent";
-import RightSidebar from "./components/ContactsSidebar";
+import RightSidebar from "./components/RightSidebar";
 import CommentsTab from "./components/Comments/DealCommentTab";
 import { Deal, Contact, Comment, Company } from "./types";
 
@@ -141,12 +141,7 @@ export default function DealDetailPage() {
       const response = await fetch(`http://localhost:5000/api/deals/${id}/comments`);
       if (response.ok) {
         const { data } = await response.json();
-        setComments(data.map((comment: any) => ({
-          id: comment.id,
-          text: comment.message,
-          author: comment.user?.name || comment.user_name || 'Unknown',
-          created_at: comment.created_at
-        })));
+        setComments(data);
       } else {
         console.error('Failed to fetch comments');
         setComments([]);
@@ -241,12 +236,7 @@ export default function DealDetailPage() {
 
       if (response.ok) {
         const { data } = await response.json();
-        setComments();prev => [{
-          id: data.id,
-          text: data.message,
-          author: data.user?.name || data.user_name || 'Unknown',
-          created_at: data.created_at
-        }, ...prev]
+        setComments(prev => [data, ...prev]);
       } else {
         throw new Error('Failed to add comment');
       }
@@ -413,7 +403,7 @@ export default function DealDetailPage() {
         </div>
 
         <RightSidebar
-          currentDeal={currentDeal} // ✅ FIXED
+          deal={currentDeal}
           contacts={contacts}
           contactsLoading={contactsLoading}
           isContactsExpanded={isContactsExpanded}

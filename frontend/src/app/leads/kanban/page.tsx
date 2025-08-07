@@ -58,7 +58,7 @@ export default function DealsKanban() {
 
     const handleRefresh = () => {
         fetchKanbanData({
-            url: "http://localhost:5000/api/leads",
+            url: "http://localhost:3000/api/leads",
             setData: setData,
             setContainers: setContainers,
             groupBy: "stage", // bisa diganti "status", "type", dll tergantung API

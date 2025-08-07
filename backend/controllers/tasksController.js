@@ -7,29 +7,44 @@ import { Op } from "sequelize";
 // GET /api/tasks - List task berdasarkan filter
 export const getTasks = async (req, res) => {
   try {
-    const { status, priority, category, assigned_to, lead_id } = req.query;
-    
+    const { status, priority, category, assigned_to, lead_id, search, } = req.query;
+
     let whereClause = {};
-    
+
     // Filter berdasarkan lead_id (PENTING untuk detail lead)
     if (lead_id) {
       whereClause.lead_id = lead_id;
     }
-    
+
     if (status) {
       whereClause.status = status;
     }
-    
+
     if (priority) {
       whereClause.priority = priority;
     }
-    
+
     if (category) {
       whereClause.category = category;
     }
-    
+
     if (assigned_to) {
       whereClause.assigned_to = assigned_to;
+    }
+
+    if (search) {
+      whereClause[Op.or] = [
+        {
+          title: {
+            [Op.like]: `%${search}%`
+          }
+        },
+        {
+          category: {
+            [Op.like]: `%${search}%`
+          }
+        }
+      ];
     }
 
     const tasks = await Tasks.findAll({
@@ -54,7 +69,7 @@ export const getTasks = async (req, res) => {
       ],
       order: [['created_at', 'DESC']]
     });
-    
+
     // Transform data untuk menambahkan assigned_user_name
     const transformedTasks = tasks.map(task => {
       const taskData = task.toJSON();
@@ -63,7 +78,7 @@ export const getTasks = async (req, res) => {
         assigned_user_name: taskData.assignee ? taskData.assignee.name : 'Unassigned'
       };
     });
-    
+
     res.status(200).json({
       success: true,
       data: transformedTasks,
@@ -71,10 +86,10 @@ export const getTasks = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching tasks:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: "Error fetching tasks", 
-      error: error.message 
+      message: "Error fetching tasks",
+      error: error.message
     });
   }
 };
@@ -146,7 +161,7 @@ export const updateTask = async (req, res) => {
     const updateData = req.body;
 
     const task = await Tasks.findByPk(id);
-    
+
     if (!task) {
       return res.status(404).json({
         success: false,
@@ -190,7 +205,7 @@ export const updateTask = async (req, res) => {
 export const getTaskById = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const task = await Tasks.findOne({
       where: { id },
       include: [
@@ -281,7 +296,7 @@ export const updateTaskStatus = async (req, res) => {
     responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
 
     console.log(`✅ Task ${id} status updated from "${oldStatus}" to "${status}"`);
-    
+
     res.status(200).json({
       success: true,
       message: "Status task berhasil diupdate",
@@ -330,7 +345,7 @@ export const deleteTask = async (req, res) => {
 export const getTaskComments = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const comments = await TaskComments.findAll({
       where: { task_id: id },
       order: [['created_at', 'ASC']]
@@ -406,7 +421,7 @@ export const updateTaskComment = async (req, res) => {
     }
 
     const comment = await TaskComments.findByPk(commentId);
-    
+
     if (!comment) {
       return res.status(404).json({
         success: false,
@@ -437,7 +452,7 @@ export const deleteTaskComment = async (req, res) => {
     const { commentId } = req.params;
 
     const comment = await TaskComments.findByPk(commentId);
-    
+
     if (!comment) {
       return res.status(404).json({
         success: false,

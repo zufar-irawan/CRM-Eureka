@@ -1,52 +1,61 @@
-export interface Deal {
-  id: string | number;
-  title?: string | null;
-  value?: number | null;
-  stage?: string | null;
-  probability?: number | null;
-  lead?: {
-    id?: number;
-    company?: string | null;
-    fullname?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    industry?: string | null;
-  } | null;
-  company?: {
-    id?: number;
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    address?: string | null;
-  } | null;
-  contact?: {
-    id?: number;
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    position?: string | null;
-    company?: {
-      id?: number;
-      name?: string | null;
-    } | null;
-  } | null;
-  creator?: {
-    name?: string | null;
-    email?: string | null;
-  } | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  description?: string | null;
-  comments?: Comment[] | null;
+// types.ts - Type definitions for deals, users, comments, contacts, companies, and UI config
+
+import { LucideIcon } from "lucide-react"; // ⬅️ Wajib untuk TabConfig
+
+// -------------------- USERS --------------------
+
+export interface CurrentUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string; // ✅ Ditambahkan agar bisa digunakan di useAuth
 }
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role?: string;
+}
+
+// -------------------- COMMENTS --------------------
+
+export interface Comment {
+  id: number;
+  message: string;
+  user_id: number;
+  user_name: string;
+  created_at: string;
+  parent_id: number | null;
+  parent_user: string | null;
+  replies: Comment[];
+  deal_id?: number;
+  lead_id?: number;
+}
+
+// -------------------- COMPANY --------------------
+
+export interface Company {
+  id: number;
+  name: string;
+  industry?: string;
+  website?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  created_at?: string;
+}
+
+// -------------------- CONTACT --------------------
 
 export interface Contact {
   id: number;
   name: string;
-  email?: string | null;
-  phone?: string | null;
-  position?: string | null;
-  company_id?: number | null;
+  email?: string;
+  phone?: string;
+  position?: string;
+  company_id?: number;
   company?: {
     id: number;
     name: string;
@@ -54,17 +63,48 @@ export interface Contact {
   created_at?: string;
 }
 
-export interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  created_at: string;
+// -------------------- LEAD --------------------
+
+export interface Lead {
+  id?: number;
+  company?: string;
+  fullname?: string;
+  email?: string;
+  phone?: string;   // ✅ Ditambahkan agar bisa diakses oleh OrganizationDetails.tsx
+  mobile?: string;
+  industry?: string;
 }
 
-export interface Company {
-  id: number;
+// -------------------- DEAL --------------------
+
+export interface Deal {
+  id: string;
+  title: string;
+  value: number;
+  stage: string;
+  probability: number;
+  lead: Lead | null;
+  company: Company | null;
+  contact: Contact | null;
+  creator: {
+    id: number;
+    name: string;
+  } | null;
+  created_at: string;
+  updated_at: string;
+  description?: string;
+  comments?: Comment[];
+}
+
+// -------------------- UI CONFIG TYPES --------------------
+
+export interface StatusOption {
   name: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
+  color: string;
+  backendStage: string;
+}
+
+export interface TabConfig {
+  name: string;
+  icon: LucideIcon;
 }

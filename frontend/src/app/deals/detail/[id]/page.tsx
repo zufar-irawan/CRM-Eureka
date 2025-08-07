@@ -8,7 +8,8 @@ import Sidebar from "@/components/Sidebar";
 import DealHeader from "./components/DealHeader";
 import TabNavigation from "./components/TabNavigation";
 import TabContent from "./components/TabContent";
-import RightSidebar from "./components/RightSidebar";
+import RightSidebar from "./components/ContactsSidebar";
+import CommentsTab from "./components/Comments/DealCommentTab";
 import { Deal, Contact, Comment, Company } from "./types";
 
 export default function DealDetailPage() {
@@ -31,7 +32,13 @@ export default function DealDetailPage() {
   const [isContactsExpanded, setIsContactsExpanded] = useState(true);
   const [isOrgDetailsExpanded, setIsOrgDetailsExpanded] = useState(true);
 
-  // Utility functions
+  const [currentUser] = useState({
+    id: 1,
+    name: 'Current User',
+    email: 'current@user.com',
+    role: 'admin'
+  });
+
   const safeString = (value: any): string => {
     if (value === null || value === undefined) return '';
     return String(value);
@@ -85,26 +92,17 @@ export default function DealDetailPage() {
     return formatDate(dateString);
   };
 
-  // API Functions
   const fetchDeal = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch(`http://localhost:5000/api/deals/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        mode: 'cors',
-      });
+      const response = await fetch(`http://localhost:5000/api/deals/${id}`);
       
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(`Deal with ID ${id} not found`);
         }
-        
         const errorData = await response.json().catch(() => null);
         const errorMsg = errorData?.message || `HTTP ${response.status}: ${response.statusText}`;
         throw new Error(errorMsg);
@@ -120,19 +118,15 @@ export default function DealDetailPage() {
         ...data,
         comments: data.comments || []
       });
-      
     } catch (err: unknown) {
       let errorMessage = 'An unexpected error occurred';
-      
       if (err instanceof TypeError && err.message.includes('fetch')) {
         errorMessage = 'Network error: Unable to connect to server. Please check if backend server is running on localhost:5000';
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
-      
       console.error('[ERROR] Fetch failed:', err);
       setError(errorMessage);
-      
       if (err instanceof Error && err.message.includes('not found')) {
         setTimeout(() => router.push('/deals'), 3000);
       }
@@ -145,7 +139,6 @@ export default function DealDetailPage() {
     try {
       setCommentsLoading(true);
       const response = await fetch(`http://localhost:5000/api/deals/${id}/comments`);
-      
       if (response.ok) {
         const { data } = await response.json();
         setComments(data.map((comment: any) => ({
@@ -168,13 +161,10 @@ export default function DealDetailPage() {
 
   const fetchRelatedContacts = async () => {
     if (!deal) return;
-    
     try {
       setContactsLoading(true);
-      
       const contactsToFetch: Contact[] = [];
-      
-      // Add the direct contact from deal if exists
+
       if (deal.contact && deal.contact.id && deal.contact.name) {
         contactsToFetch.push({
           id: deal.contact.id,
@@ -182,11 +172,12 @@ export default function DealDetailPage() {
           email: deal.contact.email,
           phone: deal.contact.phone,
           position: deal.contact.position,
-          company: (deal.contact.company && deal.contact.company.id && deal.contact.company.name) ? { id: deal.contact.company.id, name: deal.contact.company.name } : null
+          company: deal.contact.company?.id && deal.contact.company?.name
+            ? { id: deal.contact.company.id, name: deal.contact.company.name }
+            : null
         });
       }
-      
-      // Fetch all contacts from the same company
+
       if (deal.company?.id) {
         const response = await fetch(`http://localhost:5000/api/contacts/company/${deal.company.id}`);
         if (response.ok) {
@@ -206,10 +197,7 @@ export default function DealDetailPage() {
             }
           });
         }
-      }
-      
-      // If no company but deal has lead company info, search contacts by company name
-      else if (deal.lead?.company && !deal.company?.id) {
+      } else if (deal.lead?.company && !deal.company?.id) {
         const response = await fetch(`http://localhost:5000/api/contacts?search=${encodeURIComponent(deal.lead.company)}`);
         if (response.ok) {
           const { data } = await response.json();
@@ -229,9 +217,8 @@ export default function DealDetailPage() {
           });
         }
       }
-      
+
       setContacts(contactsToFetch);
-      
     } catch (err) {
       console.error('Error fetching related contacts:', err);
       setContacts([]);
@@ -244,9 +231,7 @@ export default function DealDetailPage() {
     try {
       const response = await fetch(`http://localhost:5000/api/deals/${id}/comments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
           user_id: 1,
@@ -256,12 +241,12 @@ export default function DealDetailPage() {
 
       if (response.ok) {
         const { data } = await response.json();
-        setComments(prev => [{
+        setComments();prev => [{
           id: data.id,
           text: data.message,
           author: data.user?.name || data.user_name || 'Unknown',
           created_at: data.created_at
-        }, ...prev]);
+        }, ...prev]
       } else {
         throw new Error('Failed to add comment');
       }
@@ -282,9 +267,7 @@ export default function DealDetailPage() {
     try {
       const response = await fetch('http://localhost:5000/api/contacts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
           email: email?.trim() || null,
@@ -308,13 +291,48 @@ export default function DealDetailPage() {
     }
   };
 
-  // Effects
+  const renderTabContent = () => {
+    if (!deal) return null;
+
+    switch (activeTab) {
+      case "Comments":
+        return <CommentsTab dealId={id} currentUser={currentUser} />;
+      case "Activity":
+      case "Emails":
+      case "Calls":
+      case "Notes":
+      case "Attachments":
+        return (
+          <TabContent
+            activeTab={activeTab}
+            deal={currentDeal}
+            comments={comments}
+            commentsLoading={commentsLoading}
+            displayValue={displayValue}
+            formatTimeAgo={formatTimeAgo}
+            formatCurrency={formatCurrency}
+            formatPercentage={formatPercentage}
+            formatDate={formatDate}
+            getFirstChar={getFirstChar}
+            addComment={addComment}
+          />
+        );
+      default:
+        return (
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900">
+              {activeTab} content for this deal
+            </h3>
+          </div>
+        );
+    }
+  };
+
   useEffect(() => {
     if (!id) {
       setError("Invalid deal ID");
       return;
     }
-
     fetchDeal();
     fetchComments();
   }, [id]);
@@ -351,16 +369,10 @@ export default function DealDetailPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Deal</h2>
               <p className="text-gray-600 mb-6">{error}</p>
               <div className="space-x-4">
-                <button 
-                  onClick={fetchDeal}
-                  className="bg-gray-900 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
+                <button onClick={fetchDeal} className="bg-gray-900 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
                   Try Again
                 </button>
-                <button 
-                  onClick={() => router.back()}
-                  className="border border-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-                >
+                <button onClick={() => router.back()} className="border border-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
                   Go Back
                 </button>
               </div>
@@ -388,7 +400,6 @@ export default function DealDetailPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-
       <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex`}>
         <div className="flex-1 bg-white">
           <DealHeader
@@ -397,29 +408,12 @@ export default function DealDetailPage() {
             setIsDropdownOpen={setIsDropdownOpen}
             displayValue={displayValue}
           />
-
-          <TabNavigation
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          />
-
-          <TabContent
-            activeTab={activeTab}
-            deal={currentDeal}
-            comments={comments}
-            commentsLoading={commentsLoading}
-            displayValue={displayValue}
-            formatTimeAgo={formatTimeAgo}
-            formatCurrency={formatCurrency}
-            formatPercentage={formatPercentage}
-            formatDate={formatDate}
-            getFirstChar={getFirstChar}
-            addComment={addComment}
-          />
+          <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+          {renderTabContent()}
         </div>
 
         <RightSidebar
-          deal={currentDeal}
+          currentDeal={currentDeal} // ✅ FIXED
           contacts={contacts}
           contactsLoading={contactsLoading}
           isContactsExpanded={isContactsExpanded}

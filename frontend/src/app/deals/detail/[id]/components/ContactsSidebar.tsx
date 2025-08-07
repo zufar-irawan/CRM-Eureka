@@ -21,7 +21,7 @@ export default function ContactsSidebar({
   setIsContactsExpanded, 
   getFirstChar, 
   handleCreateContact, 
-  currentDeal 
+  currentDeal
 }: ContactsSidebarProps) {
   const router = useRouter();
 

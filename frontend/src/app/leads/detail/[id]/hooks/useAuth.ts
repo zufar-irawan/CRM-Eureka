@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CurrentUser } from '../types';
 import { getCurrentUserFromStorage, makeAuthenticatedRequest, getAuthToken } from '../utils/auth';
-import { API_ENDPOINTS } from '../utils/constants';
+import { API_ENDPOINTS, FALLBACK_USERS } from '../utils/constants';
 
 export const useAuth = () => {
   const router = useRouter();
@@ -21,16 +21,101 @@ export const useAuth = () => {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const userData = await response.json();
+      const result = await response.json();
+      const userData = result.data || result; 
       
-      const userToStore = JSON.stringify(userData);
+      // Format user data with role information
+      const formattedUser = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        role: userData.primaryRole || userData.role || 'user',
+        roles: userData.roles || [],
+        roleNames: userData.roleNames || [],
+        primaryRole: userData.primaryRole || userData.role || 'user',
+        avatar: userData.avatar,
+        // Permission flags
+        isAdmin: userData.isAdmin || false,
+        isSales: userData.isSales || false,
+        isPartnership: userData.isPartnership || false,
+        isAkunting: userData.isAkunting || false
+      };
+      
+      const userToStore = JSON.stringify(formattedUser);
       localStorage.setItem('currentUser', userToStore);
       
-      return userData;
+      return formattedUser;
     } catch (error) {
       console.error('Error fetching current user from API:', error);
       return null;
     }
+  };
+
+  const refreshUser = async (): Promise<CurrentUser | null> => {
+    try {
+      const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.AUTH_ME.replace('/me', '/refresh')}`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const userData = result.data || result;
+        if (result.token) {
+          localStorage.setItem('authToken', result.token);
+        }
+
+        const formattedUser = {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.primaryRole || userData.role || 'user',
+          roles: userData.roles || [],
+          roleNames: userData.roleNames || [],
+          primaryRole: userData.primaryRole || userData.role || 'user',
+          avatar: userData.avatar,
+          isAdmin: userData.isAdmin || false,
+          isSales: userData.isSales || false,
+          isPartnership: userData.isPartnership || false,
+          isAkunting: userData.isAkunting || false
+        };
+
+        const userToStore = JSON.stringify(formattedUser);
+        localStorage.setItem('currentUser', userToStore);
+        
+        setCurrentUser(formattedUser);
+        return formattedUser;
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+    return null;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('currentUser');
+    setCurrentUser(null);
+    router.push('/login');
+  };
+
+  const hasRole = (role: string): boolean => {
+    if (!currentUser) return false;
+    return currentUser.roleNames?.includes(role) || currentUser.role === role || false;
+  };
+
+  const hasAnyRole = (roles: string[]): boolean => {
+    if (!currentUser) return false;
+    return roles.some(role => hasRole(role));
+  };
+
+  const canAccess = (requiredRoles: string[]): boolean => {
+    if (!currentUser) return false;
+    if (hasRole('admin')) return true; // Admin can access everything
+    return hasAnyRole(requiredRoles);
   };
 
   useEffect(() => {
@@ -59,17 +144,32 @@ export const useAuth = () => {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role || 'user',
-          avatar: user.avatar
+          role: user.primaryRole || user.role || 'user',
+          roles: user.roles || [],
+          roleNames: user.roleNames || [],
+          primaryRole: user.primaryRole || user.role || 'user',
+          avatar: user.avatar,
+          isAdmin: user.isAdmin || false,
+          isSales: user.isSales || false,
+          isPartnership: user.isPartnership || false,
+          isAkunting: user.isAkunting || false
         });
       } else {
-        // Fallback for development/testing
-        console.warn('No user data found, using fallback user');
+        // Fallback for development/testing - use first fallback user (Admin)
+        console.warn('No user data found, using fallback admin user');
+        const fallbackUser = FALLBACK_USERS[0]; // Admin User
         setCurrentUser({
-          id: 1,
-          name: 'Admin User',
-          email: 'admin@eureka.com',
-          role: 'admin'
+          id: fallbackUser.id,
+          name: fallbackUser.name,
+          email: fallbackUser.email,
+          role: fallbackUser.role,
+          roles: [],
+          roleNames: fallbackUser.roleNames,
+          primaryRole: fallbackUser.role,
+          isAdmin: fallbackUser.role === 'admin',
+          isSales: fallbackUser.role === 'sales',
+          isPartnership: fallbackUser.role === 'partnership',
+          isAkunting: fallbackUser.role === 'akunting'
         });
       }
       
@@ -79,5 +179,13 @@ export const useAuth = () => {
     initializeUser();
   }, [router]);
 
-  return { currentUser, userLoading };
+  return { 
+    currentUser, 
+    userLoading, 
+    refreshUser, 
+    logout, 
+    hasRole, 
+    hasAnyRole, 
+    canAccess 
+  };
 };

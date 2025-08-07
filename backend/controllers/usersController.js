@@ -19,9 +19,17 @@ export const getUserById = async (req, res) => {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
         
+        // Format response dengan role information
+        const userData = {
+            ...user.dataValues,
+            roleNames: user.roles ? user.roles.map(role => role.name) : [],
+            primaryRole: user.roles && user.roles.length > 0 ? user.roles[0].name : 'user',
+            role: user.roles && user.roles.length > 0 ? user.roles[0].name : 'user'
+        };
+        
         res.status(200).json({
             message: "Detail user berhasil diambil",
-            data: user
+            data: userData
         });
     } catch (error) {
         console.error(error);
@@ -68,9 +76,17 @@ export const getAllUsers = async (req, res) => {
 
         const { count, rows: users } = await User.findAndCountAll(queryOptions);
         
+        // Format users dengan role information
+        const formattedUsers = users.map(user => ({
+            ...user.dataValues,
+            roleNames: user.roles ? user.roles.map(role => role.name) : [],
+            primaryRole: user.roles && user.roles.length > 0 ? user.roles[0].name : 'user',
+            role: user.roles && user.roles.length > 0 ? user.roles[0].name : 'user'
+        }));
+        
         const response = {
             message: "Daftar user berhasil diambil",
-            data: users
+            data: formattedUsers
         };
 
         if (include_roles !== 'true') {
@@ -81,7 +97,7 @@ export const getAllUsers = async (req, res) => {
                 itemsPerPage: parseInt(limit)
             };
         } else {
-            response.total = users.length;
+            response.total = formattedUsers.length;
         }
 
         res.status(200).json(response);
@@ -91,7 +107,7 @@ export const getAllUsers = async (req, res) => {
     }
 };
 
-// New endpoint specifically for getting all users with roles (for dropdowns)
+// Enhanced endpoint specifically for getting all users with roles (for dropdowns)
 export const getAllUsersWithRoles = async (req, res) => {
     try {
         const { search = '' } = req.query;
@@ -103,7 +119,7 @@ export const getAllUsersWithRoles = async (req, res) => {
             ]
         } : {};
 
-        // Get all users without pagination
+        // Get all users without pagination, ordered by name
         const users = await User.findAll({
             where: whereClause,
             attributes: ['id', 'name', 'email', 'created_at'],
@@ -117,19 +133,42 @@ export const getAllUsersWithRoles = async (req, res) => {
         });
 
         // Format the response to include role information in a more accessible way
-        const usersWithRoles = users.map(user => ({
-            ...user.dataValues,
-            roleNames: user.roles ? user.roles.map(role => role.name) : [],
-            primaryRole: user.roles && user.roles.length > 0 ? user.roles[0].name : null
-        }));
+        const usersWithRoles = users.map(user => {
+            const roles = user.roles || [];
+            const primaryRole = roles.length > 0 ? roles[0].name : 'user';
+            
+            return {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                created_at: user.created_at,
+                roles: roles,
+                roleNames: roles.map(role => role.name),
+                primaryRole: primaryRole,
+                role: primaryRole, // For backward compatibility
+                // Additional computed fields
+                isAdmin: roles.some(role => role.name === 'admin'),
+                isSales: roles.some(role => role.name === 'sales'),
+                isPartnership: roles.some(role => role.name === 'partnership'),
+                isAkunting: roles.some(role => role.name === 'akunting')
+            };
+        });
 
         res.status(200).json({
             message: "Daftar user dengan roles berhasil diambil",
             data: usersWithRoles,
-            total: usersWithRoles.length
+            total: usersWithRoles.length,
+            stats: {
+                totalUsers: usersWithRoles.length,
+                admins: usersWithRoles.filter(u => u.isAdmin).length,
+                sales: usersWithRoles.filter(u => u.isSales).length,
+                partnerships: usersWithRoles.filter(u => u.isPartnership).length,
+                akuntings: usersWithRoles.filter(u => u.isAkunting).length,
+                regularUsers: usersWithRoles.filter(u => u.primaryRole === 'user').length
+            }
         });
     } catch (error) {
-        console.error(error);
+        console.error('Error in getAllUsersWithRoles:', error);
         res.status(500).json({ message: "Terjadi kesalahan pada server" });
     }
 };
@@ -144,7 +183,8 @@ export const getAllRoles = async (req, res) => {
 
         res.status(200).json({
             message: "Daftar role berhasil diambil",
-            data: roles
+            data: roles,
+            total: roles.length
         });
     } catch (error) {
         console.error(error);
@@ -185,7 +225,13 @@ export const assignRoleToUser = async (req, res) => {
         });
 
         res.status(201).json({
-            message: "Role berhasil di-assign ke user"
+            message: "Role berhasil di-assign ke user",
+            data: {
+                userId: userId,
+                roleId: roleId,
+                roleName: role.name,
+                userName: user.name
+            }
         });
     } catch (error) {
         console.error(error);
@@ -207,10 +253,62 @@ export const removeRoleFromUser = async (req, res) => {
         }
 
         res.status(200).json({
-            message: "Role berhasil dihapus dari user"
+            message: "Role berhasil dihapus dari user",
+            data: { userId, roleId }
         });
     } catch (error) {
         console.error(error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    }
+};
+
+// Search users (for mention/tagging functionality)
+export const searchUsers = async (req, res) => {
+    try {
+        const { q = '', limit = 10 } = req.query;
+        
+        if (!q.trim()) {
+            return res.status(400).json({ 
+                message: "Query pencarian tidak boleh kosong" 
+            });
+        }
+
+        const users = await User.findAll({
+            where: {
+                [Op.or]: [
+                    { name: { [Op.iLike]: `%${q}%` } },
+                    { email: { [Op.iLike]: `%${q}%` } }
+                ]
+            },
+            attributes: ['id', 'name', 'email'],
+            include: [{
+                model: Role,
+                as: 'roles',
+                attributes: ['id', 'name'],
+                through: { attributes: [] }
+            }],
+            limit: parseInt(limit),
+            order: [['name', 'ASC']]
+        });
+
+        const formattedUsers = users.map(user => ({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            roles: user.roles || [],
+            roleNames: user.roles ? user.roles.map(role => role.name) : [],
+            primaryRole: user.roles && user.roles.length > 0 ? user.roles[0].name : 'user',
+            role: user.roles && user.roles.length > 0 ? user.roles[0].name : 'user'
+        }));
+
+        res.status(200).json({
+            message: "Pencarian user berhasil",
+            data: formattedUsers,
+            total: formattedUsers.length,
+            query: q
+        });
+    } catch (error) {
+        console.error('Error in searchUsers:', error);
         res.status(500).json({ message: "Terjadi kesalahan pada server" });
     }
 };
@@ -246,9 +344,17 @@ export const updateUser = async (req, res) => {
             }]
         });
 
+        // Format response dengan role information
+        const userData = {
+            ...updatedUser.dataValues,
+            roleNames: updatedUser.roles ? updatedUser.roles.map(role => role.name) : [],
+            primaryRole: updatedUser.roles && updatedUser.roles.length > 0 ? updatedUser.roles[0].name : 'user',
+            role: updatedUser.roles && updatedUser.roles.length > 0 ? updatedUser.roles[0].name : 'user'
+        };
+
         res.status(200).json({
             message: "Profil berhasil diperbarui",
-            data: updatedUser
+            data: userData
         });
     } catch (error) {
         console.error(error);

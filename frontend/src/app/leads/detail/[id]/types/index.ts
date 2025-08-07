@@ -1,4 +1,4 @@
-// types/index.ts
+// types/index.ts - Updated types untuk user system
 export interface Lead {
   id: string | number;
   title?: string | null;
@@ -17,19 +17,18 @@ export interface Lead {
   status?: boolean;
 }
 
-// Updated types.ts untuk support nested comments
 export interface Comment {
   id: number;
   lead_id: number;
-  parent_id: number | null;         // NEW: Parent comment ID
-  reply_level: number;              // NEW: Nesting level
+  parent_id: number | null;       
+  reply_level: number;             
   user_id: number | null;
   user_name: string | null;
   message: string;
   created_at: string;
-  replies?: Comment[];              // NEW: Nested replies
-  is_reply?: boolean;               // NEW: Helper flag
-  parent_user?: string | null;      // NEW: Parent comment user name
+  replies?: Comment[];             
+  is_reply?: boolean;              
+  parent_user?: string | null;      
 }
 
 // NEW: Task interfaces
@@ -79,11 +78,11 @@ export interface AddCommentRequest {
   message: string;
   user_id?: number;
   user_name?: string;
-  parent_id?: number;               // NEW: For replies
+  parent_id?: number;            
 }
 
 export interface ReplyToCommentRequest extends AddCommentRequest {
-  parent_id: number;                // Required for replies
+  parent_id: number;              
 }
 
 // Helper interfaces for frontend state
@@ -101,12 +100,20 @@ export interface ReplyState {
   };
 }
 
+// Updated User interfaces sesuai dengan SQL structure
 export interface CurrentUser {
   id: number;
   name: string;
   email: string;
   role: string;
+  roles?: Role[];
+  roleNames?: string[];
+  primaryRole?: string;
   avatar?: string;
+  isAdmin?: boolean;
+  isSales?: boolean;
+  isPartnership?: boolean;
+  isAkunting?: boolean;
 }
 
 export interface User {
@@ -114,6 +121,23 @@ export interface User {
   name: string;
   email: string;
   role?: string;
+  roles?: Role[];
+  roleNames?: string[];
+  primaryRole?: string;
+  created_at?: string;
+}
+
+// Role interfaces sesuai dengan SQL structure
+export interface Role {
+  id: number;
+  name: string;
+}
+
+export interface UserRole {
+  user_id: number;
+  role_id: number;
+  user?: User;
+  role?: Role;
 }
 
 export interface StatusOption {
@@ -141,4 +165,18 @@ export interface RecipientsState {
 
 export interface ToFieldsState {
   [key: number]: string;
+}
+
+// Interface untuk response API users dengan roles
+export interface UserWithRolesResponse {
+  message: string;
+  data: User[];
+  total: number;
+}
+
+// Interface untuk user search dan selection
+export interface UserSearchResult {
+  users: User[];
+  total: number;
+  filtered: User[];
 }

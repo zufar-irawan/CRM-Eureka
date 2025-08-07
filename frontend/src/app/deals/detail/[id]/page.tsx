@@ -326,7 +326,7 @@ export default function DealDetailPage() {
   }, [deal]);
 
   const currentDeal = deal || {
-    id: id || '',
+    id: Array.isArray(id) ? id[0] : id || '',
     title: '',
     value: 0,
     stage: 'New',

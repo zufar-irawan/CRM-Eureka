@@ -161,10 +161,10 @@ export default function Deals() {
         if (deal.value !== null && deal.value !== undefined && deal.value !== '') {
           const numValue = parseFloat(deal.value.toString());
           if (!isNaN(numValue) && numValue > 0) {
-            annualRevenue = `$${numValue.toLocaleString('en-US', {
+            annualRevenue = numValue.toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2
-            })}`;
+            });
           }
         }
 
@@ -439,7 +439,7 @@ export default function Deals() {
                     </td>
                     <td className="px-6 py-4 text-xs text-gray-900">
                       <div className="flex items-center">
-                        <DollarSign className="w-3.5 h-3.5 text-green-500" />
+                        {/*<DollarSign className="w-3.5 h-3.5 text-green-500" />*/}
                         {deal.annualRevenue}
                       </div>
                     </td>
@@ -562,7 +562,7 @@ export default function Deals() {
                         {deal.organization}
                       </h3>
                       <div className="flex items-center text-xs text-gray-500 mt-1">
-                        <DollarSign className="w-3 h-3" />
+                        {/*<DollarSign className="w-3 h-3" />*/}
                         {deal.annualRevenue}
                       </div>
                     </div>

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Smile, Paperclip, AtSign, Users } from 'lucide-react';
 import type { CurrentUser, User } from '../../types';
 import { getFirstChar } from '../../utils/formatting';
-import UserSelector from './DealUserSelector';
+import DealUserSelector from './DealUserSelector';
 
 interface DealCommentFormProps {
   value: string;
@@ -186,7 +186,7 @@ export default function DealCommentForm({
           {/* Mention dropdown */}
           {showMentionDropdown && (
             <div className="absolute bottom-full left-0 right-0 mb-2">
-              <UserSelector
+              <DealUserSelector
                 show={showMentionDropdown}
                 onClose={() => setShowMentionDropdown(false)}
                 onUserSelect={handleUserMention}

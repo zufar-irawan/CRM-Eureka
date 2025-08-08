@@ -1,3 +1,4 @@
+// DealCommentItem.tsx - Updated to match CommentItem.tsx design exactly
 "use client";
 
 import { Reply, MoreHorizontal, Trash2, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
@@ -38,8 +39,10 @@ export default function DealCommentItem({
   maxDepth = 3
 }: DealCommentItemProps) {
   const [showReplies, setShowReplies] = useState(true);
+  const [loadingReplies, setLoadingReplies] = useState(false);
   const hasReplies = comment.replies && comment.replies.length > 0;
   const canReply = depth < maxDepth;
+  const isTopLevel = depth === 0;
 
   const getIndentStyles = (depth: number) => {
     const baseIndent = 16;
@@ -98,7 +101,7 @@ export default function DealCommentItem({
               <div>
                 <div className="flex items-center space-x-2">
                   <p className={`${depth === 0 ? 'text-sm' : 'text-xs'} font-medium text-gray-900`}>
-                    {comment.user_name || comment.author || "Unknown User"}
+                    {comment.user_name || "Unknown User"}
                   </p>
                   {comment.parent_id && comment.parent_user && (
                     <span className="text-xs text-gray-500">
@@ -154,7 +157,7 @@ export default function DealCommentItem({
           
           {/* Comment Message */}
           <div className={`${depth === 0 ? 'text-sm' : 'text-xs'} text-gray-700 leading-relaxed whitespace-pre-wrap mb-3`}>
-            {comment.message || comment.text}
+            {comment.message}
           </div>
 
           {/* Replies Toggle */}

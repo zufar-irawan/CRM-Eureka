@@ -157,7 +157,7 @@ export default function Deals() {
       if (!result.success) throw new Error(result.message);
 
       const formattedDeals = result.data.map((deal: any) => {
-        let annualRevenue = "$0.00";
+        let annualRevenue = "0.00";
         if (deal.value !== null && deal.value !== undefined && deal.value !== '') {
           const numValue = parseFloat(deal.value.toString());
           if (!isNaN(numValue) && numValue > 0) {

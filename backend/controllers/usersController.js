@@ -18,8 +18,6 @@ export const getUserById = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
-        
-        // Format response dengan role information
         const userData = {
             ...user.dataValues,
             roleNames: user.roles ? user.roles.map(role => role.name) : [],
@@ -57,7 +55,6 @@ export const getAllUsers = async (req, res) => {
             order: [['created_at', 'DESC']]
         };
 
-        // If include_roles is requested, add role information and remove pagination
         if (include_roles === 'true') {
             queryOptions = {
                 where: whereClause,

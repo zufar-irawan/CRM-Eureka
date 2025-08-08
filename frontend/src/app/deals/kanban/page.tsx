@@ -20,8 +20,7 @@ export default function DealsKanban() {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>
-            ,
+            </div>,
             title: 'proposal',
             items: []
         },
@@ -29,8 +28,7 @@ export default function DealsKanban() {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>
-            ,
+            </div>,
             title: 'negotiation',
             items: []
         },
@@ -38,8 +36,7 @@ export default function DealsKanban() {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-green-700 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>
-            ,
+            </div>,
             title: 'won',
             items: []
         },
@@ -47,8 +44,7 @@ export default function DealsKanban() {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>
-            ,
+            </div>,
             title: 'lost',
             items: []
         },
@@ -59,14 +55,14 @@ export default function DealsKanban() {
             url: "http://localhost:5000/api/deals",
             setData: setData,
             setContainers: setContainers,
-            groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
+            groupBy: "stage",
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
                 itemId: deal.id,
-                fullname: deal.lead?.fullname || "Unknown",
-                organization: deal.lead?.company || "-",
-                email: deal.lead?.email || "-",
-                mobileno: deal.lead?.phone || "-",
+                fullname: deal.lead?.fullname || deal.title || "Unknown",
+                organization: deal.lead?.company || deal.company?.name || "-",
+                email: deal.lead?.email || deal.contact?.email || "-",
+                mobileno: deal.lead?.phone || deal.contact?.phone || "-",
             }),
         })
     }
@@ -76,14 +72,14 @@ export default function DealsKanban() {
             url: "http://localhost:5000/api/deals",
             setData: setData,
             setContainers: setContainers,
-            groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
+            groupBy: "stage",
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
                 itemId: deal.id,
-                fullname: deal.lead?.fullname || "Unknown",
-                organization: deal.lead?.company || "-",
-                email: deal.lead?.email || "-",
-                mobileno: deal.lead?.phone || "-",
+                fullname: deal.lead?.fullname || deal.title || "Unknown",
+                organization: deal.lead?.company || deal.company?.name || "-",
+                email: deal.lead?.email || deal.contact?.email || "-",
+                mobileno: deal.lead?.phone || deal.contact?.phone || "-",
             }),
         })
     }, []);
@@ -110,24 +106,19 @@ export default function DealsKanban() {
                                 >
                                     <RotateCcw className="w-3 h-3" />
                                 </button>
-
-                                {/* <button className="flex items-center gap-2 px-3 py-2 text-xs border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
-                                    <Filter className="w-3 h-3" />
-                                    <span className="hidden sm:inline">Filter</span>
-                                </button>
-
-                                <button className="flex items-center gap-2 px-3 py-2 text-xs border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors">
-                                    <KanbanIcon className="w-3 h-3" />
-                                    <span className="hidden sm:inline">Kanban Settings</span>
-                                </button> */}
                             </div>
                         </div>
                     </div>
 
-                    <Kanban setContainers={setContainers} setData={setData} containers={containers} pathname='Deals' />
+                    {/* Pastikan pathname dikirim sebagai "Deals" untuk routing yang benar */}
+                    <Kanban 
+                        setContainers={setContainers} 
+                        setData={setData} 
+                        containers={containers} 
+                        pathname="Deals"
+                    />
                 </main>
             </div>
-
         </div>
     )
 }

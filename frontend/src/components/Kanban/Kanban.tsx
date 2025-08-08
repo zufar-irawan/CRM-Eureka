@@ -44,7 +44,7 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
     const [isConverting, setIsConverting] = useState(false);
     const [onConfirm, setOnConfirm] = useState<((title: string, value: number, stage: string) => Promise<void>) | null>(null);
 
-    // Saat modal dibuka atau lead diklik:
+    // Handle convert modal untuk leads
     const handleOpenConvertModal = (leadId: number) => {
         setConvertingLeadId(leadId);
 
@@ -62,6 +62,27 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
         setShowConvertModal(true);
     };
 
+    // Fungsi untuk refresh data setelah modal ditutup
+    const refreshKanbanData = () => {
+        const apiUrl = pathname === "Deals" ? "http://localhost:5000/api/deals" : "http://localhost:3000/api/leads";
+        const groupByField = "stage"; // atau sesuai kebutuhan
+        
+        fetchKanbanData({
+            url: apiUrl,
+            setData: setData,
+            setContainers: setContainers,
+            groupBy: groupByField,
+            mapItem: (item) => ({
+                id: `item-${item.id}`,
+                itemId: item.id,
+                fullname: item.lead?.fullname || item.fullname || "Unknown",
+                organization: item.lead?.company || item.company || "-",
+                email: item.lead?.email || item.email || "-",
+                mobileno: item.lead?.phone || item.phone || "-",
+            }),
+        });
+    };
+
     return (
         <>
             <div className="mt-8 overflow-x-auto">
@@ -71,9 +92,19 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                         collisionDetection={closestCorners}
                         onDragStart={(event: DragStartEvent) => handleDragStart({ event, setActiveId, setDraggedItem, containers })}
                         onDragMove={(event: DragMoveEvent) => handleDragMove({ event, containers, setContainers })}
-                        onDragEnd={(event: DragEndEvent) => handleDragEnd({ event, containers, setShowConvertModal, setActiveId, draggedItem, setDraggedItem, setConvertingLeadId, onConvertRequest: handleOpenConvertModal, pathname })}
+                        onDragEnd={(event: DragEndEvent) => handleDragEnd({ 
+                            event, 
+                            containers, 
+                            setShowConvertModal, 
+                            setActiveId, 
+                            draggedItem, 
+                            setDraggedItem, 
+                            setConvertingLeadId, 
+                            onConvertRequest: handleOpenConvertModal, 
+                            pathname 
+                        })}
                     >
-                        <SortableContext items={containers.map((i) => i.id)} >
+                        <SortableContext items={containers.map((i) => i.id)}>
                             {containers.map((container) => (
                                 <Container
                                     key={container.id}
@@ -85,7 +116,7 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                                         setCurrentContainerId(container.id)
                                     }}
                                 >
-                                    <SortableContext items={container.items.map((i) => i.id)} >
+                                    <SortableContext items={container.items.map((i) => i.id)}>
                                         <div className="flex items-start flex-col gap-y-4">
                                             {container.items.map((item) => (
                                                 <Items
@@ -104,31 +135,18 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                                 </Container>
                             ))}
                         </SortableContext>
-
                     </DndContext>
                 </div>
-            </div >
+            </div>
 
-            {showConvertModal && onConfirm && (
+            {/* Modal untuk convert lead to deal - hanya muncul jika pathname adalah "Leads" */}
+            {showConvertModal && onConfirm && pathname === "Leads" && (
                 <ConvertToDealModal
                     onClose={() => {
                         setShowConvertModal(false);
                         setConvertingLeadId(null);
-                        // Refresh data in case of cancellation
-                        fetchKanbanData({
-                            url: "http://localhost:3000/api/leads",
-                            setData: setData,
-                            setContainers: setContainers,
-                            groupBy: "stage", // bisa diganti "status", "type", dll tergantung API
-                            mapItem: (lead) => ({
-                                id: `item-${lead.id}`,
-                                itemId: lead.id,
-                                fullname: lead.lead?.fullname || "Unknown",
-                                organization: lead.lead?.company || "-",
-                                email: lead.lead?.email || "-",
-                                mobileno: lead.lead?.phone || "-",
-                            }),
-                        })
+                        // Refresh data setelah modal ditutup
+                        refreshKanbanData();
                     }}
                     onConfirm={onConfirm}
                     selectedCount={1}

@@ -1,22 +1,445 @@
 "use client";
 
-import { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
-import MainContentDeals from './Layouts/MainContentDeals';
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import {
+  RotateCcw,
+  Filter,
+  ArrowUpDown,
+  Columns,
+  MoreHorizontal,
+  Phone,
+  Mail,
+  User,
+  Building2,
+  DollarSign,
+  X,
+  Edit,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import DeleteDealModal from "./components/DeleteDealModal";
+import EditDealModal from "./components/EditDealModal";
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
+import CreateDealsModal from "./add/AddDealsModal";
+import Swal from "sweetalert2";
+import { useDealEditStore } from "@/Store/dealModalStore";
+import axios from "axios";
 
-export default function DealsPage() {
-  const [isMinimized, setIsMinimized] = useState(false);
+interface SortConfig {
+  key: string;
+  direction: 'asc' | 'desc';
+}
+
+const ALL_COLUMNS = {
+  title: { key: 'title', label: 'Title', default: true, sortable: true },
+  value: { key: 'value', label: 'Value', default: true, sortable: false },
+  stage: { key: 'stage', label: 'Stage', default: true, sortable: true },
+
+  // Lead-related (from lead object)
+  lead_fullname: { key: 'lead.fullname', label: 'Lead Name', default: true, sortable: true },
+  lead_email: { key: 'lead.email', label: 'Lead Email', default: false, sortable: true },
+  lead_phone: { key: 'lead.phone', label: 'Lead Phone', default: false, sortable: true },
+
+  // Contact-related (from contact object)
+  contact_name: { key: 'contact.name', label: 'Contact Name', default: false, sortable: true },
+  contact_email: { key: 'contact.email', label: 'Contact Email', default: false, sortable: true },
+  contact_phone: { key: 'contact.phone', label: 'Contact Phone', default: false, sortable: true },
+  contact_position: { key: 'contact.position', label: 'Contact Position', default: false, sortable: true },
+  contact_company: { key: 'contact.company.name', label: 'Contact Company', default: false, sortable: true },
+
+  // Company-related (from company object)
+  company_name: { key: 'company.name', label: 'Company Name', default: true, sortable: true },
+  company_phone: { key: 'company.phone', label: 'Company Phone', default: false, sortable: true },
+  company_address: { key: 'company.address', label: 'Company Address', default: false, sortable: false },
+
+  // Creator-related
+  owner: { key: 'owner', label: 'Owner ID', default: false, sortable: true },
+  created_by: { key: 'created_by', label: 'Created By ID', default: false, sortable: true },
+  creator_name: { key: 'creator.name', label: 'Creator Name', default: false, sortable: true },
+  creator_email: { key: 'creator.email', label: 'Creator Email', default: false, sortable: true },
+
+  // Timestamps
+  created_at: { key: 'created_at', label: 'Created At', default: false, sortable: false },
+  updated_at: { key: 'updated_at', label: 'Updated At', default: true, sortable: false },
+} as const;
+
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 10000,
+});
+
+export default function Deals() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [deals, setDeals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
+  const [showColumnsDropdown, setShowColumnsDropdown] = useState(false);
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [dealsToDelete, setDealsToDelete] = useState<string[]>([]);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [currentDeal, setCurrentDeal] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const pathname = usePathname();
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const [originalLeads, setOriginalLeads] = useState<any[]>([]);
+  const openEditModal = useDealEditStore((state) => state.openModal)
+
+  const stages = ["proposal", "negotiation", "won", "lost"];
+
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    return Object.entries(ALL_COLUMNS)
+      .filter(([_, column]) => column.default)
+      .map(([key, _]) => key);
+  });
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      if (!target.closest(".action-menu") &&
+        !target.closest("[data-action-menu]")) {
+        setActionMenuOpenId(null);
+      }
+    }
+
+    fetchDeals();
+
+    const handleRefresh = () => {
+      fetchDeals()
+    }
+
+    window.addEventListener("deals-add", handleRefresh)
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      window.removeEventListener("deals-add", handleRefresh)
+    };
+  }, [selectedStage, searchTerm]);
+
+  const fetchDeals = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/deals/", {
+        params: {
+          ...(selectedStage ? { stage: selectedStage } : {}),
+          ...(searchTerm ? { search: searchTerm } : {}),
+        }
+      })
+
+      setOriginalLeads(response.data.data)
+      setDeals(response.data.data)
+    } catch (err: any) {
+      console.error('[ERROR] Failed to load deals:', err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: "Failed to load deals: " + err.message
+      })
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRowClick = (id: string) => {
+    router.push(`/deals/detail/${id}`);
+  };
+
+  const openDeleteModal = (ids: string[]) => {
+    setDealsToDelete(ids);
+    setDeleteModalOpen(true);
+    setActionMenuOpenId(null);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDealsToDelete([]);
+  };
+
+  const confirmDelete = async () => {
+    await handleBulkDelete(dealsToDelete);
+    closeDeleteModal();
+  };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    try {
+      const deletePromises = ids.map(async (id) => {
+        const response = await fetch(`/api/deals/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `Failed to delete deal ${id}`);
+        }
+
+        return response.json();
+      });
+
+      await Promise.all(deletePromises);
+      setDeals((prev) => prev.filter((deal) => !ids.includes(deal.id)));
+      setSelectedDeals([]);
+      Swal.fire({
+        icon: 'success',
+        title: "Success",
+        text: `Successfully deleted ${ids.length} deal(s)`
+      })
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: "Failed",
+        text: "Failed to delete deals: " + err.message
+      })
+    }
+  };
+
+  const handleEditDeal = (deal: any) => {
+    setCurrentDeal(deal);
+    setEditModalOpen(true);
+    setActionMenuOpenId(null);
+  };
+
+  const handleSaveDeal = (updatedDeal: any) => {
+    setDeals(prev => prev.map(deal =>
+      deal.id === updatedDeal.id ? updatedDeal : deal
+    ));
+    setEditModalOpen(false);
+  };
+
+  const toggleSelectDeal = (id: string) => {
+    setSelectedDeals((prev) =>
+      prev.includes(id)
+        ? prev.filter((dealId) => dealId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const isAllSelected = deals.length > 0 && selectedDeals.length === deals.length;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedDeals([]);
+    } else {
+      setSelectedDeals(deals.map((deal) => deal.id));
+    }
+  };
+
+  const handleSort = (columnKey: string) => {
+    const column = ALL_COLUMNS[columnKey as keyof typeof ALL_COLUMNS];
+    if (!column?.sortable) return;
+
+    let newSortConfig: SortConfig | null = null;
+
+    if (!sortConfig || sortConfig.key !== columnKey) {
+      // First click: set to ascending
+      newSortConfig = { key: columnKey, direction: 'asc' };
+    } else if (sortConfig.direction === 'asc') {
+      // Second click: set to descending
+      newSortConfig = { key: columnKey, direction: 'desc' };
+    } else {
+      // Third click: clear sorting (back to original order)
+      newSortConfig = null;
+    }
+
+    setSortConfig(newSortConfig);
+
+    if (newSortConfig) {
+      const sortedLeads = [...deals].sort((a, b) => {
+        let aValue = a[columnKey];
+        let bValue = b[columnKey];
+
+        // Handle special cases
+        if (columnKey === 'name') {
+          aValue = (a.title + " " + a.fullname).toLowerCase();
+          bValue = (b.title + " " + b.fullname).toLowerCase();
+        } else if (columnKey === 'updated_at' || columnKey === 'created_at') {
+          aValue = new Date(aValue);
+          bValue = new Date(bValue);
+        } else if (columnKey === 'number_of_employees' || columnKey === 'rating') {
+          aValue = parseInt(aValue) || 0;
+          bValue = parseInt(bValue) || 0;
+        } else {
+          // Handle null/undefined values
+          aValue = aValue?.toString().toLowerCase() || '';
+          bValue = bValue?.toString().toLowerCase() || '';
+        }
+
+        if (aValue < bValue) {
+          return newSortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return newSortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+
+      setDeals(sortedLeads);
+    } else {
+      // Reset to original order
+      setDeals([...originalLeads]);
+    }
+  }
+
+  const getSortIcon = (columnKey: string) => {
+    const column = ALL_COLUMNS[columnKey as keyof typeof ALL_COLUMNS];
+    if (!column?.sortable) return null;
+
+    if (!sortConfig || sortConfig.key !== columnKey) {
+      return <ArrowUpDown className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />;
+    }
+
+    return sortConfig.direction === 'asc'
+      ? <ArrowUp className="w-3 h-3 text-blue-600" />
+      : <ArrowDown className="w-3 h-3 text-blue-600" />;
+  };
+
+  const renderCellContent = (deal: any, columnKey: string) => {
+    const getSafe = (path: string) => path.split('.').reduce((obj, key) => obj?.[key], deal) ?? '-';
+
+    switch (columnKey) {
+      case 'title':
+        return <span className="text-xs text-gray-900">{deal.title || '-'}</span>;
+
+      case 'value':
+        return (
+          <span className="text-xs text-gray-900">
+            {deal.value
+              ? new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+              }).format(Number(deal.value))
+              : '-'}
+          </span>
+        );
+
+      case 'stage':
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium`}>
+            {deal.stage}
+          </span>
+        );
+
+      // Lead fields
+      case 'lead_fullname':
+        return <span className="text-xs text-gray-900">{getSafe('lead.fullname')}</span>;
+      case 'lead_email':
+        return <span className="text-xs text-blue-600 hover:underline">{getSafe('lead.email')}</span>;
+      case 'lead_phone':
+        return <span className="text-xs text-gray-900">{getSafe('lead.phone')}</span>;
+
+      // Contact fields
+      case 'contact_name':
+        return <span className="text-xs text-gray-900">{getSafe('contact.name')}</span>;
+      case 'contact_email':
+        return <span className="text-xs text-blue-600 hover:underline">{getSafe('contact.email')}</span>;
+      case 'contact_phone':
+        return <span className="text-xs text-gray-900">{getSafe('contact.phone')}</span>;
+      case 'contact_position':
+        return <span className="text-xs text-gray-900">{getSafe('contact.position')}</span>;
+      case 'contact_company':
+        return <span className="text-xs text-gray-900">{getSafe('contact.company.name')}</span>;
+
+      // Company fields
+      case 'company_name':
+        return <span className="text-xs text-gray-900">{getSafe('company.name')}</span>;
+      case 'company_phone':
+        return <span className="text-xs text-gray-900">{getSafe('company.phone')}</span>;
+      case 'company_address':
+        return <span className="text-xs text-gray-900">{getSafe('company.address')}</span>;
+
+      // Creator / owner
+      case 'creator_name':
+        return <span className="text-xs text-gray-900">{getSafe('creator.name')}</span>;
+      case 'creator_email':
+        return <span className="text-xs text-blue-600 hover:underline">{getSafe('creator.email')}</span>;
+      case 'owner':
+        return <span className="text-xs text-gray-900">{deal.owner || '-'}</span>;
+      case 'created_by':
+        return <span className="text-xs text-gray-900">{deal.created_by || '-'}</span>;
+
+      // Timestamps
+      case 'created_at':
+        return (
+          <span className="text-xs text-gray-500">
+            {new Date(deal.created_at).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </span>
+        );
+      case 'updated_at':
+        return (
+          <span className="text-xs text-gray-500">
+            {new Date(deal.updated_at).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </span>
+        );
+
+      default:
+        return <span className="text-xs text-gray-900">-</span>;
+    }
+  };
+
+
+  const selectAllColumns = () => {
+    setVisibleColumns(Object.keys(ALL_COLUMNS));
+  };
+
+  const deselectAllColumns = () => {
+    // Keep at least one column visible
+    setVisibleColumns(['name']);
+  };
+
+  const resetColumnsToDefault = () => {
+    const defaultColumns = Object.entries(ALL_COLUMNS)
+      .filter(([_, column]) => column.default)
+      .map(([key, _]) => key);
+    setVisibleColumns(defaultColumns);
+  };
+
+  const toggleColumnVisibility = (columnKey: string) => {
+    setVisibleColumns(prev => {
+      if (prev.includes(columnKey)) {
+        // Don't allow hiding all columns
+        if (prev.length <= 1) return prev;
+        return prev.filter(key => key !== columnKey);
+      } else {
+        return [...prev, columnKey];
+      }
+    });
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex">
       <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-      
-      <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex flex-col`}>
+
+      {isModalOpen ? (
+        <CreateDealsModal onClose={() => setIsModalOpen(false)} />
+      ) : ''}
+
+      <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'}`}>
         <Header
           isOpen={isOpen}
           setIsOpen={setIsOpen}

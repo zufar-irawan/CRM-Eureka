@@ -40,7 +40,7 @@ export default function ConvertToDealModal({
   selectedIds,
 }: ConvertToDealModalProps) {
   const [dealTitle, setDealTitle] = useState("");
-  const [dealValue, setDealValue] = useState<string>(""); // Changed to string for better input handling
+  const [dealValue, setDealValue] = useState<string>(""); // Keep as string for better input handling
   const [dealStage, setDealStage] = useState("proposal");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -55,12 +55,14 @@ export default function ConvertToDealModal({
       return;
     }
 
-    if (dealValue < 0) {
+    // Convert dealValue to number for validation
+    const numericValue = dealValue === "" ? 0 : parseFloat(dealValue);
+    
+    if (isNaN(numericValue) || numericValue < 0) {
       Swal.fire({
         icon: 'warning',
-        text: "Deal value cannot be negative"
+        text: "Deal value must be a valid positive number"
       })
-
       return;
     }
 
@@ -76,11 +78,6 @@ export default function ConvertToDealModal({
     const results: ConversionResult[] = [];
 
     try {
-      const numericValue = parseFloat(dealValue.toString());
-      if (isNaN(numericValue)) {
-        throw new Error("Invalid deal value");
-      }
-
       // Convert each lead individually
       for (const leadId of selectedIds) {
         try {
@@ -128,20 +125,19 @@ export default function ConvertToDealModal({
       console.log(`[DEBUG] Conversion summary: ${successCount} success, ${failureCount} failed`);
 
       if (successCount > 0) {
-        const dealValueDisplay =
-          numericValue > 0
-            ? ` with value ${numericValue.toLocaleString("en-US")}`
-            : "";
-
+        // Show success message WITHOUT dollar sign
         if (successCount === selectedCount) {
-          alert(`🎉 Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`);
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: `🎉 Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`
+          })
         } else {
           Swal.fire({
             icon: 'info',
             title: 'Information',
             text: `Partially successful: ${successCount} converted, ${failureCount} failed`
           })
-
         }
 
         // Close modal after successful conversion
@@ -173,23 +169,11 @@ export default function ConvertToDealModal({
 
   const handleDealValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-
+    
     // Allow empty string, numbers, and decimal points
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
       setDealValue(value);
     }
-  };
-
-  const handleDealValueFocus = () => {
-    // Clear the field if it's "0" when user focuses
-    if (dealValue === "0") {
-      setDealValue("");
-    }
-  };
-
-  const handleDealValueBlur = () => {
-    // If field is empty when user leaves, don't set it back to 0
-    // Let it remain empty - the form will handle it as 0 when submitting
   };
 
   // Simple conversion form - no results screen
@@ -259,23 +243,14 @@ export default function ConvertToDealModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Deal Value
             </label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-              <input
-                type="number"
-                value={dealValue || ''}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const numValue = value === '' ? 0 : parseFloat(value);
-                  setDealValue(isNaN(numValue) ? 0 : numValue);
-                }}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-            </div>
+            <input
+              type="text"
+              value={dealValue}
+              onChange={handleDealValueChange}
+              placeholder="0.00"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
+            />
           </div>
 
           <div>

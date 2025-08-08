@@ -1,4 +1,4 @@
-// File: routes/dealRoutes.js - Updated with enhanced comment system
+//dealRoutes.js
 import express from 'express';
 import { 
     getAllDeals,

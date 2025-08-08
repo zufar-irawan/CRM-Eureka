@@ -1,4 +1,4 @@
-// File: models/contacts/contactsModel.js
+//models/contacts/contactsModel.js
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 

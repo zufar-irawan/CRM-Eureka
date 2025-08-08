@@ -1,7 +1,6 @@
 import { sequelize } from '../config/db.js';
 import { DataTypes } from 'sequelize';
 
-// Role Model
 export const Role = sequelize.define('roles', {
   id: {
     type: DataTypes.INTEGER,
@@ -18,7 +17,7 @@ export const Role = sequelize.define('roles', {
   tableName: 'roles'
 });
 
-// User Roles Junction Table
+// user Roles Junction Table
 export const UserRole = sequelize.define('user_roles', {
   user_id: {
     type: DataTypes.INTEGER,

@@ -1,5 +1,10 @@
 import express from 'express';
-import { getAllCompanies, getCompanyById, createCompany, updateCompany, deleteCompany } from '../controllers/companiesController.js';
+import { getAllCompanies, 
+    getCompanyById, 
+    createCompany, 
+    updateCompany, 
+    deleteCompany 
+} from '../controllers/companiesController.js';
 
 const router = express.Router();
 router.get('/', getAllCompanies);

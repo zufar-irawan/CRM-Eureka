@@ -164,7 +164,7 @@ export default function Deals() {
           if (!isNaN(numValue) && numValue > 0) {
             annualRevenue = numValue.toLocaleString('en-US', {
               minimumFractionDigits: 2,
-              maximumFractionDigits: 2
+              maximumFractionDigits: 2  
             });
           }
         }
@@ -260,7 +260,6 @@ export default function Deals() {
   };
 
   const handleEditDeal = (deal: any) => {
-    // You can implement edit functionality here
     console.log("Edit deal:", deal);
     setActionMenuOpenId(null);
   };

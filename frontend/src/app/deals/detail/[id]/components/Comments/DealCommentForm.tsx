@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Smile, Paperclip, AtSign, Users } from 'lucide-react';
 import type { CurrentUser, User } from '../../types';
 import { getFirstChar } from '../../utils/formatting';
-import UserSelector from './DealUserSelector';
+import DealUserSelector from './DealUserSelector';
 
 interface DealCommentFormProps {
   value: string;
@@ -84,12 +84,10 @@ export default function DealCommentForm({
     setShowMentionDropdown(false);
     setMentionSearch('');
     
-    // Add to mentioned users list
     if (!mentionedUsers.find(u => u.id === user.id)) {
       setMentionedUsers(prev => [...prev, user]);
     }
 
-    // Focus and set cursor position
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -98,9 +96,7 @@ export default function DealCommentForm({
     }, 0);
   };
 
-  // Enhanced key press handler
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle mention dropdown navigation
     if (showMentionDropdown) {
       if (e.key === 'Escape') {
         setShowMentionDropdown(false);
@@ -108,8 +104,6 @@ export default function DealCommentForm({
         return;
       }
     }
-
-    // Original key press handler
     onKeyPress(e);
   };
 
@@ -186,7 +180,7 @@ export default function DealCommentForm({
           {/* Mention dropdown */}
           {showMentionDropdown && (
             <div className="absolute bottom-full left-0 right-0 mb-2">
-              <UserSelector
+              <DealUserSelector
                 show={showMentionDropdown}
                 onClose={() => setShowMentionDropdown(false)}
                 onUserSelect={handleUserMention}

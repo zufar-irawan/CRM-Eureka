@@ -1,11 +1,11 @@
-// File: models/associations.js - Updated with proper foreign key associations including roles
+// models/associations.js
 import { Leads } from "./leads/leadsModel.js";
 import { LeadComments } from "./leads/leadsCommentModel.js";
 import { Tasks } from "./tasks/tasksModel.js";
 import { TaskComments } from "./tasks/tasksCommentModel.js";
 import { TaskResults } from "./tasks/tasksResultModel.js";
 import { User } from "./usersModel.js";
-import { Role, UserRole } from "./rolesModel.js"; // Import dari file terpisah
+import { Role, UserRole } from "./rolesModel.js"; 
 import { Deals } from "./deals/dealsModel.js";
 import { DealComments } from "./deals/dealsCommentModel.js";
 import { Companies } from "./companies/companiesModel.js";

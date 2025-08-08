@@ -1,4 +1,4 @@
-// File: controllers/dealsController.js - Complete version with proper imports
+//controllers/dealsController.js
 import { Deals, DealComments, Leads, User, Companies, Contacts } from '../models/associations.js';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js';
@@ -930,7 +930,6 @@ export const getDealCommentThread = async (req, res) => {
             });
         }
 
-        // Get all comments in this thread
         const threadComments = await DealComments.findAll({
             where: {
                 deal_id: dealId,

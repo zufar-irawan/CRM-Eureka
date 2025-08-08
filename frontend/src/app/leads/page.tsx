@@ -278,7 +278,7 @@ export default function MainLeads() {
   };
 
   const handleRowClick = (leadId: string) => {
-    router.push(`/leads/detail/${leadId}`);
+    router.push(`/leads/detail/${leadId}`)
   };
 
   const handleRefresh = async () => {

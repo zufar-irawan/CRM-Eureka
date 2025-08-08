@@ -4,44 +4,44 @@ import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js';
 
 const buildCommentTree = (comments) => {
-  const commentMap = {};
-  const rootComments = [];
-  comments.forEach(comment => {
-    commentMap[comment.id] = {
-      ...comment.toJSON(),
-      replies: []
-    };
-  });
-
-  comments.forEach(comment => {
-    if (comment.parent_id === null) {
-      rootComments.push(commentMap[comment.id]);
-    } else if (commentMap[comment.parent_id]) {
-      commentMap[comment.parent_id].replies.push(commentMap[comment.id]);
-    }
-  });
-
-  const sortReplies = (comments) => {
+    const commentMap = {};
+    const rootComments = [];
     comments.forEach(comment => {
-      if (comment.replies && comment.replies.length > 0) {
-        comment.replies.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        sortReplies(comment.replies);
-      }
+        commentMap[comment.id] = {
+            ...comment.toJSON(),
+            replies: []
+        };
     });
-  };
 
-  sortReplies(rootComments);
-  return rootComments;
+    comments.forEach(comment => {
+        if (comment.parent_id === null) {
+            rootComments.push(commentMap[comment.id]);
+        } else if (commentMap[comment.parent_id]) {
+            commentMap[comment.parent_id].replies.push(commentMap[comment.id]);
+        }
+    });
+
+    const sortReplies = (comments) => {
+        comments.forEach(comment => {
+            if (comment.replies && comment.replies.length > 0) {
+                comment.replies.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                sortReplies(comment.replies);
+            }
+        });
+    };
+
+    sortReplies(rootComments);
+    return rootComments;
 };
 
 // GET /api/deals - Get all deals with company and contact info
 export const getAllDeals = async (req, res) => {
     try {
-        const { 
-            page = 1, 
-            limit = 10, 
-            stage, 
-            owner, 
+        const {
+            page = 1,
+            limit = 10,
+            stage,
+            owner,
             search,
             sortBy = 'created_at',
             sortOrder = 'DESC'
@@ -61,7 +61,8 @@ export const getAllDeals = async (req, res) => {
         if (search) {
             whereConditions[Op.or] = [
                 { title: { [Op.like]: `%${search}%` } },
-                { stage: { [Op.like]: `%${search}%` } }
+                { stage: { [Op.like]: `%${search}%` } },
+                { fullname: { [Op.like]: `%${search}%` } }
             ];
         }
 
@@ -142,7 +143,7 @@ export const getAllDeals = async (req, res) => {
 export const getDealById = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const deal = await Deals.findByPk(id, {
             include: [
                 {
@@ -226,31 +227,31 @@ export const getDealById = async (req, res) => {
 // POST /api/deals - Create new deal (flexible version)
 export const createDeal = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
-        const { 
+        const {
             title,
             value = 0,
             stage = 'proposal',
-            
+
             // Optional lead reference (for converted deals)
             lead_id = null,
-            
+
             // Optional direct company/contact references (backward compatibility)
             id_contact = null,
             id_company = null,
-            
+
             // Manual company/contact creation data
             company_name,
             company_email,
             company_phone,
             company_address,
-            
+
             contact_name,
             contact_email,
             contact_phone,
             contact_position,
-            
+
             // Owner/creator info
             owner = 0,
             created_by = null
@@ -279,7 +280,7 @@ export const createDeal = async (req, res) => {
                     message: 'Lead not found'
                 });
             }
-            
+
             // Use lead owner if no owner specified
             if (!finalOwnerId) {
                 finalOwnerId = lead.owner || 0;
@@ -309,7 +310,7 @@ export const createDeal = async (req, res) => {
                     address: company_address || null,
                     created_at: new Date()
                 }, { transaction });
-                
+
                 finalCompanyId = newCompany.id;
             }
         }
@@ -325,7 +326,7 @@ export const createDeal = async (req, res) => {
                 position: contact_position || null,
                 created_at: new Date()
             }, { transaction });
-            
+
             finalContactId = newContact.id;
         }
 
@@ -424,20 +425,20 @@ export const createDeal = async (req, res) => {
 // POST /api/deals/from-lead/:leadId - Specific endpoint for lead conversion
 export const createDealFromLead = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { leadId } = req.params;
-        const { 
+        const {
             title,
             value = 0,
             stage = 'proposal'
         } = req.body;
 
-        const lead = await Leads.findByPk(leadId, { 
+        const lead = await Leads.findByPk(leadId, {
             transaction,
-            lock: true 
+            lock: true
         });
-        
+
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({
@@ -486,7 +487,7 @@ export const createDealFromLead = async (req, res) => {
         // Create contact if lead has personal info
         if (lead.fullname || lead.first_name || lead.last_name || lead.email) {
             const contactName = lead.fullname || `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
-            
+
             if (contactName) {
                 const newContact = await Contacts.create({
                     company_id: companyId,
@@ -568,7 +569,7 @@ export const updateDeal = async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = { ...req.body };
-        
+
         // Add updated_at timestamp
         updateData.updated_at = new Date();
 
@@ -689,9 +690,9 @@ export const updateDealStage = async (req, res) => {
             });
         }
 
-        await deal.update({ 
-            stage, 
-            updated_at: new Date() 
+        await deal.update({
+            stage,
+            updated_at: new Date()
         });
 
         res.json({
@@ -713,7 +714,7 @@ export const updateDealStage = async (req, res) => {
 export const deleteDeal = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const deal = await Deals.findByPk(id);
         if (!deal) {
             return res.status(404).json({
@@ -744,16 +745,16 @@ export const getDealComments = async (req, res) => {
         const { id } = req.params;
         const dealId = parseInt(id);
         if (isNaN(dealId)) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "Invalid deal ID" 
+                message: "Invalid deal ID"
             });
         }
         const deal = await Deals.findByPk(dealId);
         if (!deal) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: "Deal not found" 
+                message: "Deal not found"
             });
         }
         const comments = await DealComments.findAll({
@@ -763,7 +764,7 @@ export const getDealComments = async (req, res) => {
                 as: 'user',
                 attributes: ['id', 'name', 'email']
             }],
-            order: [['created_at', 'DESC']] 
+            order: [['created_at', 'DESC']]
         });
 
         const nestedComments = buildCommentTree(comments);
@@ -791,34 +792,34 @@ export const getDealComments = async (req, res) => {
 // POST /api/deals/:id/comments - Add comment to deal
 export const addDealComment = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { id } = req.params;
         const dealId = parseInt(id);
-        
+
         if (isNaN(dealId)) {
             await transaction.rollback();
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "Invalid deal ID" 
+                message: "Invalid deal ID"
             });
-        } 
+        }
         const { message, user_id, user_name, parent_id } = req.body;
-        
+
         if (!message || !message.trim()) {
             await transaction.rollback();
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "Comment message is required" 
+                message: "Comment message is required"
             });
         }
 
         const deal = await Deals.findByPk(dealId, { transaction });
         if (!deal) {
             await transaction.rollback();
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: "Deal not found" 
+                message: "Deal not found"
             });
         }
 
@@ -827,17 +828,17 @@ export const addDealComment = async (req, res) => {
 
         if (parent_id) {
             parentComment = await DealComments.findOne({
-                where: { 
+                where: {
                     id: parent_id,
-                    deal_id: dealId 
+                    deal_id: dealId
                 },
                 transaction
             });
             if (!parentComment) {
                 await transaction.rollback();
-                return res.status(400).json({ 
+                return res.status(400).json({
                     success: false,
-                    message: "Parent comment not found" 
+                    message: "Parent comment not found"
                 });
             }
 
@@ -845,9 +846,9 @@ export const addDealComment = async (req, res) => {
 
             if (reply_level > 3) {
                 await transaction.rollback();
-                return res.status(400).json({ 
+                return res.status(400).json({
                     success: false,
-                    message: "Maximum reply depth exceeded. Please reply to a higher level comment." 
+                    message: "Maximum reply depth exceeded. Please reply to a higher level comment."
                 });
             }
         }
@@ -870,7 +871,7 @@ export const addDealComment = async (req, res) => {
                 attributes: ['id', 'name', 'email']
             }]
         });
-        
+
         res.status(201).json({
             success: true,
             message: parent_id ? "Reply added successfully" : "Comment added successfully",
@@ -897,11 +898,11 @@ export const getDealCommentThread = async (req, res) => {
         const { id, commentId } = req.params;
         const dealId = parseInt(id);
         const commentIdInt = parseInt(commentId);
-        
+
         if (isNaN(dealId) || isNaN(commentIdInt)) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "Invalid deal ID or comment ID" 
+                message: "Invalid deal ID or comment ID"
             });
         }
 
@@ -911,21 +912,21 @@ export const getDealCommentThread = async (req, res) => {
                 deal_id: dealId
             }
         });
-        
+
         if (!comment) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: "Comment not found" 
+                message: "Comment not found"
             });
         }
 
         let rootComment = comment;
         if (comment.parent_id) {
             rootComment = await DealComments.findOne({
-                where: { 
+                where: {
                     id: comment.parent_id,
                     deal_id: dealId,
-                    parent_id: null 
+                    parent_id: null
                 }
             });
         }
@@ -934,7 +935,7 @@ export const getDealCommentThread = async (req, res) => {
             where: {
                 deal_id: dealId,
                 [Op.or]: [
-                    { id: rootComment.id }, 
+                    { id: rootComment.id },
                     { parent_id: rootComment.id }
                 ]
             },
@@ -971,7 +972,7 @@ export const getDealCommentThread = async (req, res) => {
 // DELETE /api/deals/:id/comments/:commentId - Delete deal comment
 export const deleteDealComment = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { id, commentId } = req.params;
         const dealId = parseInt(id);
@@ -979,16 +980,16 @@ export const deleteDealComment = async (req, res) => {
 
         if (isNaN(dealId) || isNaN(commentIdInt)) {
             await transaction.rollback();
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "Invalid deal ID or comment ID" 
+                message: "Invalid deal ID or comment ID"
             });
         }
-        
+
         const comment = await DealComments.findOne({
-            where: { 
-                id: commentIdInt, 
-                deal_id: dealId 
+            where: {
+                id: commentIdInt,
+                deal_id: dealId
             },
             transaction
         });

@@ -35,7 +35,7 @@ const Container = ({
                 transform: CSS.Translate.toString(transform),
             }}
             className={
-                'w-full h-full min-w-[260px] max-w-[260px] rounded-xl hover:bg-gray-50 bg-white flex flex-col'}
+                'w-full h-[500px] min-w-[260px] max-w-[260px] rounded-xl hover:bg-gray-50 bg-white flex flex-col'}
         >
             <div className="flex items-center py-4 px-2 justify-between">
                 <div className="w-full flex flex-col gap-y-1">
@@ -63,7 +63,7 @@ const Container = ({
                 </button> */}
             </div>
 
-            <div className="px-1">
+            <div className="px-1 flex-1 overflow-y-hidden hover:overflow-y-auto pr-[4px] transition-all">
                 {children}
             </div>
         </div>

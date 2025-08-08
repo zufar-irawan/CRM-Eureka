@@ -39,13 +39,18 @@ const Items = ({ id, fullname, organization, email, mobileno, pathname, itemId }
         clickStartPos.current = { x: e.clientX, y: e.clientY };
     };
 
-    let routes = ""
-
-    if (pathname === "Deals") {
-        routes = `/deals/detail/${itemId}`
-    } else if (pathname === "Leads") {
-        routes = `/leads/detail/${itemId}`
-    }
+    // Perbaikan routing - pastikan rute yang benar
+    const getDetailRoute = () => {
+        if (pathname === "Deals") {
+            return `/deals/detail/${itemId}`;
+        } else if (pathname === "Leads") {
+            return `/leads/detail/${itemId}`;
+        } else if (pathname === "Tasks") {
+            return `/leads/detail/${itemId}`;
+        } 
+        // Default fallback untuk Deals
+        return `/deals/detail/${itemId}`;
+    };
 
     // Handle click to navigate to detail page
     const handleClick = (e: React.MouseEvent) => {
@@ -71,8 +76,10 @@ const Items = ({ id, fullname, organization, email, mobileno, pathname, itemId }
             return;
         }
 
-        // Navigate to lead detail page
-        router.push(routes)
+        // Navigate to detail page dengan route yang benar
+        const detailRoute = getDetailRoute();
+        console.log(`Navigating to: ${detailRoute}`);
+        router.push(detailRoute);
     };
 
     return (

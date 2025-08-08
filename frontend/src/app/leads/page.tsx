@@ -706,6 +706,7 @@ export default function MainLeads() {
           <table className="w-full relative">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
+
                 <th className="px-6 py-3 text-left sticky left-0 bg-gray-50 z-10">
                   <input
                     type="checkbox"
@@ -713,6 +714,10 @@ export default function MainLeads() {
                     onChange={toggleSelectAll}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  No
                 </th>
 
                 {visibleColumns.map((columnKey) => {
@@ -753,7 +758,7 @@ export default function MainLeads() {
                     No unconverted leads found
                   </td>
                 </tr>
-              ) : leads.map((lead) => (
+              ) : leads.map((lead, index) => (
                 <tr
                   key={lead.id}
                   className="hover:bg-gray-50 transition-colors cursor-pointer"
@@ -767,6 +772,8 @@ export default function MainLeads() {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </td>
+
+                  <td className="px-6 py-4 text-sm text-center">{index + 1}</td>
 
                   {visibleColumns.map((columnKey) => (
                     <td key={columnKey} className="px-6 py-4 whitespace-nowrap">

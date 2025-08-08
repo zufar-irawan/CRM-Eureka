@@ -1,4 +1,4 @@
-// File: models/deals/dealsModel.js - Updated with proper foreign key references
+//models/deals/dealsModel.js
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -18,7 +18,7 @@ export const Deals = sequelize.define('Deals', {
     },
     id_contact: {
         type: DataTypes.INTEGER,
-        allowNull: true, // Changed to allow NULL
+        allowNull: true, 
         references: {
             model: 'contacts',
             key: 'id'
@@ -26,7 +26,7 @@ export const Deals = sequelize.define('Deals', {
     },
     id_company: {
         type: DataTypes.INTEGER,
-        allowNull: true, // Changed to allow NULL
+        allowNull: true,
         references: {
             model: 'companies',
             key: 'id'

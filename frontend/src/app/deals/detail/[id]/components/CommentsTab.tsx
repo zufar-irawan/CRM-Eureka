@@ -1,5 +1,6 @@
 "use client";
 
+import Swal from "sweetalert2";
 import { Deal, Comment } from "../types";
 import { MessageSquare, Plus } from "lucide-react";
 
@@ -25,7 +26,7 @@ export default function CommentsTab({
   const handleAddComment = () => {
     const commentText = prompt("Enter your comment:");
     if (commentText) {
-      addComment(commentText).catch(() => alert("Failed to add comment"));
+      addComment(commentText).catch(() => Swal.fire({ icon: 'error', title: 'Failed', text: "Failed to add comment" }));
     }
   };
 

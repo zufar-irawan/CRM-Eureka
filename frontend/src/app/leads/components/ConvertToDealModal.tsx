@@ -4,10 +4,11 @@
 
 import { useState } from "react";
 import { X, ArrowRight, Building, User, DollarSign, Target } from "lucide-react";
+import Swal from "sweetalert2";
 
 interface ConvertToDealModalProps {
   onClose: () => void;
-  onConfirm: (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => Promise<any>; 
+  onConfirm: (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => Promise<any>;
   selectedCount: number;
   selectedIds: string[];
 }
@@ -38,14 +39,21 @@ export default function ConvertToDealModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!dealTitle.trim()) {
-      alert("Please enter a deal title");
+      Swal.fire({
+        icon: 'warning',
+        text: "Please enter a deal title"
+      })
       return;
     }
 
     if (dealValue < 0) {
-      alert("Deal value cannot be negative");
+      Swal.fire({
+        icon: 'warning',
+        text: "Deal value cannot be negative"
+      })
+
       return;
     }
 
@@ -59,27 +67,27 @@ export default function ConvertToDealModal({
 
     setIsLoading(true);
     const results: ConversionResult[] = [];
-    
+
     try {
       const numericValue = parseFloat(dealValue.toString());
       if (isNaN(numericValue)) {
         throw new Error("Invalid deal value");
       }
-      
+
       // Convert each lead individually
       for (const leadId of selectedIds) {
         try {
           console.log(`[DEBUG] Converting lead ${leadId}...`);
-          
+
           const result = await onConfirm(
             leadId,
-            selectedCount === 1 ? dealTitle : `${dealTitle} - Lead ${leadId}`, 
-            numericValue, 
+            selectedCount === 1 ? dealTitle : `${dealTitle} - Lead ${leadId}`,
+            numericValue,
             dealStage
           );
-          
+
           console.log(`[DEBUG] Conversion result for lead ${leadId}:`, result);
-          
+
           if (result && result.success && result.data) {
             results.push({
               leadId,
@@ -105,31 +113,52 @@ export default function ConvertToDealModal({
           });
         }
       }
-      
+
       const successCount = results.filter(r => r.success).length;
       const failureCount = results.filter(r => !r.success).length;
-      
+
       console.log(`[DEBUG] Conversion summary: ${successCount} success, ${failureCount} failed`);
-      
+
       if (successCount > 0) {
         // Show success message and close modal
         if (successCount === selectedCount) {
-          alert(`🎉 Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`);
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: `🎉 Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`
+          })
+
         } else {
-          alert(`Partially successful: ${successCount} converted, ${failureCount} failed`);
+          Swal.fire({
+            icon: 'info',
+            title: 'Information',
+            text: `Partially successful: ${successCount} converted, ${failureCount} failed`
+          })
+
         }
-        
+
         // Close modal after successful conversion
         onClose();
       } else {
         // If no conversions succeeded, show error message
         const firstError = results.find(r => r.error)?.error || "All conversions failed";
-        alert(`Conversion failed: ${firstError}`);
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: `Conversion failed: ${firstError}`
+        })
       }
-      
+
     } catch (error) {
       console.error("Error in conversion process:", error);
-      alert("Error: " + (error instanceof Error ? error.message : "Unknown error"));
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: "Error: " + (error instanceof Error ? error.message : "Unknown error")
+      })
+
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +172,7 @@ export default function ConvertToDealModal({
           <h2 className="text-xl font-bold">Convert to Deal</h2>
           <ArrowRight className="w-5 h-5 text-blue-600" />
         </div>
-        
+
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-black"
@@ -197,7 +226,7 @@ export default function ConvertToDealModal({
               <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               <input
                 type="number"
-                value={dealValue || ''} 
+                value={dealValue || ''}
                 onChange={(e) => {
                   const value = e.target.value;
                   const numValue = value === '' ? 0 : parseFloat(value);

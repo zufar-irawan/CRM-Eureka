@@ -177,7 +177,10 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Salutation</label>
+                      <label className="block text-sm font-medium text-gray-600">
+                        Salutation <span className="text-red-500">*</span>
+                      </label>
+
                       <select
                         name="title"
                         value={form.title}
@@ -219,7 +222,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Email</label>
+                      <label className="block text-sm font-medium text-gray-600">Email <span className="text-red-500">*</span></label>
                       <input
                         name="email"
                         type="email"
@@ -232,7 +235,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Mobile</label>
+                      <label className="block text-sm font-medium text-gray-600">Mobile <span className="text-red-500">*</span></label>
                       <input
                         name="mobile"
                         placeholder="Enter mobile number"
@@ -277,7 +280,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Company</label>
+                      <label className="block text-sm font-medium text-gray-600">Company <span className="text-red-500">*</span></label>
                       <input
                         name="company"
                         placeholder="Enter company name"
@@ -324,7 +327,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Phone</label>
+                      <label className="block text-sm font-medium text-gray-600">Phone <span className="text-red-500">*</span></label>
                       <input
                         name="phone"
                         placeholder="Enter phone number"
@@ -349,7 +352,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Company Email</label>
+                      <label className="block text-sm font-medium text-gray-600">Company Email <span className="text-red-500">*</span></label>
                       <input
                         name="work_email"
                         type="email"
@@ -430,7 +433,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1 md:col-span-3">
-                      <label className="block text-sm font-medium text-gray-600">Street</label>
+                      <label className="block text-sm font-medium text-gray-600">Street <span className="text-red-500">*</span></label>
                       <input
                         name="street"
                         placeholder="Enter street address"
@@ -442,7 +445,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">City</label>
+                      <label className="block text-sm font-medium text-gray-600">City <span className="text-red-500">*</span></label>
                       <input
                         name="city"
                         placeholder="Enter city"
@@ -454,7 +457,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">State</label>
+                      <label className="block text-sm font-medium text-gray-600">State <span className="text-red-500">*</span></label>
                       <input
                         name="state"
                         placeholder="Enter state"
@@ -478,7 +481,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Country</label>
+                      <label className="block text-sm font-medium text-gray-600">Country <span className="text-red-500">*</span></label>
                       <input
                         name="country"
                         placeholder="Enter country"
@@ -488,24 +491,6 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                         maxLength={100}
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Additional Information Section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Additional Information
-                  </h3>
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-600">Description</label>
-                    <textarea
-                      name="description"
-                      placeholder="Enter description or additional notes"
-                      value={form.description}
-                      onChange={handleChange}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-vertical"
-                    />
                   </div>
                 </div>
 

@@ -208,6 +208,11 @@ export default function DesktopTable({
                                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
                         </th>
+
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            No
+                        </th>
+
                         {columns
                             .filter((col) => visibleColumns.includes(col.key))
                             .map((col) => (
@@ -247,7 +252,7 @@ export default function DesktopTable({
                             </td>
                         </tr>
                     ) : (
-                        data.map((row) => (
+                        data.map((row, index) => (
                             <tr
                                 key={row.id}
                                 className="hover:bg-gray-50 transition-colors cursor-pointer"
@@ -260,6 +265,8 @@ export default function DesktopTable({
                                         className="rounded border-gray-300 text-blue-600"
                                     />
                                 </td>
+
+                                <td className="px-6 py-4 text-sm text-center">{index + 1}</td>
 
                                 {columns
                                     .filter((col) => visibleColumns.includes(col.key))

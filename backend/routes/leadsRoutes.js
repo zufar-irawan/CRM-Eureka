@@ -1,4 +1,4 @@
-// Updated routes untuk leadsRoutes.js
+//leadsRoutes.js
 import express from 'express';
 import {
     getLeads,

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { CurrentUser, User } from '../../types';
 import { makeAuthenticatedRequest } from '../../utils/auth';
 import { API_ENDPOINTS, FALLBACK_USERS } from '../../utils/constants';
+import Swal from "sweetalert2";
 
 interface CreateTaskModalProps {
   leadId: string | string[] | undefined;
@@ -23,11 +24,11 @@ interface TaskForm {
   priority: string;
 }
 
-export default function CreateTaskModal({ 
-  leadId, 
-  currentUser, 
-  onClose, 
-  onTaskCreated 
+export default function CreateTaskModal({
+  leadId,
+  currentUser,
+  onClose,
+  onTaskCreated
 }: CreateTaskModalProps) {
   const [form, setForm] = useState<TaskForm>({
     lead_id: parseInt(String(leadId)) || 0,
@@ -48,7 +49,7 @@ export default function CreateTaskModal({
     const fetchUsers = async () => {
       try {
         const response = await makeAuthenticatedRequest(API_ENDPOINTS.USERS);
-        
+
         if (response.ok) {
           const result = await response.json();
           const data = Array.isArray(result) ? result : result.data || [];
@@ -127,9 +128,22 @@ export default function CreateTaskModal({
       const result = await response.json();
       console.log("Task created successfully:", result);
 
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: "Task created successfully"
+      })
+
       onTaskCreated();
     } catch (err) {
       console.error("Error creating task:", err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: err instanceof Error ? err.message : "Failed to create task"
+      })
+
       setError(err instanceof Error ? err.message : "Failed to create task");
     } finally {
       setIsSubmitting(false);

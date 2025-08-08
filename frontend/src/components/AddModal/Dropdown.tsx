@@ -9,16 +9,18 @@ type dropdownprops = {
         value: string | number
         label: string
     }[]
+    isRequired?: boolean
 }
 
 export default function Dropdown(
-    { label, name, value, onChange, options }:
+    { label, name, value, onChange, options, isRequired }:
         dropdownprops
 ) {
     return (
         <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-600">
                 {label}
+                {isRequired && (<span className="text-red-500">*</span>)}
             </label>
             <select
                 name={name}

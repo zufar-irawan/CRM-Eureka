@@ -17,6 +17,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
+import Swal from "sweetalert2";
 
 interface Deal {
   id: string;
@@ -115,7 +116,7 @@ export default function Deals() {
 
   const getStatusColor = (status: string) => {
     const normalizedStatus = status.toLowerCase().trim();
-    
+
     switch (normalizedStatus) {
       case 'proposal':
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -126,7 +127,7 @@ export default function Deals() {
       case 'lost':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'; 
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -137,9 +138,9 @@ export default function Deals() {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      
-      if (!target.closest(".action-menu") && 
-          !target.closest("[data-action-menu]")) {
+
+      if (!target.closest(".action-menu") &&
+        !target.closest("[data-action-menu]")) {
         setActionMenuOpenId(null);
       }
     };
@@ -172,7 +173,7 @@ export default function Deals() {
           id: String(deal.id),
           organization: deal.lead?.company || deal.company || "N/A",
           annualRevenue: annualRevenue,
-          status: deal.stage || "N/A", 
+          status: deal.stage || "N/A",
           email: deal.lead?.email || deal.email || "-",
           mobile: deal.lead?.phone || deal.lead?.mobile || deal.mobile || "-",
           assignedTo: deal.creator?.name || deal.owner || "Unassigned",
@@ -180,14 +181,20 @@ export default function Deals() {
             dateStyle: 'medium',
             timeStyle: 'short'
           }),
-          rawData: deal 
+          rawData: deal
         };
       });
 
       setDeals(formattedDeals);
     } catch (err: any) {
       console.error('[ERROR] Failed to load deals:', err);
-      alert("Failed to load deals: " + err.message);
+
+      Swal.fire({
+        icon: "error",
+        title: 'Failed',
+        text: "Failed to load deals: " + err.message
+      })
+
     } finally {
       setLoading(false);
     }
@@ -234,9 +241,21 @@ export default function Deals() {
       await Promise.all(deletePromises);
       setDeals((prev) => prev.filter((deal) => !ids.includes(deal.id)));
       setSelectedDeals([]);
-      alert(`Successfully deleted ${ids.length} deal(s)`);
+
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: `Successfully deleted ${ids.length} deal(s)`
+      })
+
     } catch (err: any) {
-      alert("Failed to delete deals: " + err.message);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: "Failed to delete deals: " + err.message
+      })
+
     }
   };
 
@@ -275,7 +294,7 @@ export default function Deals() {
             >
               <RotateCcw className="w-3 h-3" />
             </button>
-            
+
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
               className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors"
@@ -482,19 +501,18 @@ export default function Deals() {
 
                         {actionMenuOpenId === deal.id && (
                           <>
-                            <div 
-                              className="fixed inset-0 z-40" 
+                            <div
+                              className="fixed inset-0 z-40"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setActionMenuOpenId(null);
                               }}
                             />
-                            
-                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
-                              deals.indexOf(deal) >= deals.length - 2 
-                                ? 'bottom-full mb-1' 
-                                : 'top-full mt-1'
-                            }`}>
+
+                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${deals.indexOf(deal) >= deals.length - 2
+                              ? 'bottom-full mb-1'
+                              : 'top-full mt-1'
+                              }`}>
                               <div className="py-1">
                                 <button
                                   onClick={(e) => {
@@ -570,7 +588,7 @@ export default function Deals() {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(deal.status)}`}>
                       {deal.status}
                     </span>
-                    
+
                     <div className="relative" data-action-menu onClick={(e) => e.stopPropagation()}>
                       <button
                         className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -584,19 +602,18 @@ export default function Deals() {
 
                       {actionMenuOpenId === deal.id && (
                         <>
-                          <div 
-                            className="fixed inset-0 z-40" 
+                          <div
+                            className="fixed inset-0 z-40"
                             onClick={(e) => {
                               e.stopPropagation();
                               setActionMenuOpenId(null);
                             }}
                           />
-                          
-                          <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
-                            deals.indexOf(deal) >= deals.length - 2 
-                              ? 'bottom-full mb-1' 
-                              : 'top-full mt-1'
-                          }`}>
+
+                          <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${deals.indexOf(deal) >= deals.length - 2
+                            ? 'bottom-full mb-1'
+                            : 'top-full mt-1'
+                            }`}>
                             <div className="py-1">
                               <button
                                 onClick={(e) => {

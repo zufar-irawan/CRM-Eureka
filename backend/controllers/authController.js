@@ -27,7 +27,6 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: "Password Salah" });
         } 
 
-        // Format user data with role information
         const roles = user.roles || [];
         const primaryRole = roles.length > 0 ? roles[0].name : 'user';
         
@@ -38,7 +37,7 @@ export const login = async (req, res) => {
             roles: roles,
             roleNames: roles.map(role => role.name),
             primaryRole: primaryRole,
-            role: primaryRole, // For backward compatibility
+            role: primaryRole, 
             isAdmin: roles.some(role => role.name === 'admin'),
             isSales: roles.some(role => role.name === 'sales'),
             isPartnership: roles.some(role => role.name === 'partnership'),
@@ -91,7 +90,6 @@ export const me = async (req, res) => {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
-        // Format user data with role information
         const roles = user.roles || [];
         const primaryRole = roles.length > 0 ? roles[0].name : 'user';
         
@@ -145,10 +143,8 @@ export const refreshUser = async (req, res) => {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
-        // Format user data with role information
         const roles = user.roles || [];
         const primaryRole = roles.length > 0 ? roles[0].name : 'user';
-        
         const userData = {
             id: user.id,
             name: user.name,
@@ -165,7 +161,6 @@ export const refreshUser = async (req, res) => {
             isAkunting: roles.some(role => role.name === 'akunting')
         };
 
-        // Generate new token with updated role information
         const token = jwt.sign(
             { 
                 userId: user.id, 

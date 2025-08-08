@@ -5,16 +5,18 @@ type textAreaProps = {
     value: string
     onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
     rows: number
+    isRequired?: boolean
 }
 
 export default function TextArea(
-    { label, name, placeholder, value, onChange, rows }:
+    { label, name, placeholder, value, onChange, rows, isRequired }:
         textAreaProps
 ) {
     return (
         <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-600">
                 {label}
+                {isRequired && (<span className="text-red-500">*</span>)}
             </label>
             <textarea
                 name={name}

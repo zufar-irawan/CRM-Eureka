@@ -1,4 +1,4 @@
-// File: models/companies/companiesModel.js
+//models/companies/companiesModel.js
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 

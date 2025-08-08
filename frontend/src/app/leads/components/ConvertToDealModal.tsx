@@ -1,4 +1,4 @@
-// File: ConvertToDealModal.tsx - Fixed implementation
+// C:\Users\fazry\Downloads\CRM-Eureka\frontend\src\app\leads\components\ConvertToDealModal.tsx 
 
 "use client";
 
@@ -40,7 +40,7 @@ export default function ConvertToDealModal({
   selectedIds,
 }: ConvertToDealModalProps) {
   const [dealTitle, setDealTitle] = useState("");
-  const [dealValue, setDealValue] = useState<string>(""); // Keep as string for better input handling
+  const [dealValue, setDealValue] = useState<string>(""); 
   const [dealStage, setDealStage] = useState("proposal");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -130,7 +130,7 @@ export default function ConvertToDealModal({
           Swal.fire({
             icon: 'success',
             title: 'Success',
-            text: `🎉 Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`
+            text: `Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`
           })
         } else {
           Swal.fire({
@@ -276,10 +276,7 @@ export default function ConvertToDealModal({
               type="button"
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-colors"
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
+              disabled={isLoading}>Cancel</button>
             <button
               type="submit"
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

@@ -94,7 +94,7 @@ export default function LeadDetailPage() {
         icon: 'info',
         title: 'Information',
         text: "To convert a lead, please use the 'Convert to Deal' button instead."
-      })
+      });
       return;
     }
 
@@ -103,7 +103,7 @@ export default function LeadDetailPage() {
         icon: 'error',
         title: 'Failed',
         text: "Cannot update stage of converted lead."
-      })
+      });
       return;
     }
 
@@ -114,16 +114,18 @@ export default function LeadDetailPage() {
       if (!statusOption) return;
 
       const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.LEADS}/${lead.id}/stage`, {
-        method: 'PUT',
+        method: 'PATCH', // Changed from PUT to PATCH to match controller
         body: JSON.stringify({
           stage: statusOption.backendStage
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
+      // Update local state
       setLead(prevLead => prevLead ? {
         ...prevLead,
         stage: statusOption.backendStage,
@@ -135,8 +137,10 @@ export default function LeadDetailPage() {
       Swal.fire({
         icon: 'success',
         title: 'Success',
-        text: `Lead stage updated to "${newStatus}" successfully!`
-      })
+        text: `Lead stage updated to "${newStatus}" successfully!`,
+        timer: 2000,
+        showConfirmButton: false
+      });
 
     } catch (error: unknown) {
       console.error('[ERROR] Failed to update lead stage:', error);
@@ -146,8 +150,9 @@ export default function LeadDetailPage() {
         icon: 'error',
         title: 'Failed',
         text: `Error: ${errorMessage}`
-      })
+      });
 
+      // Revert status
       if (lead?.stage) {
         setSelectedStatus(mapStageToStatus(lead.stage));
       }
@@ -156,35 +161,53 @@ export default function LeadDetailPage() {
     }
   };
 
+  // Handle convert to deal with the existing modal pattern
   const handleConvertToDeal = async (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => {
     if (!lead) throw new Error('No lead data available');
 
-    const requestBody = {
-      dealTitle: dealTitle.trim(),
-      dealValue: parseFloat(dealValue.toString()),
-      dealStage: dealStage,
-      leadData: {
-        fullname: lead.fullname,
-        company: lead.company,
-        email: lead.email,
-        mobile: lead.mobile,
-        industry: lead.industry,
-        job_position: lead.job_position,
-        website: lead.website
+    setIsConverting(true);
+    try {
+      const requestBody = {
+        dealTitle: dealTitle.trim(),
+        dealValue: parseFloat(dealValue.toString()),
+        dealStage: dealStage
+      };
+
+      console.log('[DEBUG] Converting lead to deal:', requestBody);
+
+      const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.LEADS}/${leadId}/convert`, {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
       }
-    };
 
-    const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.LEADS}/${leadId}/convert`, {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-    });
+      const result = await response.json();
+      console.log('[DEBUG] Conversion successful:', result);
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `HTTP ${response.status}: ${response.statusText}`);
+      // Close modal
+      setShowConvertModal(false);
+      
+      // Refresh lead data
+      await refreshLead();
+      
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: `Successfully converted lead "${lead.fullname || 'Unknown'}" to deal "${dealTitle}"!`
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error converting lead:', error);
+      throw error;
+    } finally {
+      setIsConverting(false);
     }
-
-    return await response.json();
   };
 
   const renderTabContent = () => {
@@ -194,7 +217,7 @@ export default function LeadDetailPage() {
       case "Comments":
         return <CommentsTab leadId={id} currentUser={currentUser} />;
       case "Tasks":
-        return <TasksTab currentUser={currentUser} />; // ✅ Updated: leadId tidak perlu dikirim manual
+        return <TasksTab currentUser={currentUser} />;
       case "Activity":
         return <ActivityTab lead={lead} />;
       case "Emails":
@@ -255,6 +278,7 @@ export default function LeadDetailPage() {
           isConverting={isConverting}
           onStatusChange={handleStatusChange}
           onConvertToDeal={() => setShowConvertModal(true)}
+          onLeadUpdate={refreshLead} // Pass refresh function
         />
 
         <LeadTabs
@@ -272,11 +296,8 @@ export default function LeadDetailPage() {
 
       {showConvertModal && lead && (
         <ConvertToDealModal
-          onClose={async () => {
-            setShowConvertModal(false);
-            await refreshLead();
-          }}
-          onConfirm={handleConvertToDeal}
+          onClose={() => setShowConvertModal(false)}
+          onConfirm={(leadId, dealTitle, dealValue, dealStage) => handleConvertToDeal(leadId, dealTitle, dealValue, dealStage)}
           selectedCount={1}
           selectedIds={[String(lead.id)]}
         />

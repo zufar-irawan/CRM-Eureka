@@ -200,6 +200,8 @@ export default function DesktopTable({
     const handleRowClick = (id: string) => {
         if (pathname === "/contacts/") {
             router.push(`/contacts/detail/${id}`)
+        } else if (pathname === "/companies/") {
+            router.push(`/companies/detail/${id}`)
         }
     }
 

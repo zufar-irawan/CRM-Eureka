@@ -327,6 +327,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                                 { value: "won", label: "Won" },
                                                 { value: "lost", label: "Lost" },
                                             ]}
+                                            isRequired
                                         />
                                     </div>
                                 </div>
@@ -359,6 +360,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                                 value={form.id_company || ''}
                                                 onChange={handleChange}
                                                 options={companyOptions}
+                                                isRequired
                                             />
                                         </div>
                                     ) : (
@@ -371,6 +373,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                                 value={form.company_name}
                                                 onChange={handleChange}
                                                 maxLength={100}
+
                                             />
                                             <Input
                                                 label="Company Email"
@@ -383,7 +386,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                             />
                                             <Input
                                                 label="Company Phone"
-                                                isRequired={false}
+                                                isRequired={true}
                                                 name="company_phone"
                                                 placeholder="Enter company phone"
                                                 value={form.company_phone}
@@ -398,6 +401,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                                     value={form.company_address}
                                                     onChange={handleChange}
                                                     rows={3}
+                                                    isRequired
                                                 />
                                             </div>
                                         </div>
@@ -432,6 +436,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                                 value={form.id_contact || ''}
                                                 onChange={handleChange}
                                                 options={contactOptions}
+                                                isRequired
                                             />
                                         </div>
                                     ) : (
@@ -456,7 +461,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                             />
                                             <Input
                                                 label="Contact Phone"
-                                                isRequired={false}
+                                                isRequired={true}
                                                 name="contact_phone"
                                                 placeholder="Enter contact phone"
                                                 value={form.contact_phone}

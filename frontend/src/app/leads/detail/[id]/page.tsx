@@ -12,6 +12,7 @@ import TasksTab from "./components/Tasks/TasksTab";
 import ConvertToDealModal from "../../components/ConvertToDealModal";
 import { makeAuthenticatedRequest } from "./utils/auth";
 import { API_ENDPOINTS } from "./utils/constants";
+import Swal from "sweetalert2";
 
 // Tab Components
 const ActivityTab = ({ lead }: { lead: any }) => (
@@ -89,12 +90,20 @@ export default function LeadDetailPage() {
     if (!lead) return;
 
     if (newStatus === "Converted") {
-      alert("To convert a lead, please use the 'Convert to Deal' button instead.");
+      Swal.fire({
+        icon: 'info',
+        title: 'Information',
+        text: "To convert a lead, please use the 'Convert to Deal' button instead."
+      })
       return;
     }
 
     if (lead.status === true) {
-      alert("Cannot update stage of converted lead.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: "Cannot update stage of converted lead."
+      })
       return;
     }
 
@@ -122,11 +131,22 @@ export default function LeadDetailPage() {
       } : null);
 
       setSelectedStatus(newStatus);
-      alert(`Lead stage updated to "${newStatus}" successfully!`);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: `Lead stage updated to "${newStatus}" successfully!`
+      })
+
     } catch (error: unknown) {
       console.error('[ERROR] Failed to update lead stage:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to update lead stage';
-      alert(`Error: ${errorMessage}`);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: `Error: ${errorMessage}`
+      })
 
       if (lead?.stage) {
         setSelectedStatus(mapStageToStatus(lead.stage));

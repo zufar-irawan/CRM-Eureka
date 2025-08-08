@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 interface LoginData {
   email: string;
@@ -43,7 +44,11 @@ export default function Login() {
 
       router.push("/dashboard");
     } catch (err: any) {
-      alert(err.message);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message
+      })
     } finally {
       setIsLoading(false);
     }

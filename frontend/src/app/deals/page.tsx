@@ -604,6 +604,10 @@ export default function Deals() {
                       />
                     </th>
 
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      No
+                    </th>
+
                     {visibleColumns.map((columnKey) => {
                       const column = ALL_COLUMNS[columnKey as keyof typeof ALL_COLUMNS];
                       return (
@@ -643,7 +647,7 @@ export default function Deals() {
                       </td>
                     </tr>
                   ) : (
-                    deals.map((deal) => (
+                    deals.map((deal, index) => (
                       <tr
                         key={deal.id}
                         className="hover:bg-gray-50 transition-colors cursor-pointer"
@@ -660,6 +664,8 @@ export default function Deals() {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
+
+                        <td className="px-6 py-4 text-sm text-center">{index + 1}</td>
 
                         {visibleColumns.map((columnKey) => (
                           <td key={columnKey} className="px-6 py-4 whitespace-nowrap">

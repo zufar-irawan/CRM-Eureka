@@ -11,15 +11,11 @@ import {
   DollarSign,
   Target,
 } from "lucide-react";
+import Swal from "sweetalert2";
 
 interface ConvertToDealModalProps {
   onClose: () => void;
-  onConfirm: (
-    leadId: string,
-    dealTitle: string,
-    dealValue: number,
-    dealStage: string
-  ) => Promise<any>;
+  onConfirm: (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => Promise<any>;
   selectedCount: number;
   selectedIds: string[];
 }
@@ -52,14 +48,19 @@ export default function ConvertToDealModal({
     e.preventDefault();
 
     if (!dealTitle.trim()) {
-      alert("Please enter a deal title");
+      Swal.fire({
+        icon: 'warning',
+        text: "Please enter a deal title"
+      })
       return;
     }
 
-    const numericValue = dealValue === "" ? 0 : parseFloat(dealValue);
+    if (dealValue < 0) {
+      Swal.fire({
+        icon: 'warning',
+        text: "Deal value cannot be negative"
+      })
 
-    if (isNaN(numericValue) || numericValue < 0) {
-      alert("Deal value must be a valid positive number");
       return;
     }
 
@@ -75,6 +76,11 @@ export default function ConvertToDealModal({
     const results: ConversionResult[] = [];
 
     try {
+      const numericValue = parseFloat(dealValue.toString());
+      if (isNaN(numericValue)) {
+        throw new Error("Invalid deal value");
+      }
+
       // Convert each lead individually
       for (const leadId of selectedIds) {
         try {
@@ -116,12 +122,10 @@ export default function ConvertToDealModal({
         }
       }
 
-      const successCount = results.filter((r) => r.success).length;
-      const failureCount = results.filter((r) => !r.success).length;
+      const successCount = results.filter(r => r.success).length;
+      const failureCount = results.filter(r => !r.success).length;
 
-      console.log(
-        `[DEBUG] Conversion summary: ${successCount} success, ${failureCount} failed`
-      );
+      console.log(`[DEBUG] Conversion summary: ${successCount} success, ${failureCount} failed`);
 
       if (successCount > 0) {
         const dealValueDisplay =
@@ -130,28 +134,38 @@ export default function ConvertToDealModal({
             : "";
 
         if (successCount === selectedCount) {
-          alert(
-            `🎉 Successfully converted ${successCount} lead${
-              successCount > 1 ? "s" : ""
-            } to deal${successCount > 1 ? "s" : ""}${dealValueDisplay}!`
-          );
+          alert(`🎉 Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`);
         } else {
-          alert(
-            `Partially successful: ${successCount} converted, ${failureCount} failed`
-          );
+          Swal.fire({
+            icon: 'info',
+            title: 'Information',
+            text: `Partially successful: ${successCount} converted, ${failureCount} failed`
+          })
+
         }
 
+        // Close modal after successful conversion
         onClose();
       } else {
-        const firstError =
-          results.find((r) => r.error)?.error || "All conversions failed";
-        alert(`Conversion failed: ${firstError}`);
+        // If no conversions succeeded, show error message
+        const firstError = results.find(r => r.error)?.error || "All conversions failed";
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: `Conversion failed: ${firstError}`
+        })
       }
+
     } catch (error) {
       console.error("Error in conversion process:", error);
-      alert(
-        "Error: " + (error instanceof Error ? error.message : "Unknown error")
-      );
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: "Error: " + (error instanceof Error ? error.message : "Unknown error")
+      })
+
     } finally {
       setIsLoading(false);
     }
@@ -245,16 +259,23 @@ export default function ConvertToDealModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Deal Value
             </label>
-            <input
-              type="text"
-              value={dealValue}
-              onChange={handleDealValueChange}
-              onFocus={handleDealValueFocus}
-              onBlur={handleDealValueBlur}
-              placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            />
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input
+                type="number"
+                value={dealValue || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = value === '' ? 0 : parseFloat(value);
+                  setDealValue(isNaN(numValue) ? 0 : numValue);
+                }}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div>

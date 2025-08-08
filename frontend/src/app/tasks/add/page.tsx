@@ -219,6 +219,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                         <Dropdown
                                             label="Assigned To"
                                             name="assigned_to"
+                                            isRequired
                                             value={form.assigned_to}
                                             onChange={handleChange}
                                             options={userOptions}
@@ -235,6 +236,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                                 { value: "Penawaran", label: "Penawaran" },
                                                 { value: "Lainnya", label: "Lainnya" },
                                             ]}
+                                            isRequired
                                         />
 
                                         <Dropdown
@@ -247,6 +249,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                                 { value: "medium", label: "Medium" },
                                                 { value: "high", label: "High" },
                                             ]}
+                                            isRequired
                                         />
 
                                         <DateTime
@@ -256,6 +259,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                             value={form.due_date}
                                             onChange={handleChange}
                                             required
+
                                         />
                                     </div>
 
@@ -267,6 +271,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                             value={form.description}
                                             onChange={handleChange}
                                             rows={4}
+
                                         />
                                     </div>
                                 </div>

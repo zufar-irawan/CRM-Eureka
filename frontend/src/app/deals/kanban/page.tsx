@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 import fetchKanbanData from "@/components/Kanban/Functions/FetchKanbanData";
 import Kanban, { DNDType } from "@/components/Kanban/Kanban"
 import { Filter, KanbanIcon, RotateCcw, Search, X } from "lucide-react"
@@ -10,18 +10,17 @@ import Header from '@/components/Header';
 import { usePathname } from 'next/navigation';
 
 export default function DealsKanban() {
-    const [data, setData] = useState<any[]>([])
-    const [isMinimized, setIsMinimized] = useState(false)
-    const [isOpen, setIsOpen] = useState(false)
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const pathname = usePathname()
+    const [data, setData] = useState<any[]>([]);
+    const [isMinimized, setIsMinimized] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const pathname = usePathname();
     const [containers, setContainers] = useState<DNDType[]>([
         {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-gray-700 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>
-            ,
+            </div>,
             title: 'proposal',
             items: []
         },
@@ -29,8 +28,7 @@ export default function DealsKanban() {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>
-            ,
+            </div>,
             title: 'negotiation',
             items: []
         },
@@ -38,8 +36,7 @@ export default function DealsKanban() {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-green-700 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>
-            ,
+            </div>,
             title: 'won',
             items: []
         },
@@ -47,12 +44,11 @@ export default function DealsKanban() {
             id: `container-${uuidv4()}`,
             icon: <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
-            </div>
-            ,
+            </div>,
             title: 'lost',
             items: []
         },
-    ])
+    ]);
 
     const [showFilterDropdown, setShowFilterDropdown] = useState(false)
 
@@ -69,6 +65,7 @@ export default function DealsKanban() {
             url: "http://localhost:5000/api/deals",
             setData: setData,
             setContainers: setContainers,
+            groupBy: "stage",
             groupBy: "stage",
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
@@ -131,10 +128,10 @@ export default function DealsKanban() {
     const hasActiveFilters = filterOption || searchTerm;
 
     return (
-        <div className="flex">
+        <div className="flex h-screen bg-gray-50">
             <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
-            <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'}`}>
+            <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex flex-col`}>
                 <Header
                     isOpen={isOpen}
                     setIsOpen={setIsOpen}
@@ -142,7 +139,7 @@ export default function DealsKanban() {
                     pathname={pathname}
                 />
 
-                <main className="p-4 overflow-auto lg:p-6 bg-white">
+                <main className="flex-1 p-4 overflow-auto lg:p-6 bg-white">
                     <div className="mx-auto">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                             <div className="flex flex-wrap gap-2">
@@ -261,5 +258,5 @@ export default function DealsKanban() {
                 </main>
             </div>
         </div>
-    )
+    );
 }

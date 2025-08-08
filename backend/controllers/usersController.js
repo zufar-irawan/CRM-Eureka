@@ -72,8 +72,6 @@ export const getAllUsers = async (req, res) => {
         }
 
         const { count, rows: users } = await User.findAndCountAll(queryOptions);
-        
-        // Format users dengan role information
         const formattedUsers = users.map(user => ({
             ...user.dataValues,
             roleNames: user.roles ? user.roles.map(role => role.name) : [],
@@ -104,11 +102,9 @@ export const getAllUsers = async (req, res) => {
     }
 };
 
-// Enhanced endpoint specifically for getting all users with roles (for dropdowns)
 export const getAllUsersWithRoles = async (req, res) => {
     try {
         const { search = '' } = req.query;
-        
         const whereClause = search ? {
             [Op.or]: [
                 { name: { [Op.iLike]: `%${search}%` } },
@@ -116,7 +112,6 @@ export const getAllUsersWithRoles = async (req, res) => {
             ]
         } : {};
 
-        // Get all users without pagination, ordered by name
         const users = await User.findAll({
             where: whereClause,
             attributes: ['id', 'name', 'email', 'created_at'],
@@ -129,7 +124,6 @@ export const getAllUsersWithRoles = async (req, res) => {
             order: [['name', 'ASC']]
         });
 
-        // Format the response to include role information in a more accessible way
         const usersWithRoles = users.map(user => {
             const roles = user.roles || [];
             const primaryRole = roles.length > 0 ? roles[0].name : 'user';
@@ -170,7 +164,6 @@ export const getAllUsersWithRoles = async (req, res) => {
     }
 };
 
-// Get all available roles
 export const getAllRoles = async (req, res) => {
     try {
         const roles = await Role.findAll({
@@ -189,24 +182,20 @@ export const getAllRoles = async (req, res) => {
     }
 };
 
-// Assign role to user
 export const assignRoleToUser = async (req, res) => {
     try {
         const { userId, roleId } = req.body;
 
-        // Check if user exists
         const user = await User.findByPk(userId);
         if (!user) {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
-        // Check if role exists
         const role = await Role.findByPk(roleId);
         if (!role) {
             return res.status(404).json({ message: "Role tidak ditemukan" });
         }
 
-        // Check if assignment already exists
         const existingAssignment = await UserRole.findOne({
             where: { user_id: userId, role_id: roleId }
         });
@@ -215,7 +204,6 @@ export const assignRoleToUser = async (req, res) => {
             return res.status(400).json({ message: "User sudah memiliki role ini" });
         }
 
-        // Create the assignment
         await UserRole.create({
             user_id: userId,
             role_id: roleId
@@ -236,7 +224,6 @@ export const assignRoleToUser = async (req, res) => {
     }
 };
 
-// Remove role from user
 export const removeRoleFromUser = async (req, res) => {
     try {
         const { userId, roleId } = req.body;
@@ -259,7 +246,6 @@ export const removeRoleFromUser = async (req, res) => {
     }
 };
 
-// Search users (for mention/tagging functionality)
 export const searchUsers = async (req, res) => {
     try {
         const { q = '', limit = 10 } = req.query;
@@ -341,7 +327,6 @@ export const updateUser = async (req, res) => {
             }]
         });
 
-        // Format response dengan role information
         const userData = {
             ...updatedUser.dataValues,
             roleNames: updatedUser.roles ? updatedUser.roles.map(role => role.name) : [],

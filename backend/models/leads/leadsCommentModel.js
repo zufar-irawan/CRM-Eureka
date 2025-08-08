@@ -1,4 +1,4 @@
-// File: models/leads/leadsCommentModel.js - Updated dengan nested replies support
+// models/leads/leadsCommentModel.js
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -31,7 +31,7 @@ export const LeadComments = sequelize.define('LeadComment', {
     defaultValue: 0,
     validate: {
       min: 0,
-      max: 5 // Batasi maksimal 5 level nesting
+      max: 5 
     },
     comment: 'Nesting level: 0=top level, 1=reply, 2=reply to reply, etc'
   },
@@ -72,7 +72,7 @@ export const LeadComments = sequelize.define('LeadComment', {
       fields: ['user_id']
     },
     {
-      fields: ['lead_id', 'parent_id'] // Composite index untuk query efisien
+      fields: ['lead_id', 'parent_id']
     }
   ]
 });

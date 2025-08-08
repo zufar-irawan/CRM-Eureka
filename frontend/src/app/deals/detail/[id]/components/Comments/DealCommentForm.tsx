@@ -84,12 +84,10 @@ export default function DealCommentForm({
     setShowMentionDropdown(false);
     setMentionSearch('');
     
-    // Add to mentioned users list
     if (!mentionedUsers.find(u => u.id === user.id)) {
       setMentionedUsers(prev => [...prev, user]);
     }
 
-    // Focus and set cursor position
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -98,9 +96,7 @@ export default function DealCommentForm({
     }, 0);
   };
 
-  // Enhanced key press handler
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle mention dropdown navigation
     if (showMentionDropdown) {
       if (e.key === 'Escape') {
         setShowMentionDropdown(false);
@@ -108,8 +104,6 @@ export default function DealCommentForm({
         return;
       }
     }
-
-    // Original key press handler
     onKeyPress(e);
   };
 

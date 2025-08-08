@@ -117,11 +117,9 @@ export const getLeadById = async (req, res) => {
                 id: leadId
             }
         });
-        
         if (!response) {
             return res.status(404).json({ message: "Lead not found" });
         }
-        
         res.status(200).json(response);
     } catch (error) {
         console.error('Error fetching lead by ID:', error);

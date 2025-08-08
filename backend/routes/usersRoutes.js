@@ -1,21 +1,21 @@
 // routes/usersRoutes.js
 import express from 'express';
-import { 
-    getUserById, 
-    getAllUsers, 
+import {
+    getUserById,
+    getAllUsers,
     getAllUsersWithRoles,
     getAllRoles,
     assignRoleToUser,
     removeRoleFromUser,
     searchUsers,
-    updateUser 
+    updateUser
 } from '../controllers/usersController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 // Get all users (with pagination and optional roles)
 router.get('/', getAllUsers);

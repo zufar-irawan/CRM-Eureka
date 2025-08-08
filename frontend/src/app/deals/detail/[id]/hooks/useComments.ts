@@ -1,317 +1,260 @@
-// hooks/useComments.ts - Adapted for both leads and deals
-"use client";
-
+// hooks/useDealsComments.ts - Updated hook for deals comments like leads
 import { useState, useCallback } from 'react';
-import type { Comment, CurrentUser } from '../types';
+import type { Comment, CurrentUser, CommentResponse } from '../types';
+import { makeAuthenticatedRequest } from '../utils/auth';
 
-interface UseCommentsReturn {
-  comments: Comment[];
-  commentsLoading: boolean;
-  commentsError: string | null;
-  showNewComment: boolean;
-  newComment: string;
-  submitting: boolean;
-  replyingTo: number | null;
-  replyMessages: { [key: number]: string };
-  replySubmitting: { [key: number]: boolean };
-  totalComments: number;
-  topLevelComments: number;
-  setShowNewComment: (show: boolean) => void;
-  setNewComment: (comment: string) => void;
-  handleStartReply: (commentId: number, parentId?: number) => void;
-  handleCancelReply: () => void;
-  setReplyMessage: (commentId: number, message: string) => void;
-  fetchComments: () => Promise<void>;
-  handleAddComment: (currentUser: CurrentUser | null) => Promise<void>;
-  handleReplyToComment: (commentId: number, currentUser: CurrentUser | null) => Promise<void>;
-  handleDeleteComment: (commentId: number) => Promise<void>;
-  handleReplyKeyPress: (e: React.KeyboardEvent, commentId: number, currentUser: CurrentUser | null) => void;
-}
-
-export function useComments(
-  entityId: string | string[] | undefined,
-  entityType: 'lead' | 'deal' = 'lead'
-): UseCommentsReturn {
+export const useDealsComments = (dealId: string | string[] | undefined) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsError, setCommentsError] = useState<string | null>(null);
   const [showNewComment, setShowNewComment] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  
+  // Nested replies state
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
-  const [replyMessages, setReplyMessages] = useState<{ [key: number]: string }>({});
-  const [replySubmitting, setReplySubmitting] = useState<{ [key: number]: boolean }>({});
+  const [replyMessages, setReplyMessages] = useState<{[key: number]: string}>({});
+  const [replySubmitting, setReplySubmitting] = useState<{[key: number]: boolean}>({});
 
-  const actualEntityId = Array.isArray(entityId) ? entityId[0] : entityId;
-  const parsedEntityId = actualEntityId ? parseInt(actualEntityId) : undefined;
+  // API endpoint for deals comments
+  const API_DEALS_ENDPOINT = 'http://localhost:5000/api/deals';
 
-  const getCommentsEndpoint = () => {
-    return entityType === 'deal'
-      ? `http://localhost:5000/api/deals/${actualEntityId}/comments`
-      : `http://localhost:5000/api/leads/${actualEntityId}/comments`;
-  };
-
-  const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
-    return fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...options.headers,
-      },
-      mode: 'cors',
-    });
-  };
-
+  // Fetch comments with nested structure
   const fetchComments = useCallback(async () => {
-    if (!actualEntityId) return;
+    if (!dealId) return;
 
     setCommentsLoading(true);
     setCommentsError(null);
 
     try {
-      const response = await makeAuthenticatedRequest(getCommentsEndpoint());
+      const response = await makeAuthenticatedRequest(
+        `${API_DEALS_ENDPOINT}/${dealId}/comments`
+      );
 
       if (response.ok) {
-        const result = await response.json();
-        const commentsData = result.data || result;
-
-        if (Array.isArray(commentsData)) {
-          const transformedComments = commentsData.map((comment: any) => ({
-            id: comment.id,
-            message: comment.message,
-            user_id: comment.user_id,
-            user_name: comment.user?.name || comment.user_name || 'Unknown User',
-            created_at: comment.created_at,
-            parent_id: comment.parent_id,
-            parent_user: comment.parent_user,
-            replies: comment.replies || [],
-            deal_id: comment.deal_id,
-            lead_id: comment.lead_id
-          }));
-
-          const nestedComments = buildNestedComments(transformedComments);
-          setComments(nestedComments);
-        } else {
-          setComments([]);
-        }
-      } else if (response.status === 404) {
-        setComments([]);
+        const data: CommentResponse = await response.json();
+        setComments(data.data || []); // deals API uses 'data' field
       } else {
-        throw new Error(`Failed to fetch comments: ${response.status}`);
+        throw new Error('Failed to fetch comments');
       }
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error fetching deal comments:', error);
       setCommentsError('Failed to load comments. Please try again.');
-      setComments([]);
     } finally {
       setCommentsLoading(false);
     }
-  }, [actualEntityId, entityType]);
+  }, [dealId]);
 
-  const buildNestedComments = (flatComments: any[]): Comment[] => {
-    const commentMap = new Map();
-    const rootComments: Comment[] = [];
-
-    flatComments.forEach(comment => {
-      commentMap.set(comment.id, { ...comment, replies: [] });
-    });
-
-    flatComments.forEach(comment => {
-      if (comment.parent_id && commentMap.has(comment.parent_id)) {
-        const parentComment = commentMap.get(comment.parent_id);
-        const childComment = commentMap.get(comment.id);
-        parentComment.replies.push(childComment);
-      } else {
-        rootComments.push(commentMap.get(comment.id));
-      }
-    });
-
-    return rootComments;
-  };
-
-  const handleStartReply = (commentId: number, parentId?: number) => {
-    setReplyingTo(commentId);
-    if (!replyMessages[commentId]) {
-      setReplyMessages(prev => ({ ...prev, [commentId]: '' }));
-    }
-  };
-
-  const handleCancelReply = () => {
-    setReplyingTo(null);
-  };
-
-  const setReplyMessage = (commentId: number, message: string) => {
-    setReplyMessages(prev => ({ ...prev, [commentId]: message }));
-  };
-
-  const handleAddComment = async (currentUser: CurrentUser | null) => {
-    if (!newComment.trim() || !actualEntityId || !currentUser) return;
+  // Add top-level comment
+  const handleAddComment = useCallback(async (currentUser: CurrentUser | null) => {
+    if (!newComment.trim() || !dealId || !currentUser) return;
 
     setSubmitting(true);
 
     try {
-      const response = await makeAuthenticatedRequest(getCommentsEndpoint(), {
-        method: 'POST',
-        body: JSON.stringify({
-          message: newComment.trim(),
-          user_id: currentUser.id,
-          user_name: currentUser.name,
-          parent_id: null
-        }),
-      });
+      const response = await makeAuthenticatedRequest(
+        `${API_DEALS_ENDPOINT}/${dealId}/comments`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            message: newComment.trim(),
+            user_id: currentUser.id,
+            user_name: currentUser.name
+          })
+        }
+      );
 
       if (response.ok) {
-        const result = await response.json();
-        const newCommentData = result.data || result;
-
-        const comment: Comment = {
-          id: newCommentData.id,
-          message: newCommentData.message,
-          user_id: currentUser.id,
-          user_name: currentUser.name,
-          created_at: newCommentData.created_at || new Date().toISOString(),
-          parent_id: null,
-          parent_user: null,
-          replies: [],
-          deal_id: entityType === 'deal' ? parsedEntityId : undefined,
-          lead_id: entityType === 'lead' ? parsedEntityId : undefined
-        };
-
-        setComments(prev => [comment, ...prev]);
+        const data = await response.json();
+        
+        // Add new comment to the beginning of the list
+        setComments(prev => [
+          {
+            ...data.data,
+            replies: []
+          },
+          ...prev
+        ]);
+        
         setNewComment('');
         setShowNewComment(false);
       } else {
         throw new Error('Failed to add comment');
       }
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error('Error adding deal comment:', error);
       setCommentsError('Failed to add comment. Please try again.');
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [newComment, dealId]);
 
-  const handleReplyToComment = async (commentId: number, currentUser: CurrentUser | null) => {
-    const message = replyMessages[commentId];
-    if (!message?.trim() || !currentUser) return;
+  // Add reply to a comment
+  const handleReplyToComment = useCallback(async (commentId: number, currentUser: CurrentUser | null) => {
+    const replyMessage = replyMessages[commentId];
+    
+    if (!replyMessage?.trim() || !dealId || !currentUser) return;
 
     setReplySubmitting(prev => ({ ...prev, [commentId]: true }));
 
     try {
-      const response = await makeAuthenticatedRequest(getCommentsEndpoint(), {
-        method: 'POST',
-        body: JSON.stringify({
-          message: message.trim(),
-          user_id: currentUser.id,
-          user_name: currentUser.name,
-          parent_id: commentId
-        }),
-      });
+      const response = await makeAuthenticatedRequest(
+        `${API_DEALS_ENDPOINT}/${dealId}/comments`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            message: replyMessage.trim(),
+            user_id: currentUser.id,
+            user_name: currentUser.name,
+            parent_id: commentId
+          })
+        }
+      );
 
       if (response.ok) {
-        const result = await response.json();
-        const newReplyData = result.data || result;
-
-        const reply: Comment = {
-          id: newReplyData.id,
-          message: newReplyData.message,
-          user_id: currentUser.id,
-          user_name: currentUser.name,
-          created_at: newReplyData.created_at || new Date().toISOString(),
-          parent_id: commentId,
-          parent_user: null,
-          replies: [],
-          deal_id: entityType === 'deal' ? parsedEntityId : undefined,
-          lead_id: entityType === 'lead' ? parsedEntityId : undefined
+        const data = await response.json();
+        
+        // Add reply to the specific comment in the tree
+        const addReplyToTree = (comments: Comment[]): Comment[] => {
+          return comments.map(comment => {
+            if (comment.id === commentId) {
+              return {
+                ...comment,
+                replies: [
+                  ...(comment.replies || []),
+                  {
+                    ...data.data,
+                    replies: []
+                  }
+                ]
+              };
+            }
+            
+            // Recursively search in replies
+            if (comment.replies && comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: addReplyToTree(comment.replies)
+              };
+            }
+            
+            return comment;
+          });
         };
 
-        setComments(prev => addReplyToComment(prev, commentId, reply));
+        setComments(prev => addReplyToTree(prev));
+        
+        // Clear reply state
         setReplyMessages(prev => ({ ...prev, [commentId]: '' }));
         setReplyingTo(null);
       } else {
         throw new Error('Failed to add reply');
       }
     } catch (error) {
-      console.error('Error adding reply:', error);
+      console.error('Error adding reply to deal comment:', error);
       setCommentsError('Failed to add reply. Please try again.');
     } finally {
       setReplySubmitting(prev => ({ ...prev, [commentId]: false }));
     }
-  };
+  }, [replyMessages, dealId]);
 
-  const addReplyToComment = (comments: Comment[], parentId: number, reply: Comment): Comment[] => {
-    return comments.map(comment => {
-      if (comment.id === parentId) {
-        return { ...comment, replies: [reply, ...comment.replies] };
-      }
-      if (comment.replies.length > 0) {
-        return { ...comment, replies: addReplyToComment(comment.replies, parentId, reply) };
-      }
-      return comment;
-    });
-  };
-
-  const handleDeleteComment = async (commentId: number) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+  // Delete comment (handles nested deletion)
+  const handleDeleteComment = useCallback(async (commentId: number) => {
+    if (!window.confirm('Are you sure you want to delete this comment and all its replies?')) {
+      return;
+    }
 
     try {
-      const deleteEndpoint = entityType === 'deal'
-        ? `http://localhost:5000/api/deals/${actualEntityId}/comments/${commentId}`
-        : `http://localhost:5000/api/leads/${actualEntityId}/comments/${commentId}`;
-
-      const response = await makeAuthenticatedRequest(deleteEndpoint, {
-        method: 'DELETE',
-      });
+      const response = await makeAuthenticatedRequest(
+        `${API_DEALS_ENDPOINT}/${dealId}/comments/${commentId}`,
+        {
+          method: 'DELETE'
+        }
+      );
 
       if (response.ok) {
-        setComments(prev => removeCommentById(prev, commentId));
+        // Remove comment from tree (including all nested replies)
+        const removeFromTree = (comments: Comment[]): Comment[] => {
+          return comments
+            .filter(comment => comment.id !== commentId)
+            .map(comment => ({
+              ...comment,
+              replies: comment.replies ? removeFromTree(comment.replies) : []
+            }));
+        };
+
+        setComments(prev => removeFromTree(prev));
       } else {
         throw new Error('Failed to delete comment');
       }
     } catch (error) {
-      console.error('Error deleting comment:', error);
+      console.error('Error deleting deal comment:', error);
       setCommentsError('Failed to delete comment. Please try again.');
     }
-  };
+  }, [dealId]);
 
-  const removeCommentById = (comments: Comment[], commentId: number): Comment[] => {
-    return comments.filter(comment => {
-      if (comment.id === commentId) return false;
-      if (comment.replies.length > 0) {
-        comment.replies = removeCommentById(comment.replies, commentId);
-      }
-      return true;
-    });
-  };
+  // Start replying to a comment
+  const handleStartReply = useCallback((commentId: number) => {
+    setReplyingTo(commentId);
+    setReplyMessages(prev => ({
+      ...prev,
+      [commentId]: prev[commentId] || ''
+    }));
+  }, []);
 
-  const handleReplyKeyPress = (e: React.KeyboardEvent, commentId: number, currentUser: CurrentUser | null) => {
+  // Cancel reply
+  const handleCancelReply = useCallback(() => {
+    setReplyingTo(null);
+    setReplyMessages({});
+  }, []);
+
+  // Set reply message for specific comment
+  const setReplyMessage = useCallback((commentId: number, message: string) => {
+    setReplyMessages(prev => ({
+      ...prev,
+      [commentId]: message
+    }));
+  }, []);
+
+  // Keyboard shortcuts
+  const handleReplyKeyPress = useCallback((e: React.KeyboardEvent, commentId: number, currentUser: CurrentUser | null) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       handleReplyToComment(commentId, currentUser);
     }
-  };
+    if (e.key === 'Escape') {
+      handleCancelReply();
+    }
+  }, [handleReplyToComment, handleCancelReply]);
 
-  const calculateCommentStats = (comments: Comment[]): { total: number; topLevel: number } => {
-    let total = 0;
-    let topLevel = comments.length;
+  // Get comment thread (for expanded view)
+  const getCommentThread = useCallback(async (commentId: number) => {
+    if (!dealId) return null;
 
-    const countReplies = (comments: Comment[]) => {
-      comments.forEach(comment => {
-        total++;
-        if (comment.replies.length > 0) {
-          countReplies(comment.replies);
-        }
-      });
-    };
+    try {
+      const response = await makeAuthenticatedRequest(
+        `${API_DEALS_ENDPOINT}/${dealId}/comments/${commentId}/thread`
+      );
 
-    countReplies(comments);
-    return { total, topLevel };
-  };
+      if (response.ok) {
+        const data = await response.json();
+        return data.thread;
+      }
+    } catch (error) {
+      console.error('Error fetching deal comment thread:', error);
+    }
+    return null;
+  }, [dealId]);
 
-  const stats = calculateCommentStats(comments);
+  // Count total comments including replies
+  const getTotalCommentCount = useCallback((comments: Comment[]): number => {
+    return comments.reduce((total, comment) => {
+      return total + 1 + (comment.replies ? getTotalCommentCount(comment.replies) : 0);
+    }, 0);
+  }, []);
 
   return {
+    // State
     comments,
     commentsLoading,
     commentsError,
@@ -321,17 +264,26 @@ export function useComments(
     replyingTo,
     replyMessages,
     replySubmitting,
-    totalComments: stats.total,
-    topLevelComments: stats.topLevel,
+    
+    // Setters
     setShowNewComment,
     setNewComment,
-    handleStartReply,
-    handleCancelReply,
-    setReplyMessage,
+    setReplyingTo,
+    setReplyMessages,
+    
+    // Actions
     fetchComments,
     handleAddComment,
     handleReplyToComment,
     handleDeleteComment,
+    handleStartReply,
+    handleCancelReply,
+    setReplyMessage,
     handleReplyKeyPress,
+    getCommentThread,
+    
+    // Computed
+    totalComments: getTotalCommentCount(comments),
+    topLevelComments: comments.length
   };
-}
+};

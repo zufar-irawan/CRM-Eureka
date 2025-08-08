@@ -9,12 +9,15 @@ import DealHeader from "./components/DealHeader";
 import TabNavigation from "./components/TabNavigation";
 import TabContent from "./components/TabContent";
 import RightSidebar from "./components/RightSidebar";
-import CommentsTab from "./components/Comments/DealCommentTab";
+import DealCommentTab from "./components/Comments/DealCommentTab";
+import { useAuth } from "../[id]/hooks/useAuth";
+import { makeAuthenticatedRequest } from "../[id]/utils/auth";
 import { Deal, Contact, Comment, Company } from "./types";
 
 export default function DealDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { currentUser } = useAuth();
   
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -31,13 +34,6 @@ export default function DealDetailPage() {
   
   const [isContactsExpanded, setIsContactsExpanded] = useState(true);
   const [isOrgDetailsExpanded, setIsOrgDetailsExpanded] = useState(true);
-
-  const [currentUser] = useState({
-    id: 1,
-    name: 'Current User',
-    email: 'current@user.com',
-    role: 'admin'
-  });
 
   const safeString = (value: any): string => {
     if (value === null || value === undefined) return '';
@@ -97,7 +93,7 @@ export default function DealDetailPage() {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch(`http://localhost:5000/api/deals/${id}`);
+      const response = await makeAuthenticatedRequest(`http://localhost:5000/api/deals/${id}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -138,7 +134,7 @@ export default function DealDetailPage() {
   const fetchComments = async () => {
     try {
       setCommentsLoading(true);
-      const response = await fetch(`http://localhost:5000/api/deals/${id}/comments`);
+      const response = await makeAuthenticatedRequest(`http://localhost:5000/api/deals/${id}/comments`);
       if (response.ok) {
         const { data } = await response.json();
         setComments(data);
@@ -160,6 +156,7 @@ export default function DealDetailPage() {
       setContactsLoading(true);
       const contactsToFetch: Contact[] = [];
 
+      // Add deal's direct contact if exists
       if (deal.contact && deal.contact.id && deal.contact.name) {
         contactsToFetch.push({
           id: deal.contact.id,
@@ -173,8 +170,9 @@ export default function DealDetailPage() {
         });
       }
 
+      // Fetch contacts from deal's company
       if (deal.company?.id) {
-        const response = await fetch(`http://localhost:5000/api/contacts/company/${deal.company.id}`);
+        const response = await makeAuthenticatedRequest(`http://localhost:5000/api/contacts/company/${deal.company.id}`);
         if (response.ok) {
           const { data } = await response.json();
           data.forEach((contact: any) => {
@@ -193,7 +191,8 @@ export default function DealDetailPage() {
           });
         }
       } else if (deal.lead?.company && !deal.company?.id) {
-        const response = await fetch(`http://localhost:5000/api/contacts?search=${encodeURIComponent(deal.lead.company)}`);
+        // Search contacts by lead's company name if no direct company
+        const response = await makeAuthenticatedRequest(`http://localhost:5000/api/contacts?search=${encodeURIComponent(deal.lead.company)}`);
         if (response.ok) {
           const { data } = await response.json();
           data.forEach((contact: any) => {
@@ -224,19 +223,20 @@ export default function DealDetailPage() {
 
   const addComment = async (text: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/deals/${id}/comments`, {
+      const response = await makeAuthenticatedRequest(`http://localhost:5000/api/deals/${id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
-          user_id: 1,
-          user_name: 'Current User'
+          user_id: currentUser?.id || 1,
+          user_name: currentUser?.name || 'Current User'
         }),
       });
 
       if (response.ok) {
         const { data } = await response.json();
         setComments(prev => [data, ...prev]);
+        return data;
       } else {
         throw new Error('Failed to add comment');
       }
@@ -255,7 +255,7 @@ export default function DealDetailPage() {
     const position = prompt('Enter contact position (optional):');
 
     try {
-      const response = await fetch('http://localhost:5000/api/contacts', {
+      const response = await makeAuthenticatedRequest('http://localhost:5000/api/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -286,7 +286,7 @@ export default function DealDetailPage() {
 
     switch (activeTab) {
       case "Comments":
-        return <CommentsTab dealId={id} currentUser={currentUser} />;
+        return <DealCommentTab dealId={String(deal.id)} currentUser={currentUser} />;
       case "Activity":
       case "Emails":
       case "Calls":
@@ -337,7 +337,7 @@ export default function DealDetailPage() {
     id: Array.isArray(id) ? id[0] : id || '',
     title: '',
     value: 0,
-    stage: 'New',
+    stage: 'proposal',
     probability: 0,
     lead: null,
     company: null,

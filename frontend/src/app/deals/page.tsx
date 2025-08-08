@@ -316,18 +316,17 @@ export default function Deals() {
       case 'title':
         return <span className="text-xs text-gray-900">{deal.title || '-'}</span>;
 
-      case 'value':
-        return (
-          <span className="text-xs text-gray-900">
-            {deal.value
-              ? new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2,
-              }).format(Number(deal.value))
-              : '-'}
-          </span>
-        );
+     case 'value':
+  return (
+    <span className="text-xs text-gray-900">
+      {deal.value
+        ? new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(Number(deal.value))
+        : '-'}
+    </span>
+  );
 
       case 'stage':
         return (
@@ -761,7 +760,7 @@ export default function Deals() {
                             {deal.organization}
                           </h3>
                           <div className="flex items-center text-xs text-gray-500 mt-1">
-                            <DollarSign className="w-3 h-3" />
+                            {/*<DollarSign className="w-3 h-3" />*/}
                             {deal.annualRevenue}
                           </div>
                         </div>

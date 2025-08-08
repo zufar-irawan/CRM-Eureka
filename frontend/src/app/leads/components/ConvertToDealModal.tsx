@@ -1,13 +1,25 @@
-// File: ConvertToDealModal.tsx - Simplified implementation
+// File: ConvertToDealModal.tsx - Fixed implementation
 
 "use client";
 
 import { useState } from "react";
-import { X, ArrowRight, Building, User, DollarSign, Target } from "lucide-react";
+import {
+  X,
+  ArrowRight,
+  Building,
+  User,
+  DollarSign,
+  Target,
+} from "lucide-react";
 
 interface ConvertToDealModalProps {
   onClose: () => void;
-  onConfirm: (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => Promise<any>; 
+  onConfirm: (
+    leadId: string,
+    dealTitle: string,
+    dealValue: number,
+    dealStage: string
+  ) => Promise<any>;
   selectedCount: number;
   selectedIds: string[];
 }
@@ -22,7 +34,7 @@ const dealStages = [
   { value: "proposal", label: "Proposal" },
   { value: "negotiation", label: "Negotiation" },
   { value: "won", label: "Won" },
-  { value: "lost", label: "Lost" }
+  { value: "lost", label: "Lost" },
 ];
 
 export default function ConvertToDealModal({
@@ -32,58 +44,55 @@ export default function ConvertToDealModal({
   selectedIds,
 }: ConvertToDealModalProps) {
   const [dealTitle, setDealTitle] = useState("");
-  const [dealValue, setDealValue] = useState<number>(0);
+  const [dealValue, setDealValue] = useState<string>(""); // Changed to string for better input handling
   const [dealStage, setDealStage] = useState("proposal");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!dealTitle.trim()) {
       alert("Please enter a deal title");
       return;
     }
 
-    if (dealValue < 0) {
-      alert("Deal value cannot be negative");
+    const numericValue = dealValue === "" ? 0 : parseFloat(dealValue);
+
+    if (isNaN(numericValue) || numericValue < 0) {
+      alert("Deal value must be a valid positive number");
       return;
     }
 
-    console.log('[DEBUG] Modal values before submit:', {
+    console.log("[DEBUG] Modal values before submit:", {
       dealTitle,
       dealValue,
-      dealValueType: typeof dealValue,
+      numericValue,
       dealStage,
-      selectedIds
+      selectedIds,
     });
 
     setIsLoading(true);
     const results: ConversionResult[] = [];
-    
+
     try {
-      const numericValue = parseFloat(dealValue.toString());
-      if (isNaN(numericValue)) {
-        throw new Error("Invalid deal value");
-      }
-      
       // Convert each lead individually
       for (const leadId of selectedIds) {
         try {
           console.log(`[DEBUG] Converting lead ${leadId}...`);
-          
+
           const result = await onConfirm(
             leadId,
-            selectedCount === 1 ? dealTitle : `${dealTitle} - Lead ${leadId}`, 
-            numericValue, 
+            selectedCount === 1 ? dealTitle : `${dealTitle} - Lead ${leadId}`,
+            numericValue,
             dealStage
           );
-          
+
           console.log(`[DEBUG] Conversion result for lead ${leadId}:`, result);
-          
+
           if (result && result.success && result.data) {
             results.push({
               leadId,
-              success: true
+              success: true,
             });
             console.log(`✅ Lead ${leadId} converted successfully`);
           } else {
@@ -91,48 +100,82 @@ export default function ConvertToDealModal({
             results.push({
               leadId,
               success: false,
-              error: errorMsg
+              error: errorMsg,
             });
             console.error(`❌ Lead ${leadId} conversion failed:`, errorMsg);
           }
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "Unknown error";
+          const errorMsg =
+            error instanceof Error ? error.message : "Unknown error";
           console.error(`❌ Error converting lead ${leadId}:`, error);
           results.push({
             leadId,
             success: false,
-            error: errorMsg
+            error: errorMsg,
           });
         }
       }
-      
-      const successCount = results.filter(r => r.success).length;
-      const failureCount = results.filter(r => !r.success).length;
-      
-      console.log(`[DEBUG] Conversion summary: ${successCount} success, ${failureCount} failed`);
-      
+
+      const successCount = results.filter((r) => r.success).length;
+      const failureCount = results.filter((r) => !r.success).length;
+
+      console.log(
+        `[DEBUG] Conversion summary: ${successCount} success, ${failureCount} failed`
+      );
+
       if (successCount > 0) {
-        // Show success message and close modal
+        const dealValueDisplay =
+          numericValue > 0
+            ? ` with value ${numericValue.toLocaleString("en-US")}`
+            : "";
+
         if (successCount === selectedCount) {
-          alert(`🎉 Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`);
+          alert(
+            `🎉 Successfully converted ${successCount} lead${
+              successCount > 1 ? "s" : ""
+            } to deal${successCount > 1 ? "s" : ""}${dealValueDisplay}!`
+          );
         } else {
-          alert(`Partially successful: ${successCount} converted, ${failureCount} failed`);
+          alert(
+            `Partially successful: ${successCount} converted, ${failureCount} failed`
+          );
         }
-        
-        // Close modal after successful conversion
+
         onClose();
       } else {
-        // If no conversions succeeded, show error message
-        const firstError = results.find(r => r.error)?.error || "All conversions failed";
+        const firstError =
+          results.find((r) => r.error)?.error || "All conversions failed";
         alert(`Conversion failed: ${firstError}`);
       }
-      
     } catch (error) {
       console.error("Error in conversion process:", error);
-      alert("Error: " + (error instanceof Error ? error.message : "Unknown error"));
+      alert(
+        "Error: " + (error instanceof Error ? error.message : "Unknown error")
+      );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDealValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Allow empty string, numbers, and decimal points
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setDealValue(value);
+    }
+  };
+
+  const handleDealValueFocus = () => {
+    // Clear the field if it's "0" when user focuses
+    if (dealValue === "0") {
+      setDealValue("");
+    }
+  };
+
+  const handleDealValueBlur = () => {
+    // If field is empty when user leaves, don't set it back to 0
+    // Let it remain empty - the form will handle it as 0 when submitting
   };
 
   // Simple conversion form - no results screen
@@ -143,7 +186,7 @@ export default function ConvertToDealModal({
           <h2 className="text-xl font-bold">Convert to Deal</h2>
           <ArrowRight className="w-5 h-5 text-blue-600" />
         </div>
-        
+
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-black"
@@ -154,7 +197,8 @@ export default function ConvertToDealModal({
 
         <div className="mb-4 p-3 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-800">
-            Converting <strong>{selectedCount}</strong> lead{selectedCount > 1 ? "s" : ""} to deal{selectedCount > 1 ? "s" : ""}
+            Converting <strong>{selectedCount}</strong> lead
+            {selectedCount > 1 ? "s" : ""} to deal{selectedCount > 1 ? "s" : ""}
           </p>
           {selectedCount <= 5 && (
             <p className="text-xs text-blue-600 mt-1">
@@ -164,11 +208,15 @@ export default function ConvertToDealModal({
           <div className="mt-2 text-xs text-blue-700 space-y-1">
             <div className="flex items-center gap-1">
               <Building className="w-3 h-3" />
-              <span>Companies will be created automatically from company information</span>
+              <span>
+                Companies will be created automatically from company information
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <User className="w-3 h-3" />
-              <span>Contacts will be created automatically from personal information</span>
+              <span>
+                Contacts will be created automatically from personal information
+              </span>
             </div>
           </div>
         </div>
@@ -182,7 +230,11 @@ export default function ConvertToDealModal({
               type="text"
               value={dealTitle}
               onChange={(e) => setDealTitle(e.target.value)}
-              placeholder={selectedCount === 1 ? "Deal from Lead Conversion" : `Deal from ${selectedCount} Leads`}
+              placeholder={
+                selectedCount === 1
+                  ? "Deal from Lead Conversion"
+                  : `Deal from ${selectedCount} Leads`
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={isLoading}
               required
@@ -191,25 +243,18 @@ export default function ConvertToDealModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Deal Value ($)
+              Deal Value
             </label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-              <input
-                type="number"
-                value={dealValue || ''} 
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const numValue = value === '' ? 0 : parseFloat(value);
-                  setDealValue(isNaN(numValue) ? 0 : numValue);
-                }}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-            </div>
+            <input
+              type="text"
+              value={dealValue}
+              onChange={handleDealValueChange}
+              onFocus={handleDealValueFocus}
+              onBlur={handleDealValueBlur}
+              placeholder="0.00"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isLoading}
+            />
           </div>
 
           <div>
@@ -252,7 +297,8 @@ export default function ConvertToDealModal({
               ) : (
                 <>
                   <ArrowRight className="w-4 h-4" />
-                  Convert {selectedCount > 1 ? `${selectedCount} Leads` : "Lead"}
+                  Convert{" "}
+                  {selectedCount > 1 ? `${selectedCount} Leads` : "Lead"}
                 </>
               )}
             </button>

@@ -1,17 +1,17 @@
 // routes/usersRoutes.js
 import express from 'express';
-import { 
-    getUserById, 
-    getAllUsers, 
+import {
+    getUserById,
+    getAllUsers,
     getAllUsersWithRoles,
     getAllRoles,
     assignRoleToUser,
     removeRoleFromUser,
     searchUsers,
-    updateUser 
+    updateUser
 } from '../controllers/usersController.js';
 
-const router = express.Router(); 
+const router = express.Router();
 
 // Get all users (with pagination and optional roles)
 router.get('/', getAllUsers);

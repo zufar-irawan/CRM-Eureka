@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import fetchData from "./Functions/FetchData"
 import deleteData from "./Functions/DeleteData"
 import { Edit, MoreHorizontal, Trash2, ChevronUp, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export interface Column {
     key: string
@@ -90,6 +91,7 @@ export default function DesktopTable({
     const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null)
     const [selectedData, setSelectedData] = useState<string[]>([])
     const [sortConfig, setSortConfig] = useState<SortConfig>(null)
+    const router = useRouter()
 
     useEffect(() => {
         const refresh = () => {
@@ -195,6 +197,12 @@ export default function DesktopTable({
         })
     }
 
+    const handleRowClick = (id: string) => {
+        if (pathname === "/contacts/") {
+            router.push(`/contacts/detail/${id}`)
+        }
+    }
+
     return (
         <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
             <table className="w-full relative">
@@ -256,6 +264,7 @@ export default function DesktopTable({
                             <tr
                                 key={row.id}
                                 className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                onClick={() => handleRowClick(row.id)}
                             >
                                 <td className="px-6 py-4">
                                     <input

@@ -66,7 +66,6 @@ export default function DealsKanban() {
             setData: setData,
             setContainers: setContainers,
             groupBy: "stage",
-            groupBy: "stage",
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
                 itemId: deal.id,

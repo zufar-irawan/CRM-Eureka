@@ -190,14 +190,20 @@ const KanbanLead = () => {
     }
   };
 
-  // Convert to deal function
-  const handleConvertToDeal = async (dealTitle: string, dealValue: number, dealStage: string) => {
-    if (!convertingLeadId) return;
+  // Convert to deal function - Fixed signature to match ConvertToDealModal expectations
+  const handleConvertToDeal = async (leadId: string, dealTitle: string, dealValue: number, dealStage: string) => {
+    // Convert leadId from string to number since our internal logic uses number
+    const leadIdNumber = parseInt(leadId);
+    
+    if (!leadIdNumber || isNaN(leadIdNumber)) {
+      console.error("Invalid lead ID provided:", leadId);
+      return;
+    }
 
     setIsConverting(true);
     try {
       console.log('[DEBUG] Converting lead to deal:', {
-        leadId: convertingLeadId,
+        leadId: leadIdNumber,
         dealTitle,
         dealValue,
         dealValueType: typeof dealValue,
@@ -207,7 +213,7 @@ const KanbanLead = () => {
       // Get lead data for conversion
       const leadData = containers
         .flatMap(container => container.items)
-        .find(item => item.leadId === convertingLeadId);
+        .find(item => item.leadId === leadIdNumber);
 
       if (!leadData) {
         throw new Error("Lead data not found");
@@ -227,7 +233,7 @@ const KanbanLead = () => {
 
       console.log('[DEBUG] Request body being sent:', requestBody);
 
-      const response = await fetch(`http://localhost:5000/api/leads/${convertingLeadId}/convert`, {
+      const response = await fetch(`http://localhost:5000/api/leads/${leadIdNumber}/convert`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

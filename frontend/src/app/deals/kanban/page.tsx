@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 import fetchKanbanData from "@/components/Kanban/Functions/FetchKanbanData";
-import Kanban, { DNDType } from "@/components/Kanban/Kanban"
-import { Filter, KanbanIcon, RotateCcw } from "lucide-react"
+import Kanban, { DNDType } from "@/components/Kanban/Kanban";
+import { Filter, KanbanIcon, RotateCcw } from "lucide-react";
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import { usePathname } from 'next/navigation';
 
 export default function DealsKanban() {
-    const [data, setData] = useState<any[]>([])
-    const [isMinimized, setIsMinimized] = useState(false)
-    const [isOpen, setIsOpen] = useState(false)
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const pathname = usePathname()
+    const [data, setData] = useState<any[]>([]);
+    const [isMinimized, setIsMinimized] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const pathname = usePathname();
     const [containers, setContainers] = useState<DNDType[]>([
         {
             id: `container-${uuidv4()}`,
@@ -48,7 +48,7 @@ export default function DealsKanban() {
             title: 'lost',
             items: []
         },
-    ])
+    ]);
 
     const handleRefresh = () => {
         fetchKanbanData({
@@ -59,13 +59,13 @@ export default function DealsKanban() {
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
                 itemId: deal.id,
-                fullname: deal.lead?.fullname || deal.title || "Unknown",
-                organization: deal.lead?.company || deal.company?.name || "-",
-                email: deal.lead?.email || deal.contact?.email || "-",
-                mobileno: deal.lead?.phone || deal.contact?.phone || "-",
+                fullname: deal.lead?.fullname || "Unknown",
+                organization: deal.lead?.company || "-",
+                email: deal.lead?.email || "-",
+                mobileno: deal.lead?.phone || "-",
             }),
-        })
-    }
+        });
+    };
 
     useEffect(() => {
         fetchKanbanData({
@@ -76,19 +76,19 @@ export default function DealsKanban() {
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
                 itemId: deal.id,
-                fullname: deal.lead?.fullname || deal.title || "Unknown",
-                organization: deal.lead?.company || deal.company?.name || "-",
-                email: deal.lead?.email || deal.contact?.email || "-",
-                mobileno: deal.lead?.phone || deal.contact?.phone || "-",
+                fullname: deal.lead?.fullname || "Unknown",
+                organization: deal.lead?.company || "-",
+                email: deal.lead?.email || "-",
+                mobileno: deal.lead?.phone || "-",
             }),
-        })
+        });
     }, []);
 
     return (
-        <div className="flex">
+        <div className="flex h-screen bg-gray-50">
             <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
-            <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'}`}>
+            <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex flex-col`}>
                 <Header
                     isOpen={isOpen}
                     setIsOpen={setIsOpen}
@@ -96,7 +96,7 @@ export default function DealsKanban() {
                     pathname={pathname}
                 />
 
-                <main className="p-4 overflow-auto lg:p-6 bg-white">
+                <main className="flex-1 p-4 overflow-auto lg:p-6 bg-white">
                     <div className="mx-auto">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                             <div className="flex flex-wrap gap-2">
@@ -110,15 +110,9 @@ export default function DealsKanban() {
                         </div>
                     </div>
 
-                    {/* Pastikan pathname dikirim sebagai "Deals" untuk routing yang benar */}
-                    <Kanban 
-                        setContainers={setContainers} 
-                        setData={setData} 
-                        containers={containers} 
-                        pathname="Deals"
-                    />
+                    <Kanban setContainers={setContainers} setData={setData} containers={containers} pathname='Deals' />
                 </main>
             </div>
         </div>
-    )
+    );
 }

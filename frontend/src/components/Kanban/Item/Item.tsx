@@ -45,7 +45,9 @@ const Items = ({ id, fullname, organization, email, mobileno, pathname, itemId }
             return `/deals/detail/${itemId}`;
         } else if (pathname === "Leads") {
             return `/leads/detail/${itemId}`;
-        }
+        } else if (pathname === "Tasks") {
+            return `/leads/detail/${itemId}`;
+        } 
         // Default fallback untuk Deals
         return `/deals/detail/${itemId}`;
     };

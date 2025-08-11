@@ -43,7 +43,7 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
   }
 
   if (commentsError) {
-    return <div className="p-6 text-red-500">Error loading comments: {commentsError.message}</div>;
+    return <div className="p-6 text-red-500">Error loading comments: {commentsError}</div>;
   }
 
   return (
@@ -70,7 +70,6 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
             currentUser={currentUser}
             onCommentAdded={handleCommentAdded}
             onCancel={() => setShowAddComment(false)}
-            addComment={addComment}
           />
         </div>
       )}
@@ -88,8 +87,6 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
               currentUser={currentUser}
               onUpdate={handleCommentUpdated}
               onDelete={handleCommentDeleted}
-              updateComment={updateComment}
-              deleteComment={deleteComment}
             />
           ))
         )}

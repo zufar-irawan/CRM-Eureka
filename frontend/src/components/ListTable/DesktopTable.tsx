@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import fetchData from "./Functions/FetchData"
 import deleteData from "./Functions/DeleteData"
-import { Edit, MoreHorizontal, Trash2, ChevronUp, ChevronDown, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+import { Edit, MoreHorizontal, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export interface Column {
@@ -18,7 +18,6 @@ type SortConfig = {
     direction: 'asc' | 'desc'
 } | null
 
-// ✅ Helper: Mendukung key seperti "company.name" atau "deals[0].title"
 function getNestedValue(obj: any, path: string): any {
     return path
         .replace(/\[(\d+)\]/g, '.$1') // ubah [0] jadi .0
@@ -26,7 +25,6 @@ function getNestedValue(obj: any, path: string): any {
         .reduce((acc, key) => acc?.[key], obj)
 }
 
-// ✅ Helper: Sorting function
 function sortData(data: any[], sortConfig: SortConfig): any[] {
     if (!sortConfig) return data
 

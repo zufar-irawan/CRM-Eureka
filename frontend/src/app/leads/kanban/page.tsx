@@ -1,11 +1,11 @@
 "use client"
 
 import { v4 as uuidv4 } from 'uuid'
-import fetchKanbanData from "@/components/Kanban/Functions/FetchKanbanData";
+import fetchKanbanData from "@/components/Kanban/Functions/FetchKanbanData"
 import Kanban, { DNDType } from "@/components/Kanban/Kanban"
 import { Filter, KanbanIcon, RotateCcw, X, Search } from "lucide-react"
-import { useEffect, useState, useCallback } from 'react';
-import { setStyle } from 'framer-motion';
+import { useEffect, useState, useCallback } from 'react'
+import { setStyle } from 'framer-motion'
 
 export default function LeadsKanban() {
     const [data, setData] = useState<any[]>([])

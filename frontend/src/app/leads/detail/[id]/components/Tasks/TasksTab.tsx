@@ -86,7 +86,7 @@ export default function TasksTab({ currentUser }: TasksTabProps) {
       {tasksError && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <p className="text-red-700 text-sm">{tasksError}</p>
-          <button 
+          <button
             onClick={fetchTasks}
             className="text-red-700 text-sm underline mt-2 hover:text-red-800"
           >
@@ -111,7 +111,7 @@ export default function TasksTab({ currentUser }: TasksTabProps) {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="">
           {tasks.map((task: Task) => (
             <TaskItem
               key={task.id}

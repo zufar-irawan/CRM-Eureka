@@ -83,7 +83,7 @@ export const RESULT_TYPES: ResultType[] = [
 export const TASK_API_ENDPOINTS = {
   TASKS: 'http://localhost:5000/api/tasks',
   TASK_COMMENTS: (taskId: string) => `http://localhost:5000/api/tasks/${taskId}/comments`,
-  TASK_RESULTS: (taskId: string) => `http://localhost:5000/api/tasks/${taskId}/results`,
+  TASK_RESULTS: (taskId: any) => `http://localhost:5000/api/tasks/${taskId}/results`,
   UPDATE_STATUS: (taskId: string) => `http://localhost:5000/api/tasks/${taskId}/updateStatus`,
   COMMENT_UPDATE: (commentId: string) => `http://localhost:5000/api/tasks/task-comments/${commentId}`,
   RESULT_UPDATE: (resultId: string) => `http://localhost:5000/api/tasks/task-results/${resultId}`,

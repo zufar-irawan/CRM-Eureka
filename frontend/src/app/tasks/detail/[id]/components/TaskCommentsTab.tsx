@@ -38,6 +38,9 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
     fetchComments();
   };
 
+  // Ensure comments is always an array
+  const commentsArray = Array.isArray(comments) ? comments : [];
+
   if (commentsLoading) {
     return <div className="p-6">Loading comments...</div>;
   }
@@ -52,11 +55,11 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
         <div className="flex items-center space-x-2">
           <MessageSquare className="h-5 w-5 text-gray-500" />
           <h2 className="text-lg font-medium">Comments</h2>
-          <span className="text-sm text-gray-500">({comments.length})</span>
+          <span className="text-sm text-gray-500">({commentsArray.length})</span>
         </div>
         <button
           onClick={() => setShowAddComment(true)}
-          className="flex items-center space-x-1 text-sm font-medium text-primary hover:text-primary-dark"
+          className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           <Plus className="h-4 w-4" />
           <span>Add Comment</span>
@@ -75,12 +78,12 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
       )}
 
       <div className="space-y-4">
-        {comments.length === 0 && !showAddComment ? (
+        {commentsArray.length === 0 && !showAddComment ? (
           <div className="text-center py-8 text-gray-500">
             No comments yet. Add the first one!
           </div>
         ) : (
-          comments.map((comment) => (
+          commentsArray.map((comment) => (
             <TaskCommentItem
               key={comment.id}
               comment={comment}

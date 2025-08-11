@@ -2,108 +2,135 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import { makeAuthenticatedRequest } from '../utils/auth';
+import { TASK_API_ENDPOINTS } from '../utils/constants';
 import type { TaskComment } from '../types';
 
 export function useTaskComments(taskId: string | string[] | undefined) {
   const [comments, setComments] = useState<TaskComment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
 
-  // Fungsi untuk mengambil komentar
+  // Normalize taskId to string
+  const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
+
+  // Function to fetch comments
   const fetchComments = useCallback(async () => {
-    if (!taskId) return;
+    if (!normalizedTaskId) return;
     
     try {
-      setLoading(true);
-      setError(null);
+      setCommentsLoading(true);
+      setCommentsError(null);
       
-      // Ganti dengan API call sebenarnya
-      const response = await fetch(`/api/tasks/${taskId}/comments`);
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.TASK_COMMENTS(normalizedTaskId)
+      );
       
       if (!response.ok) {
-        throw new Error('Gagal mengambil komentar');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch comments');
       }
       
       const data = await response.json();
-      setComments(data);
+      
+      // Handle different response formats
+      const commentsData = data.success ? data.data : data;
+      const commentsArray = Array.isArray(commentsData) ? commentsData : [];
+      
+      setComments(commentsArray);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      console.error('Error fetching comments:', err);
+      setCommentsError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false);
+      setCommentsLoading(false);
     }
-  }, [taskId]);
+  }, [normalizedTaskId]);
 
-  // Fungsi untuk menambah komentar
+  // Function to add comment
   const addComment = async (content: string): Promise<void> => {
+    if (!normalizedTaskId) throw new Error('Task ID is required');
+    
     try {
-      const response = await fetch(`/api/tasks/${taskId}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.TASK_COMMENTS(normalizedTaskId),
+        {
+          method: 'POST',
+          body: JSON.stringify({ comment_text: content }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Gagal menambahkan komentar');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to add comment');
       }
 
-      await fetchComments(); // Refresh daftar komentar
+      // Refresh comments after successful addition
+      await fetchComments();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
-      throw err; // Re-throw untuk penanganan di komponen
+      console.error('Error adding comment:', err);
+      setCommentsError(err instanceof Error ? err.message : 'Failed to add comment');
+      throw err; // Re-throw for component handling
     }
   };
 
-  // Fungsi untuk mengupdate komentar
-  const updateComment = async (commentId: string, content: string): Promise<void> => {
+  // Function to update comment
+  const updateComment = async (commentId: string | number, content: string): Promise<void> => {
     try {
-      const response = await fetch(`/api/tasks/${taskId}/comments/${commentId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.COMMENT_UPDATE(String(commentId)),
+        {
+          method: 'PUT',
+          body: JSON.stringify({ comment_text: content }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Gagal mengupdate komentar');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update comment');
       }
 
-      await fetchComments(); // Refresh daftar komentar
+      // Refresh comments after successful update
+      await fetchComments();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      console.error('Error updating comment:', err);
+      setCommentsError(err instanceof Error ? err.message : 'Failed to update comment');
       throw err;
     }
   };
 
-  // Fungsi untuk menghapus komentar
-  const deleteComment = async (commentId: string): Promise<void> => {
+  // Function to delete comment
+  const deleteComment = async (commentId: string | number): Promise<void> => {
     try {
-      const response = await fetch(`/api/tasks/${taskId}/comments/${commentId}`, {
-        method: 'DELETE',
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.COMMENT_UPDATE(String(commentId)),
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Gagal menghapus komentar');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete comment');
       }
 
-      await fetchComments(); // Refresh daftar komentar
+      // Refresh comments after successful deletion
+      await fetchComments();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      console.error('Error deleting comment:', err);
+      setCommentsError(err instanceof Error ? err.message : 'Failed to delete comment');
       throw err;
     }
   };
 
-  // Auto-fetch komentar saat taskId berubah
+  // Auto-fetch comments when taskId changes
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
 
   return {
     comments,
-    commentsLoading: loading,
-    commentsError: error,
+    commentsLoading,
+    commentsError,
     fetchComments,
     addComment,
     updateComment,

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { X } from 'lucide-react';
 import type { CurrentUser } from '../types';
 import { getFirstChar } from '../utils/formatting';
+import { makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
 
 interface AddTaskCommentProps {
   taskId: string | string[] | undefined;
@@ -22,6 +22,9 @@ export default function AddTaskComment({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // Normalize taskId
+  const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -30,7 +33,7 @@ export default function AddTaskComment({
       return;
     }
 
-    if (!taskId) {
+    if (!normalizedTaskId) {
       setError('Task ID is required');
       return;
     }
@@ -39,17 +42,20 @@ export default function AddTaskComment({
     setError('');
 
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          comment_text: commentText.trim(),
-          commented_by: currentUser?.id,
-          commented_by_name: currentUser?.name
-        }),
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.TASK_COMMENTS(normalizedTaskId),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            comment_text: commentText.trim(),
+            commented_by: currentUser?.id,
+            commented_by_name: currentUser?.name
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

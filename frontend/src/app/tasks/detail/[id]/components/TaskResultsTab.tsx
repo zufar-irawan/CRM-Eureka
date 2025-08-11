@@ -44,16 +44,19 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
     fetchResults();
   };
 
+  // Ensure results is always an array
+  const resultsArray = Array.isArray(results) ? results : [];
+
   return (
     <div className="p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center space-x-6">
           <h2 className="text-xl font-semibold text-gray-900">Results & Outcomes</h2>
-          {results.length > 0 && (
+          {resultsArray.length > 0 && (
             <div className="flex items-center space-x-1 text-sm text-gray-600">
               <FileText className="w-4 h-4" />
-              <span>{results.length} result{results.length !== 1 ? 's' : ''}</span>
+              <span>{resultsArray.length} result{resultsArray.length !== 1 ? 's' : ''}</span>
             </div>
           )}
         </div>
@@ -99,7 +102,7 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
       )}
 
       {/* Empty State */}
-      {!resultsLoading && results.length === 0 ? (
+      {!resultsLoading && resultsArray.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-lg flex items-center justify-center">
             <FileText className="w-10 h-10 text-gray-400" />
@@ -116,14 +119,15 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
       ) : (
         /* Results List */
         <div className="space-y-4">
-          {results.map((r) => {
+          {resultsArray.map((r) => {
             const mappedResult: TaskResult = {
               id: r.id,
               task_id: r.task_id,
               result_text: r.result_text,
-              result_type: r.result_type,
+              result_type: r.result_type as 'email' | 'meeting' | 'call' | 'visit' | 'note',
               result_date: r.result_date,
               created_by: r.created_by,
+              created_by_name: r.created_by_name,
               created_at: r.created_at,
               updated_at: r.updated_at,
             };
@@ -141,7 +145,7 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
       )}
 
       {/* Footer Action */}
-      {!showAddResult && results.length > 0 && (
+      {!showAddResult && resultsArray.length > 0 && (
         <div className="flex items-center justify-center mt-8 pt-6 border-t border-gray-200">
           <button
             onClick={() => setShowAddResult(true)}
@@ -154,10 +158,10 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
       )}
 
       {/* Footer Stats */}
-      {results.length > 0 && (
+      {resultsArray.length > 0 && (
         <div className="mt-8 pt-4 border-t border-gray-200 text-center">
           <p className="text-xs text-gray-500">
-            {results.length} result{results.length !== 1 ? 's' : ''} recorded for this task
+            {resultsArray.length} result{resultsArray.length !== 1 ? 's' : ''} recorded for this task
           </p>
         </div>
       )}

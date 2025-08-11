@@ -4,7 +4,7 @@ import { MoreHorizontal, Edit, Trash2, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import type { TaskResult, CurrentUser } from '../types';
 import { formatDate, getFirstChar } from '../utils/formatting';
-import { RESULT_TYPES } from '../utils/constants';
+import { RESULT_TYPES, makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
 
 type ResultType = typeof RESULT_TYPES[number]["value"];
 
@@ -52,14 +52,17 @@ export default function TaskResultItem({
 
     setIsUpdating(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/task-results/${result.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          result_text: editText.trim(),
-          result_type: editType
-        }),
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.RESULT_UPDATE(String(result.id)),
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            result_text: editText.trim(),
+            result_type: editType
+          }),
+        }
+      );
 
       if (response.ok) {
         setIsEditing(false);
@@ -80,9 +83,12 @@ export default function TaskResultItem({
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/task-results/${result.id}`, {
-        method: 'DELETE',
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.RESULT_UPDATE(String(result.id)),
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (response.ok) {
         onDelete();

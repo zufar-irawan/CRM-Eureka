@@ -2,6 +2,7 @@
 
 import { MoreHorizontal, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import fetchData from "./Functions/FetchData";
 
 export interface Field {
@@ -26,6 +27,7 @@ export default function MobileCards({
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedData, setSelectedData] = useState<string[]>([]);
+    const router = useRouter();
 
     useEffect(() => {
         fetchData({ setData, setLoading, url: pathname });
@@ -39,6 +41,16 @@ export default function MobileCards({
         );
     };
 
+    const handleCardClick = (id: string) => {
+        if (pathname === "/contacts/") {
+            router.push(`/contacts/detail/${id}`)
+        } else if (pathname === "/companies/") {
+            router.push(`/companies/detail/${id}`)
+        } else if (pathname === "/tasks/") {
+            router.push(`/tasks/detail/${id}`)
+        }
+    };
+
     return (
         <div className="block lg:hidden space-y-4">
             {loading ? (
@@ -48,7 +60,8 @@ export default function MobileCards({
             ) : data.map((item) => (
                 <div
                     key={item.id}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer"
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => handleCardClick(item.id)}
                 >
                     {/* Header */}
                     <div className="flex items-start justify-between mb-3">

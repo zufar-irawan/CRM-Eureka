@@ -1,9 +1,10 @@
 "use client";
 
-import { MoreHorizontal, Edit, Trash2, User } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { TaskComment, CurrentUser } from '../types';
 import { formatDate, getFirstChar } from '../utils/formatting';
+import { makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
 
 interface TaskCommentItemProps {
   comment: TaskComment;
@@ -42,15 +43,18 @@ export default function TaskCommentItem({
     
     setIsUpdating(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/task-comments/${comment.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          comment_text: editText.trim()
-        }),
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.COMMENT_UPDATE(String(comment.id)),
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            comment_text: editText.trim()
+          }),
+        }
+      );
 
       if (response.ok) {
         setIsEditing(false);
@@ -73,9 +77,12 @@ export default function TaskCommentItem({
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/task-comments/${comment.id}`, {
-        method: 'DELETE',
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.COMMENT_UPDATE(String(comment.id)),
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (response.ok) {
         onDelete();

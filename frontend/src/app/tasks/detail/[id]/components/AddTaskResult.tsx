@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FileText } from 'lucide-react';
 import type { CurrentUser } from '../types';
-import { RESULT_TYPES } from '../utils/constants';
+import { RESULT_TYPES, makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
 import { getFirstChar } from '../utils/formatting';
 
 interface AddTaskResultProps {
@@ -24,6 +24,9 @@ export default function AddTaskResult({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // Normalize taskId
+  const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -32,7 +35,7 @@ export default function AddTaskResult({
       return;
     }
 
-    if (!taskId) {
+    if (!normalizedTaskId) {
       setError('Task ID is required');
       return;
     }
@@ -41,18 +44,21 @@ export default function AddTaskResult({
     setError('');
 
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/results`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          result_text: resultText.trim(),
-          result_type: resultType,
-          created_by: currentUser?.id,
-          created_by_name: currentUser?.name
-        }),
-      });
+      const response = await makeAuthenticatedRequest(
+        TASK_API_ENDPOINTS.TASK_RESULTS(normalizedTaskId),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            result_text: resultText.trim(),
+            result_type: resultType,
+            created_by: currentUser?.id,
+            created_by_name: currentUser?.name
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -72,7 +78,7 @@ export default function AddTaskResult({
     }
   };
 
-  const selectedType = RESULT_TYPES.find(t => t.value === resultType) || RESULT_TYPES[0];
+  const selectedType = RESULT_TYPES.find(t => t.value === resultType) || RESULT_TYPES[4]; // default to 'note'
 
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

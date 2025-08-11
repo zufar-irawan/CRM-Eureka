@@ -96,7 +96,6 @@ export const setupAssociations = () => {
         as: 'task'
     });
 
-    // Task Comments associations
     TaskComments.belongsTo(User, {
         foreignKey: 'commented_by',
         as: 'commentedByUser',
@@ -107,7 +106,6 @@ export const setupAssociations = () => {
         as: 'taskComments'
     });
 
-    // Task Results associations  
     TaskResults.belongsTo(User, {
         foreignKey: 'created_by',
         as: 'creator',
@@ -118,7 +116,6 @@ export const setupAssociations = () => {
         as: 'taskResults'
     });
 
-    // Deals associations
     Leads.hasMany(Deals, {
         foreignKey: 'lead_id',
         as: 'deals'

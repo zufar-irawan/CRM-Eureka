@@ -111,7 +111,7 @@ export default function TasksTab({ currentUser }: TasksTabProps) {
           </button>
         </div>
       ) : (
-        <div className="">
+        <div className="space-y-4">
           {tasks.map((task: Task) => (
             <TaskItem
               key={task.id}

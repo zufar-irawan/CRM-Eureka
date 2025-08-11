@@ -2,10 +2,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Comment } from '../types';
+import type { TaskComment } from '../types';
 
 export function useTaskComments(taskId: string | string[] | undefined) {
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<TaskComment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

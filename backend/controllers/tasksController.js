@@ -341,6 +341,8 @@ export const deleteTask = async (req, res) => {
   }
 };
 
+// ===== TASK COMMENTS FUNCTIONS =====
+
 // GET /api/tasks/:id/comments - Ambil semua komentar pada task tertentu
 export const getTaskComments = async (req, res) => {
   try {
@@ -348,7 +350,7 @@ export const getTaskComments = async (req, res) => {
 
     const comments = await TaskComments.findAll({
       where: { task_id: id },
-      order: [['created_at', 'ASC']]
+      order: [['commented_at', 'ASC']]
     });
 
     res.status(200).json({
@@ -471,6 +473,179 @@ export const deleteTaskComment = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error deleting comment",
+      error: error.message
+    });
+  }
+};
+
+// ===== TASK RESULTS FUNCTIONS =====
+
+// GET /api/tasks/:id/results - Ambil semua hasil pada task tertentu
+export const getTaskResults = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Cek apakah task ada
+    const task = await Tasks.findByPk(id);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task tidak ditemukan"
+      });
+    }
+
+    const results = await TaskResults.findAll({
+      where: { task_id: id },
+      order: [['result_date', 'DESC']]
+    });
+
+    res.status(200).json({
+      success: true,
+      data: results,
+      message: `Found ${results.length} task results`
+    });
+  } catch (error) {
+    console.error('Error fetching task results:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching task results",
+      error: error.message
+    });
+  }
+};
+
+// POST /api/tasks/:id/results - Tambahkan hasil ke task
+export const addTaskResult = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { result_text, result_type, created_by } = req.body;
+
+    if (!result_text) {
+      return res.status(400).json({
+        success: false,
+        message: "result_text wajib diisi"
+      });
+    }
+
+    // Check if task exists
+    const task = await Tasks.findByPk(id);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task tidak ditemukan"
+      });
+    }
+
+    // Validasi result_type jika diberikan
+    const validResultTypes = ['meeting', 'call', 'email', 'visit', 'note'];
+    if (result_type && !validResultTypes.includes(result_type)) {
+      return res.status(400).json({
+        success: false,
+        message: `result_type tidak valid. Valid types: ${validResultTypes.join(', ')}`
+      });
+    }
+
+    const newResult = await TaskResults.create({
+      task_id: id,
+      result_text,
+      result_type: result_type || 'note',
+      created_by: created_by || null,
+      result_date: new Date()
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Task result berhasil ditambahkan",
+      data: newResult
+    });
+  } catch (error) {
+    console.error('Error adding task result:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding task result",
+      error: error.message
+    });
+  }
+};
+
+// PUT /api/tasks/task-results/:resultId - Edit hasil tertentu
+export const updateTaskResult = async (req, res) => {
+  try {
+    const { resultId } = req.params;
+    const { result_text, result_type } = req.body;
+
+    if (!result_text) {
+      return res.status(400).json({
+        success: false,
+        message: "result_text wajib diisi"
+      });
+    }
+
+    const result = await TaskResults.findByPk(resultId);
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Task result tidak ditemukan"
+      });
+    }
+
+    // Validasi result_type jika diberikan
+    const validResultTypes = ['meeting', 'call', 'email', 'visit', 'note'];
+    if (result_type && !validResultTypes.includes(result_type)) {
+      return res.status(400).json({
+        success: false,
+        message: `result_type tidak valid. Valid types: ${validResultTypes.join(', ')}`
+      });
+    }
+
+    const updateData = { result_text };
+    if (result_type) {
+      updateData.result_type = result_type;
+    }
+
+    await result.update(updateData);
+
+    res.status(200).json({
+      success: true,
+      message: "Task result berhasil diupdate",
+      data: result
+    });
+  } catch (error) {
+    console.error('Error updating task result:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating task result",
+      error: error.message
+    });
+  }
+};
+
+// DELETE /api/tasks/task-results/:resultId - Hapus hasil tertentu
+export const deleteTaskResult = async (req, res) => {
+  try {
+    const { resultId } = req.params;
+
+    const result = await TaskResults.findByPk(resultId);
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Task result tidak ditemukan"
+      });
+    }
+
+    await result.destroy();
+
+    res.status(200).json({
+      success: true,
+      message: "Task result berhasil dihapus"
+    });
+  } catch (error) {
+    console.error('Error deleting task result:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting task result",
       error: error.message
     });
   }

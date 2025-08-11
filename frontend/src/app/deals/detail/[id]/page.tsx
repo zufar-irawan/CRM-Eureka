@@ -13,17 +13,16 @@ import DealCommentTab from "./components/Comments/DealCommentTab";
 import { useAuth } from "../[id]/hooks/useAuth";
 import { makeAuthenticatedRequest } from "../[id]/utils/auth";
 import { Deal, Contact, Comment, Company } from "./types";
-import Swal from "sweetalert2";
 
 export default function DealDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { currentUser } = useAuth();
-
+  
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Activity");
-
+  
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -32,7 +31,7 @@ export default function DealDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [contactsLoading, setContactsLoading] = useState(false);
-
+  
   const [isContactsExpanded, setIsContactsExpanded] = useState(true);
   const [isOrgDetailsExpanded, setIsOrgDetailsExpanded] = useState(true);
 
@@ -81,7 +80,7 @@ export default function DealDetailPage() {
     const date = new Date(dateString);
     const now = new Date();
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
+    
     if (diffInDays === 0) return 'Today';
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays} days ago`;
@@ -93,9 +92,9 @@ export default function DealDetailPage() {
     try {
       setIsLoading(true);
       setError(null);
-
+      
       const response = await makeAuthenticatedRequest(`http://localhost:5000/api/deals/${id}`);
-
+      
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(`Deal with ID ${id} not found`);
@@ -104,13 +103,13 @@ export default function DealDetailPage() {
         const errorMsg = errorData?.message || `HTTP ${response.status}: ${response.statusText}`;
         throw new Error(errorMsg);
       }
-
+      
       const { data } = await response.json();
-
+      
       if (!data || typeof data !== 'object') {
         throw new Error("Invalid data format received from server");
       }
-
+      
       setDeal({
         ...data,
         comments: data.comments || []
@@ -271,31 +270,14 @@ export default function DealDetailPage() {
       if (response.ok) {
         const { data } = await response.json();
         setContacts(prev => [data, ...prev]);
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Success',
-          text: 'Contact created successfully!'
-        })
-
+        alert('Contact created successfully!');
       } else {
         const error = await response.json();
-
-        Swal.fire({
-          icon: 'error',
-          title: 'Failed',
-          text: `Failed to create contact: ${error.message}`
-        })
+        alert(`Failed to create contact: ${error.message}`);
       }
     } catch (err) {
       console.error('Error creating contact:', err);
-
-      Swal.fire({
-        icon: 'error',
-        title: "Failed",
-        text: 'Failed to create contact'
-      })
-
+      alert('Failed to create contact');
     }
   };
 

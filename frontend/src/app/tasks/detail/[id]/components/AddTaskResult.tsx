@@ -5,6 +5,7 @@ import { FileText } from 'lucide-react';
 import type { CurrentUser } from '../types';
 import { RESULT_TYPES, makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
 import { getFirstChar } from '../utils/formatting';
+import Swal from 'sweetalert2';
 
 interface AddTaskResultProps {
   taskId: string | string[] | undefined;
@@ -32,11 +33,23 @@ export default function AddTaskResult({
     
     if (!resultText.trim()) {
       setError('Result description cannot be empty');
+      
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Information',
+        text: 'Result description cannot be empty',
+      });
       return;
     }
 
     if (!normalizedTaskId) {
       setError('Task ID is required');
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Task ID is required',
+      });
       return;
     }
 
@@ -69,10 +82,25 @@ export default function AddTaskResult({
       setResultText('');
       setResultType('note');
       onResultAdded();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Result added successfully!',
+        timer: 2000,
+        showConfirmButton: false
+      });
 
     } catch (err) {
       console.error('Error adding result:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add result');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add result';
+      setError(errorMessage);
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to Add Result',
+        text: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }

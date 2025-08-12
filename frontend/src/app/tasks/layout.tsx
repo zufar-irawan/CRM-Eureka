@@ -17,18 +17,24 @@ export default function TasksLayout(
     const { isOpens, editData, closeModal } = useTaskModalStore();
 
     const PathName = usePathname()
+    
+    // Cek apakah ini halaman task detail
+    const isTaskDetailPage = PathName.includes('/tasks/') && PathName !== '/tasks'
 
     return (
         <div className="flex h-screen">
             <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
             <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex flex-col bg-white transition-all duration-300`}>
-                <Header
-                    isOpen={isOpen}
-                    setIsOpen={setIsOpen}
-                    setIsModalOpen={setIsModalOpen}
-                    pathname={PathName}
-                />
+                {/* Header hanya muncul jika bukan halaman task detail */}
+                {!isTaskDetailPage && (
+                    <Header
+                        isOpen={isOpen}
+                        setIsOpen={setIsOpen}
+                        setIsModalOpen={setIsModalOpen}
+                        pathname={PathName}
+                    />
+                )}
 
                 <div className="flex-1 overflow-y-auto">
                     {children}

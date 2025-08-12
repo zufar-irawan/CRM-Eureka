@@ -242,25 +242,8 @@ export default function TaskItem({
         } ${isOverdue ? 'border-l-4 border-l-red-500' : ''}`}>
         <div className="flex items-start justify-between">
           {/* Task Info */}
-          <div className="flex items-start space-x-4 flex-1">
-            {/* Status Toggle */}
-            <button
-              onClick={handleStatusToggle}
-              disabled={result}
-              className={`mt-1 transition-colors duration-200 ${isUpdating ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'
-                } ${result && isCompleted ? 'cursor-not-allowed opacity-50' : ''}`}
-              title={result && isCompleted ? 'Cannot change status when result exists' : ''}
-            >
-              {isUpdating ? (
-                <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-              ) : isCompleted ? (
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-              ) : (
-                <Circle className="w-5 h-5 text-gray-400 hover:text-blue-600" />
-              )}
-            </button>
-
-            {/* Task Details */}
+          <div className="flex items-start flex-1">
+            {/* Task Details - Removed Status Toggle Button */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-3 mb-2">
                 <h4 className={`font-medium ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
@@ -332,28 +315,35 @@ export default function TaskItem({
               {showActions && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowActions(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                  <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
                     <div className="py-1">
                       <button
                         onClick={() => {
                           setShowActions(false);
                           handleStatusToggle();
                         }}
-                        disabled={result}
+                        disabled={result && isCompleted}
                         className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2 disabled:opacity-50"
                       >
-                        {isCompleted ? (
-                          <>
-                            <Circle className="w-4 h-4" />
-                            <span>Mark Pending</span>
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span>Mark Complete</span>
-                          </>
-                        )}
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Mark Complete</span>
                       </button>
+
+                      <button
+                        onClick={() => {
+                          setShowActions(false);
+                          if (isCompleted) {
+                            handleStatusToggle();
+                          }
+                        }}
+                        disabled={!isCompleted}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2 disabled:opacity-50"
+                      >
+                        <Circle className="w-4 h-4" />
+                        <span>Mark Pending</span>
+                      </button>
+
+                      <div className="border-t border-gray-200 my-1"></div>
 
                       <button
                         onClick={() => {
@@ -434,7 +424,7 @@ export default function TaskItem({
       {/* Result Display */}
       {result && (
         <div className="border-green-600 rounded-b-lg p-4 border bg-green-50 flex items-start space-x-4">
-          <div className="ml-6 flex-1">
+          <div className="flex-1">
             <div className="flex items-center space-x-3 mb-2">
               <h4 className="font-medium text-green-800">Task Result</h4>
             </div>

@@ -1,8 +1,5 @@
-// types.ts - Type definitions for deals, users, comments, contacts, companies, and UI config
-
+// types.ts - Updated type definitions with user assignment support
 import { LucideIcon } from "lucide-react";
-
-// -------------------- USERS --------------------
 
 export interface CurrentUser {
   id: number;
@@ -30,7 +27,6 @@ export interface User {
   created_at?: string;
 }
 
-// Role interfaces sesuai dengan SQL structure
 export interface Role {
   id: number;
   name: string;
@@ -42,8 +38,6 @@ export interface UserRole {
   user?: User;
   role?: Role;
 }
-
-// -------------------- COMMENTS --------------------
 
 export interface Comment {
   id: number;
@@ -65,7 +59,6 @@ export interface Comment {
   };
 }
 
-// NEW: Task interfaces
 export interface Task {
   id: number;
   lead_id?: number;
@@ -136,8 +129,6 @@ export interface ReplyState {
   };
 }
 
-// -------------------- COMPANY --------------------
-
 export interface Company {
   id: number;
   name: string;
@@ -148,8 +139,6 @@ export interface Company {
   phone?: string;
   created_at?: string;
 }
-
-// -------------------- CONTACT --------------------
 
 export interface Contact {
   id: number;
@@ -165,8 +154,6 @@ export interface Contact {
   created_at?: string;
 }
 
-// -------------------- LEAD --------------------
-
 export interface Lead {
   id?: number;
   company?: string;
@@ -177,15 +164,14 @@ export interface Lead {
   industry?: string;
   job_position?: string;
   website?: string;
-  owner?: string | null;
+  owner?: string | number | null; 
   first_name?: string | null;
   last_name?: string | null;
   stage?: string | null;
   updated_at?: string | null;
   status?: boolean;
+  title?: string;
 }
-
-// -------------------- DEAL --------------------
 
 export interface Deal {
   id: string;
@@ -193,7 +179,7 @@ export interface Deal {
   value: number;
   stage: string;
   probability?: number;
-  owner?: number;
+  owner?: number | null; 
   lead_id?: number | null;
   id_contact?: number | null;
   id_company?: number | null;
@@ -205,14 +191,13 @@ export interface Deal {
     name: string;
     email?: string;
   } | null;
+  assigned_user?: User | null;
   created_by?: number;
   created_at: string;
   updated_at: string;
   description?: string;
   comments?: Comment[];
 }
-
-// -------------------- UI CONFIG TYPES --------------------
 
 export interface StatusOption {
   name: string;
@@ -241,16 +226,24 @@ export interface ToFieldsState {
   [key: number]: string;
 }
 
-// Interface untuk response API users dengan roles
 export interface UserWithRolesResponse {
   message: string;
   data: User[];
   total: number;
 }
 
-// Interface untuk user search dan selection
 export interface UserSearchResult {
   users: User[];
   total: number;
   filtered: User[];
+}
+
+export interface AssignmentRequest {
+  owner: number;
+}
+
+export interface AssignmentResponse {
+  success: boolean;
+  data: Deal | Lead;
+  message: string;
 }

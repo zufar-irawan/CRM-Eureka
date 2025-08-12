@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from 'react';
-import { Deal } from '../types';
-import { Mail, Link2, Paperclip, ChevronDown, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Deal, User as UserType } from '../types';
+import { Mail, Link2, Paperclip, ChevronDown, Check, User, X } from 'lucide-react';
 import { makeAuthenticatedRequest } from '../utils/auth';
-import { DEAL_STAGES } from '../utils/constant';
+import { DEAL_STAGES, API_ENDPOINTS } from '../utils/constant';
+import { useUsers } from '../hooks/useUsers';
 import Swal from 'sweetalert2';
 
 interface DealHeaderProps {
@@ -12,7 +13,7 @@ interface DealHeaderProps {
   isDropdownOpen: boolean;
   setIsDropdownOpen: (open: boolean) => void;
   displayValue: (value: any, fallback?: string) => string;
-  onDealUpdate?: (updatedDeal: Deal) => void; // Callback to update parent component
+  onDealUpdate?: (updatedDeal: Deal) => void;
 }
 
 export default function DealHeader({ 
@@ -23,6 +24,22 @@ export default function DealHeader({
   onDealUpdate 
 }: DealHeaderProps) {
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
+  const [isAssignDropdownOpen, setIsAssignDropdownOpen] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [assignedUser, setAssignedUser] = useState<UserType | null>(null);
+  
+  // Use the users hook
+  const { users, isLoading: isLoadingUsers } = useUsers();
+
+  // Update assigned user when deal or users change
+  useEffect(() => {
+    if (deal?.owner && users.length > 0) {
+      const currentUser = users.find(user => 
+        user.id.toString() === deal.owner?.toString()
+      );
+      setAssignedUser(currentUser || null);
+    }
+  }, [deal?.owner, users]);
 
   const getCurrentStageConfig = () => {
     return DEAL_STAGES.find(stage => 
@@ -34,16 +51,77 @@ export default function DealHeader({
     const target = e.target as HTMLElement;
     if (!target.closest('[data-dropdown]')) {
       setIsDropdownOpen(false);
+      setIsAssignDropdownOpen(false);
     }
   };
 
   // Add click outside listener
-  useState(() => {
-    if (isDropdownOpen) {
+  useEffect(() => {
+    if (isDropdownOpen || isAssignDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  });
+  }, [isDropdownOpen, isAssignDropdownOpen]);
+
+  // Handle user assignment
+  const handleAssignToUser = async (userId: number) => {
+    if (!deal || isAssigning) return;
+    
+    if (userId.toString() === deal.owner?.toString()) {
+      setIsAssignDropdownOpen(false);
+      return;
+    }
+
+    setIsAssigning(true);
+    try {
+      const response = await makeAuthenticatedRequest(
+        `${API_ENDPOINTS.DEALS}/${deal.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner: userId })
+        }
+      );
+
+      if (response.ok) {
+        const { data } = await response.json();
+        const selectedUser = users.find(user => user.id === userId);
+        setAssignedUser(selectedUser || null);
+        
+        // Update the deal object with new owner
+        const updatedDeal = { ...deal, owner: userId, updated_at: new Date().toISOString() };
+        
+        // Call parent callback to update the deal state
+        if (onDealUpdate) {
+          onDealUpdate(updatedDeal);
+        }
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: `Deal assigned to ${selectedUser?.name || 'user'} successfully!`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+        
+        console.log(`✅ Deal ${deal.id} assigned to user ${userId}`);
+      } else {
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.message || 'Failed to assign user';
+        throw new Error(errorMsg);
+      }
+    } catch (error) {
+      console.error('Error assigning user:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: 'Failed to assign user. Please try again.'
+      });
+    } finally {
+      setIsAssigning(false);
+      setIsAssignDropdownOpen(false);
+    }
+  };
 
   const updateDealStage = async (newStage: string) => {
     if (isUpdatingStage || newStage === deal.stage) return;
@@ -69,7 +147,7 @@ export default function DealHeader({
     setIsUpdatingStage(true);
     try {
       const response = await makeAuthenticatedRequest(
-        `http://localhost:5000/api/deals/${deal.id}/updateStage`,
+        `${API_ENDPOINTS.DEALS}/${deal.id}/updateStage`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -165,12 +243,98 @@ export default function DealHeader({
         </div>
         
         <div className="flex items-center space-x-3">
-          <select className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            <option>Assign to</option>
-            <option value="admin">Admin User</option>
-            <option value="sales1">Sales One</option>
-            <option value="sales2">Sales Two</option>
-          </select>
+          {/* Assign To Dropdown */}
+          <div className="relative" data-dropdown>
+            <button
+              onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
+              disabled={isAssigning}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
+            >
+              {isAssigning ? (
+                <>
+                  <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Assigning...</span>
+                </>
+              ) : (
+                <>
+                  <User className="w-4 h-4 text-gray-400" />
+                  <span className="truncate flex-1 text-left">
+                    {assignedUser ? assignedUser.name : 'Assign to'}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </>
+              )}
+            </button>
+
+            {isAssignDropdownOpen && !isAssigning && (
+              <div className="absolute right-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto animate-in fade-in duration-200">
+                <div className="py-1">
+                  <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                    Assign to User
+                  </div>
+                  {isLoadingUsers ? (
+                    <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                      Loading users...
+                    </div>
+                  ) : users.length === 0 ? (
+                    <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                      No users available
+                    </div>
+                  ) : (
+                    <>
+                      {/* Unassign option */}
+                      <button
+                        onClick={() => handleAssignToUser(0)}
+                        className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                          <X className="w-3 h-3 text-gray-500" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="font-medium">Unassigned</div>
+                        </div>
+                        {!assignedUser && (
+                          <Check className="w-4 h-4 text-blue-600" />
+                        )}
+                      </button>
+                      
+                      <div className="border-t border-gray-100 my-1"></div>
+                      
+                      {users.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => handleAssignToUser(user.id)}
+                          className={`w-full flex items-center space-x-3 px-3 py-2 text-sm transition-colors ${
+                            assignedUser?.id === user.id 
+                              ? 'bg-blue-50 text-blue-700' 
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-medium text-blue-700">
+                              {user.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1 text-left">
+                            <div className="font-medium">{user.name}</div>
+                            <div className="text-xs text-gray-500">{user.email}</div>
+                            {user.roleNames && user.roleNames.length > 0 && (
+                              <div className="text-xs text-blue-600">
+                                {user.roleNames.join(', ')}
+                              </div>
+                            )}
+                          </div>
+                          {assignedUser?.id === user.id && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </button>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           
           {/* Stage Update Dropdown */}
           <div className="relative" data-dropdown>

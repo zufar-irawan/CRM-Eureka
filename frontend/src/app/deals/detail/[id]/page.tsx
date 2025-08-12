@@ -17,23 +17,30 @@ import { Deal, Contact, Comment, Company } from "./types";
 export default function DealDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { currentUser } = useAuth();
+  const { currentUser, userLoading } = useAuth();
 
+  // UI State
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Activity");
 
+  // Data State
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  
+  // Loading & Error States
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [contactsLoading, setContactsLoading] = useState(false);
 
+  // Sidebar State
   const [isContactsExpanded, setIsContactsExpanded] = useState(true);
   const [isOrgDetailsExpanded, setIsOrgDetailsExpanded] = useState(true);
+
+  // ==================== UTILITY FUNCTIONS ====================
 
   const safeString = (value: any): string => {
     if (value === null || value === undefined) return "";
@@ -51,11 +58,6 @@ export default function DealDetailPage() {
   ): string => {
     const str = safeString(value);
     return str.length > 0 ? str : fallback;
-  };
-
-  const handleDealUpdate = (updatedDeal: Deal) => {
-    setDeal(updatedDeal);
-    console.log("Deal updated in parent:", updatedDeal);
   };
 
   const formatCurrency = (value: any): string => {
@@ -87,10 +89,13 @@ export default function DealDetailPage() {
     if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
-    const diffInDays = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    
+    const diffInDays = Math.floor(diffInSeconds / 86400);
     if (diffInDays === 0) return "Today";
     if (diffInDays === 1) return "Yesterday";
     if (diffInDays < 7) return `${diffInDays} days ago`;
@@ -98,16 +103,44 @@ export default function DealDetailPage() {
     return formatDate(dateString);
   };
 
+  // ==================== EVENT HANDLERS ====================
+
+  // Enhanced handleDealUpdate to handle all deal changes
+  const handleDealUpdate = useCallback((updatedDeal: Deal) => {
+    const prevOwner = deal?.owner;
+    setDeal(updatedDeal);
+    console.log("Deal updated in parent:", updatedDeal);
+    
+    // If owner was updated, log the change
+    if (updatedDeal.owner !== prevOwner) {
+      console.log(`Deal ownership changed from ${prevOwner || 'unassigned'} to ${updatedDeal.owner || 'unassigned'}`);
+    }
+  }, [deal?.owner]);
+
+  // ==================== API FUNCTIONS ====================
+
   const fetchDeal = async () => {
+    if (!id) {
+      setError("Invalid deal ID");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
+      console.log(`[DEBUG] Fetching deal with ID: ${id}`);
 
       const response = await makeAuthenticatedRequest(
         `http://localhost:5000/api/deals/${id}`
       );
 
       if (!response.ok) {
+        if (response.status === 401) {
+          console.error('Unauthorized access - redirecting to login');
+          router.push('/login');
+          return;
+        }
         if (response.status === 404) {
           throw new Error(`Deal with ID ${id} not found`);
         }
@@ -118,26 +151,35 @@ export default function DealDetailPage() {
         throw new Error(errorMsg);
       }
 
-      const { data } = await response.json();
+      const responseData = await response.json();
+      
+      // Handle different response structures
+      const dealData = responseData.data || responseData;
 
-      if (!data || typeof data !== "object") {
+      if (!dealData || typeof dealData !== "object") {
         throw new Error("Invalid data format received from server");
       }
 
+      console.log("[DEBUG] Deal data received:", dealData);
+
       setDeal({
-        ...data,
-        comments: data.comments || [],
+        ...dealData,
+        comments: dealData.comments || [],
       });
+
     } catch (err: unknown) {
       let errorMessage = "An unexpected error occurred";
+      
       if (err instanceof TypeError && err.message.includes("fetch")) {
         errorMessage =
           "Network error: Unable to connect to server. Please check if backend server is running on localhost:5000";
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
-      console.error("[ERROR] Fetch failed:", err);
+      
+      console.error("[ERROR] Fetch deal failed:", err);
       setError(errorMessage);
+      
       if (err instanceof Error && err.message.includes("not found")) {
         setTimeout(() => router.push("/deals"), 3000);
       }
@@ -147,16 +189,23 @@ export default function DealDetailPage() {
   };
 
   const fetchComments = async () => {
+    if (!id) return;
+    
     try {
       setCommentsLoading(true);
+      console.log(`[DEBUG] Fetching comments for deal: ${id}`);
+      
       const response = await makeAuthenticatedRequest(
         `http://localhost:5000/api/deals/${id}/comments`
       );
+      
       if (response.ok) {
-        const { data } = await response.json();
-        setComments(data);
+        const responseData = await response.json();
+        const commentsData = responseData.data || responseData || [];
+        setComments(commentsData);
+        console.log(`[DEBUG] Comments loaded: ${commentsData.length} comments`);
       } else {
-        console.error("Failed to fetch comments");
+        console.error("Failed to fetch comments:", response.status);
         setComments([]);
       }
     } catch (err) {
@@ -169,8 +218,11 @@ export default function DealDetailPage() {
 
   const fetchRelatedContacts = async () => {
     if (!deal) return;
+    
     try {
       setContactsLoading(true);
+      console.log("[DEBUG] Fetching related contacts for deal:", deal.id);
+      
       const contactsToFetch: Contact[] = [];
 
       // Add deal's direct contact if exists
@@ -190,6 +242,7 @@ export default function DealDetailPage() {
 
       // Fetch contacts from deal's company
       if (deal.company?.id) {
+        console.log(`[DEBUG] Fetching contacts for company: ${deal.company.id}`);
         const response = await makeAuthenticatedRequest(
           `http://localhost:5000/api/contacts/company/${deal.company.id}`
         );
@@ -212,6 +265,7 @@ export default function DealDetailPage() {
         }
       } else if (deal.lead?.company && !deal.company?.id) {
         // Search contacts by lead's company name if no direct company
+        console.log(`[DEBUG] Searching contacts by lead company: ${deal.lead.company}`);
         const response = await makeAuthenticatedRequest(
           `http://localhost:5000/api/contacts?search=${encodeURIComponent(
             deal.lead.company
@@ -240,6 +294,7 @@ export default function DealDetailPage() {
       }
 
       setContacts(contactsToFetch);
+      console.log(`[DEBUG] Related contacts loaded: ${contactsToFetch.length} contacts`);
     } catch (err) {
       console.error("Error fetching related contacts:", err);
       setContacts([]);
@@ -249,7 +304,12 @@ export default function DealDetailPage() {
   };
 
   const addComment = async (text: string) => {
+    if (!id || !currentUser) {
+      throw new Error("Missing required data for adding comment");
+    }
+
     try {
+      console.log(`[DEBUG] Adding comment to deal: ${id}`);
       const response = await makeAuthenticatedRequest(
         `http://localhost:5000/api/deals/${id}/comments`,
         {
@@ -257,18 +317,21 @@ export default function DealDetailPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message: text,
-            user_id: currentUser?.id || 1,
-            user_name: currentUser?.name || "Current User",
+            user_id: currentUser.id,
+            user_name: currentUser.name,
           }),
         }
       );
 
       if (response.ok) {
-        const { data } = await response.json();
-        setComments((prev) => [data, ...prev]);
-        return data;
+        const responseData = await response.json();
+        const newComment = responseData.data || responseData;
+        setComments((prev) => [newComment, ...prev]);
+        console.log("[DEBUG] Comment added successfully");
+        return newComment;
       } else {
-        throw new Error("Failed to add comment");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to add comment");
       }
     } catch (err) {
       console.error("Error adding comment:", err);
@@ -285,6 +348,7 @@ export default function DealDetailPage() {
     const position = prompt("Enter contact position (optional):");
 
     try {
+      console.log("[DEBUG] Creating new contact");
       const response = await makeAuthenticatedRequest(
         "http://localhost:5000/api/contacts",
         {
@@ -304,6 +368,7 @@ export default function DealDetailPage() {
         const { data } = await response.json();
         setContacts((prev) => [data, ...prev]);
         alert("Contact created successfully!");
+        console.log("[DEBUG] Contact created:", data);
       } else {
         const error = await response.json();
         alert(`Failed to create contact: ${error.message}`);
@@ -313,6 +378,8 @@ export default function DealDetailPage() {
       alert("Failed to create contact");
     }
   };
+
+  // ==================== TAB CONTENT RENDERER ====================
 
   const renderTabContent = () => {
     if (!deal) return null;
@@ -327,6 +394,8 @@ export default function DealDetailPage() {
       case "Calls":
       case "Notes":
       case "Attachments":
+      case "Data":
+      case "Tasks":
         return (
           <TabContent
             activeTab={activeTab}
@@ -345,13 +414,20 @@ export default function DealDetailPage() {
       default:
         return (
           <div className="p-6">
-            <h3 className="text-lg font-medium text-gray-900">
-              {activeTab} content for this deal
-            </h3>
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {activeTab}
+              </h3>
+              <p className="text-gray-500">
+                {activeTab} content for this deal will be displayed here.
+              </p>
+            </div>
           </div>
         );
     }
   };
+
+  // ==================== EFFECTS ====================
 
   useEffect(() => {
     if (!id) {
@@ -368,12 +444,15 @@ export default function DealDetailPage() {
     }
   }, [deal]);
 
+  // ==================== DERIVED STATE ====================
+
   const currentDeal = deal || {
     id: Array.isArray(id) ? id[0] : id || "",
     title: "",
     value: 0,
     stage: "proposal",
     probability: 0,
+    owner: null,
     lead: null,
     company: null,
     contact: null,
@@ -383,6 +462,28 @@ export default function DealDetailPage() {
     description: "",
   };
 
+  // ==================== RENDER CONDITIONS ====================
+
+  // Show loading while user is being authenticated
+  if (userLoading) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
+        <div
+          className={`flex-1 ${
+            isMinimized ? "ml-16" : "ml-50"
+          } flex items-center justify-center`}
+        >
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Authenticating...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
   if (error) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -393,22 +494,22 @@ export default function DealDetailPage() {
           } transition-all duration-300`}
         >
           <div className="flex items-center justify-center h-full">
-            <div className="text-center max-w-md">
+            <div className="text-center max-w-md mx-4">
               <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Error Loading Deal
               </h2>
-              <p className="text-gray-600 mb-6">{error}</p>
+              <p className="text-gray-600 mb-6 leading-relaxed">{error}</p>
               <div className="space-x-4">
                 <button
                   onClick={fetchDeal}
-                  className="bg-gray-900 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-gray-900 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
                 >
                   Try Again
                 </button>
                 <button
                   onClick={() => router.back()}
-                  className="border border-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="border border-gray-300 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 >
                   Go Back
                 </button>
@@ -420,6 +521,7 @@ export default function DealDetailPage() {
     );
   }
 
+  // Show loading state for deal data
   if (isLoading) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -427,34 +529,48 @@ export default function DealDetailPage() {
         <div
           className={`flex-1 ${
             isMinimized ? "ml-16" : "ml-50"
-          } flex items-center justify-center`}
+          } flex items-center justify-center transition-all duration-300`}
         >
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading deal details...</p>
+            <p className="text-gray-400 text-sm mt-1">Deal ID: {id}</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // ==================== MAIN RENDER ====================
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
-      <div className={`flex-1 ${isMinimized ? "ml-16" : "ml-50"} flex`}>
-        <div className="flex-1 bg-white">
+      <div className={`flex-1 ${isMinimized ? "ml-16" : "ml-50"} flex transition-all duration-300`}>
+        {/* Main Content */}
+        <div className="flex-1 bg-white shadow-sm">
+          {/* Deal Header with Assignment functionality */}
           <DealHeader
             deal={currentDeal}
             isDropdownOpen={isDropdownOpen}
             setIsDropdownOpen={setIsDropdownOpen}
             displayValue={displayValue}
-            onDealUpdate={handleDealUpdate} // Add this line
+            onDealUpdate={handleDealUpdate}
           />
 
-          <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-          {renderTabContent()}
+          {/* Tab Navigation */}
+          <TabNavigation 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+          />
+
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto">
+            {renderTabContent()}
+          </div>
         </div>
 
+        {/* Right Sidebar */}
         <RightSidebar
           deal={currentDeal}
           contacts={contacts}

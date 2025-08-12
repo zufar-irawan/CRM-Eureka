@@ -20,6 +20,13 @@ export default function OrganizationDetails({
   formatCurrency, 
   formatDate 
 }: OrganizationDetailsProps) {
+  // Function to format number without currency symbol - same format as formatCurrency but without $
+  const formatNumberWithoutDollar = (value: any) => {
+    // Use the existing formatCurrency function and remove the dollar sign
+    const formatted = formatCurrency(value);
+    return formatted.replace('$', '').trim();
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -117,7 +124,7 @@ export default function OrganizationDetails({
             <div className="grid grid-cols-3 gap-4 items-center mb-3">
               <span className="text-sm text-gray-600 col-span-1">Deal Value</span>
               <span className="text-sm text-gray-900 font-medium col-span-2">
-                {formatCurrency(deal.value)}
+                {formatNumberWithoutDollar(deal.value)}
               </span>
             </div>
             

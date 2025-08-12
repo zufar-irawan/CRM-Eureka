@@ -9,20 +9,13 @@ import LeadTabs from "./components/LeadTabs";
 import LeadSidebar from "./components/LeadSidebar";
 import CommentsTab from "./components/Comments/CommentTab";
 import TasksTab from "./components/Tasks/TasksTab";
+import {ActivityTab } from "./components/ActivityTab";
 import ConvertToDealModal from "../../components/ConvertToDealModal";
 import { makeAuthenticatedRequest } from "./utils/auth";
 import { API_ENDPOINTS } from "./utils/constants";
 import Swal from "sweetalert2";
 
 // Tab Components
-const ActivityTab = ({ lead }: { lead: any }) => (
-  <div className="p-6">
-    <h3 className="text-lg font-medium text-gray-900">
-      Activity content for {lead?.fullname || 'this lead'}
-    </h3>
-  </div>
-);
-
 const EmailsTab = ({ lead }: { lead: any }) => (
   <div className="p-6">
     <h3 className="text-lg font-medium text-gray-900">

@@ -7,6 +7,7 @@ import TextArea from "@/components/AddModal/TextArea";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react"
 import Swal from "sweetalert2";
+import Select from 'react-select';
 
 interface Props {
     onClose: () => void;
@@ -107,6 +108,22 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
     ) {
         console.log("Field changed:", e.target.name, "Value:", e.target.value);
         setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    // Handle company select change
+    function handleCompanySelectChange(selectedOption: any) {
+        setForm({
+            ...form,
+            id_company: selectedOption ? selectedOption.value : null
+        });
+    }
+
+    // Handle contact select change
+    function handleContactSelectChange(selectedOption: any) {
+        setForm({
+            ...form,
+            id_contact: selectedOption ? selectedOption.value : null
+        });
     }
 
     // Handle toggle changes
@@ -252,6 +269,31 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
         }
     }
 
+    // Custom styles for react-select
+    const customSelectStyles = {
+        control: (provided: any, state: any) => ({
+            ...provided,
+            minHeight: '42px',
+            borderColor: state.isFocused ? '#3B82F6' : '#D1D5DB',
+            boxShadow: state.isFocused ? '0 0 0 3px rgba(59, 130, 246, 0.1)' : 'none',
+            '&:hover': {
+                borderColor: '#9CA3AF'
+            }
+        }),
+        option: (provided: any, state: any) => ({
+            ...provided,
+            backgroundColor: state.isSelected ? '#3B82F6' : state.isFocused ? '#EFF6FF' : 'white',
+            color: state.isSelected ? 'white' : '#374151',
+            '&:hover': {
+                backgroundColor: state.isSelected ? '#3B82F6' : '#EFF6FF'
+            }
+        }),
+        placeholder: (provided: any) => ({
+            ...provided,
+            color: '#9CA3AF'
+        })
+    };
+
     return (
         <>
             {/* Transparent Backdrop */}
@@ -354,14 +396,22 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
                                     {useExistingCompany ? (
                                         <div className="grid grid-cols-1">
-                                            <Dropdown
-                                                label="Select Company"
-                                                name="id_company"
-                                                value={form.id_company || ''}
-                                                onChange={handleChange}
-                                                options={companyOptions}
-                                                isRequired
-                                            />
+                                            <div className="flex flex-col">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Select Company <span className="text-red-500">*</span>
+                                                </label>
+                                                <Select
+                                                    options={companyOptions}
+                                                    value={companyOptions.find(option => option.value === form.id_company) || null}
+                                                    onChange={handleCompanySelectChange}
+                                                    placeholder="Search and select company..."
+                                                    isSearchable={true}
+                                                    isClearable={true}
+                                                    styles={customSelectStyles}
+                                                    noOptionsMessage={() => "No companies found"}
+                                                    loadingMessage={() => "Loading companies..."}
+                                                />
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -430,14 +480,22 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
                                     {useExistingContact ? (
                                         <div className="grid grid-cols-1">
-                                            <Dropdown
-                                                label="Select Contact"
-                                                name="id_contact"
-                                                value={form.id_contact || ''}
-                                                onChange={handleChange}
-                                                options={contactOptions}
-                                                isRequired
-                                            />
+                                            <div className="flex flex-col">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Select Contact <span className="text-red-500">*</span>
+                                                </label>
+                                                <Select
+                                                    options={contactOptions}
+                                                    value={contactOptions.find(option => option.value === form.id_contact) || null}
+                                                    onChange={handleContactSelectChange}
+                                                    placeholder="Search and select contact..."
+                                                    isSearchable={true}
+                                                    isClearable={true}
+                                                    styles={customSelectStyles}
+                                                    noOptionsMessage={() => "No contacts found"}
+                                                    loadingMessage={() => "Loading contacts..."}
+                                                />
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

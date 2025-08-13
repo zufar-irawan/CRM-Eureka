@@ -10,6 +10,87 @@ interface TaskSidebarProps {
   currentUser: CurrentUser | null;
 }
 
+// Helper function to format date with time
+const formatDateWithTime = (dateString: string, isDueDate: boolean = false) => {
+  if (!dateString) {
+    return {
+      date: 'Not set',
+      time: '',
+      relative: '',
+      isOverdue: false
+    };
+  }
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  // Format date
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  };
+  
+  // Format time
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  };
+  
+  const formattedDate = date.toLocaleDateString('en-US', dateOptions);
+  const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
+  
+  // Calculate time difference for relative time display
+  const diffInMs = date.getTime() - now.getTime();
+  const diffInHours = Math.round(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.round(diffInMs / (1000 * 60 * 60 * 24));
+  
+  let relativeTime = '';
+  if (isDueDate) {
+    // Due date logic
+    if (diffInDays < 0) {
+      relativeTime = `${Math.abs(diffInDays)} day${Math.abs(diffInDays) !== 1 ? 's' : ''} ago`;
+    } else if (diffInDays === 0) {
+      if (diffInHours < 0) {
+        relativeTime = `${Math.abs(diffInHours)} hour${Math.abs(diffInHours) !== 1 ? 's' : ''} ago`;
+      } else if (diffInHours === 0) {
+        relativeTime = 'Due now';
+      } else {
+        relativeTime = `In ${diffInHours} hour${diffInHours !== 1 ? 's' : ''}`;
+      }
+    } else if (diffInDays === 1) {
+      relativeTime = 'Tomorrow';
+    } else if (diffInDays > 1) {
+      relativeTime = `In ${diffInDays} days`;
+    }
+  } else {
+    // Created date logic (past tense)
+    if (diffInDays > 0) {
+      relativeTime = `In ${diffInDays} day${diffInDays !== 1 ? 's' : ''}`;
+    } else if (diffInDays === 0) {
+      if (diffInHours > 0) {
+        relativeTime = `In ${diffInHours} hour${diffInHours !== 1 ? 's' : ''}`;
+      } else if (diffInHours === 0) {
+        relativeTime = 'Just now';
+      } else {
+        relativeTime = `${Math.abs(diffInHours)} hour${Math.abs(diffInHours) !== 1 ? 's' : ''} ago`;
+      }
+    } else if (diffInDays === -1) {
+      relativeTime = 'Yesterday';
+    } else if (diffInDays < -1) {
+      relativeTime = `${Math.abs(diffInDays)} day${Math.abs(diffInDays) !== 1 ? 's' : ''} ago`;
+    }
+  }
+  
+  return {
+    date: formattedDate,
+    time: formattedTime,
+    relative: relativeTime,
+    isOverdue: isDueDate && diffInMs < 0
+  };
+};
+
 export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
   if (!task) {
     return (
@@ -42,6 +123,8 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
   };
 
   const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'completed';
+  const dueDateInfo = formatDateWithTime(task.due_date, true);
+  const createdInfo = formatDateWithTime(task.created_at, false);
 
   return (
     <div className="w-80 bg-white border-l border-gray-200 p-6">
@@ -113,19 +196,34 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
             </div>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 flex items-center space-x-1">
+          {/* Enhanced Due Date with Time */}
+          <div className="flex justify-between items-start">
+            <span className="text-sm text-gray-600 flex items-center space-x-1 flex-shrink-0">
               <Calendar className="w-3 h-3" />
               <span>Due Date</span>
             </span>
             <div className="text-right">
-              <span className={`text-sm font-medium ${
-                isOverdue ? 'text-red-600' : 'text-gray-900'
+              <div className={`text-sm font-medium ${
+                dueDateInfo.isOverdue ? 'text-red-600' : 'text-gray-900'
               }`}>
-                {formatDate(task.due_date)}
-              </span>
-              {isOverdue && (
-                <div className="flex items-center space-x-1 text-red-600 text-xs mt-1">
+                {dueDateInfo.date}
+              </div>
+              {dueDateInfo.time && (
+                <div className={`text-xs font-medium ${
+                  dueDateInfo.isOverdue ? 'text-red-500' : 'text-gray-500'
+                } mt-1`}>
+                  {dueDateInfo.time}
+                </div>
+              )}
+              {dueDateInfo.relative && (
+                <div className={`text-xs ${
+                  dueDateInfo.isOverdue ? 'text-red-500' : 'text-blue-600'
+                } mt-1`}>
+                  {dueDateInfo.relative}
+                </div>
+              )}
+              {dueDateInfo.isOverdue && task.status !== 'completed' && (
+                <div className="flex items-center justify-end space-x-1 text-red-600 text-xs mt-2">
                   <AlertTriangle className="w-3 h-3" />
                   <span>Overdue</span>
                 </div>
@@ -133,22 +231,46 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
             </div>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 flex items-center space-x-1">
+          <div className="flex justify-between items-start">
+            <span className="text-sm text-gray-600 flex items-center space-x-1 flex-shrink-0">
               <Clock className="w-3 h-3" />
               <span>Created</span>
             </span>
-            <span className="text-sm text-gray-900 font-medium">
-              {formatDate(task.created_at)}
-            </span>
+            <div className="text-right">
+              <div className="text-sm text-gray-900 font-medium">
+                {createdInfo.date}
+              </div>
+              {createdInfo.time && (
+                <div className="text-xs text-gray-500 font-medium mt-1">
+                  {createdInfo.time}
+                </div>
+              )}
+              {createdInfo.relative && (
+                <div className="text-xs text-gray-400 mt-1">
+                  {createdInfo.relative}
+                </div>
+              )}
+            </div>
           </div>
 
           {task.updated_at && task.updated_at !== task.created_at && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Last Updated</span>
-              <span className="text-sm text-gray-900 font-medium">
-                {formatDate(task.updated_at)}
-              </span>
+            <div className="flex justify-between items-start">
+              <span className="text-sm text-gray-600 flex-shrink-0">Last Updated</span>
+              <div className="text-right">
+                <div className="text-sm text-gray-900 font-medium">
+                  {formatDateWithTime(task.updated_at, false).date}
+                </div>
+                {formatDateWithTime(task.updated_at, false).time && (
+                  <div className="text-xs text-gray-500 font-medium mt-1">
+                    {formatDateWithTime(task.updated_at, false).time}
+                  </div>
+                )}
+                {formatDateWithTime(task.updated_at, false).relative && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    {formatDateWithTime(task.updated_at, false).relative}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -203,7 +325,7 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
             </div>
           )}
 
-          {isOverdue && (
+          {dueDateInfo.isOverdue && task.status !== 'completed' && (
             <div className="flex items-center space-x-2 text-red-600 text-sm">
               <AlertTriangle className="w-4 h-4" />
               <span>Task is overdue</span>

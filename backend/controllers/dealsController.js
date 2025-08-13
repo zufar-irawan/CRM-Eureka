@@ -53,11 +53,12 @@ export const getAllDeals = async (req, res) => {
         if (stage) {
             whereConditions.stage = stage;
         }
-
+        if (req.query.stage_ne) {
+            whereConditions.stage = { [Op.ne]: req.query.stage_ne };
+        }
         if (owner) {
             whereConditions.owner = owner;
         }
-
         if (search) {
             whereConditions[Op.or] = [
                 { title: { [Op.like]: `%${search}%` } },
@@ -102,7 +103,7 @@ export const getAllDeals = async (req, res) => {
                 {
                     model: DealComments,
                     as: 'comments',
-                    where: { parent_id: null }, 
+                    where: { parent_id: null },
                     include: [{
                         model: User,
                         as: 'user',
@@ -179,7 +180,7 @@ export const getDealById = async (req, res) => {
                 {
                     model: DealComments,
                     as: 'comments',
-                    where: { parent_id: null }, 
+                    where: { parent_id: null },
                     include: [
                         {
                             model: User,
@@ -301,7 +302,7 @@ export const createDeal = async (req, res) => {
 
         if (contact_name && contact_name.trim() && !finalContactId) {
             const newContact = await Contacts.create({
-                company_id: finalCompanyId, 
+                company_id: finalCompanyId,
                 name: contact_name.trim(),
                 email: contact_email || null,
                 phone: contact_phone || null,
@@ -572,7 +573,7 @@ export const updateDeal = async (req, res) => {
                     });
                 }
             } else {
-                updateData.id_company = null; 
+                updateData.id_company = null;
             }
         }
 
@@ -586,12 +587,12 @@ export const updateDeal = async (req, res) => {
                     });
                 }
             } else {
-                updateData.id_contact = null; 
+                updateData.id_contact = null;
             }
         }
 
         await deal.update(updateData);
-        
+
         const updatedDeal = await Deals.findByPk(id, {
             include: [
                 {

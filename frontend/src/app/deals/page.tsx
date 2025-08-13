@@ -95,7 +95,7 @@ const getStageColor = (stage: string) => {
 const renderStageBadge = (stage: string) => {
   const normalizedStage = stage.toLowerCase();
   let dotColor = '';
-  
+
   switch (normalizedStage) {
     case 'proposal':
       dotColor = 'bg-gray-700';
@@ -363,17 +363,17 @@ export default function Deals() {
       case 'title':
         return <span className="text-xs text-gray-900">{deal.title || '-'}</span>;
 
-     case 'value':
-  return (
-    <span className="text-xs text-gray-900">
-      {deal.value
-        ? new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }).format(Number(deal.value))
-        : '-'}
-    </span>
-  );
+      case 'value':
+        return (
+          <span className="text-xs text-gray-900">
+            {deal.value
+              ? new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(Number(deal.value))
+              : '-'}
+          </span>
+        );
 
       case 'stage':
         return renderStageBadge(deal.stage);
@@ -637,15 +637,6 @@ export default function Deals() {
               <table className="w-full table-auto">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={isAllSelected}
-                        onChange={toggleSelectAll}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </th>
-
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       No
                     </th>
@@ -695,18 +686,6 @@ export default function Deals() {
                         className="hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() => handleRowClick(deal.id)}
                       >
-                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={selectedDeals.includes(deal.id)}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleSelectDeal(deal.id);
-                            }}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                        </td>
-
                         <td className="px-6 py-4 text-sm text-center">{index + 1}</td>
 
                         {visibleColumns.map((columnKey) => (
@@ -791,15 +770,6 @@ export default function Deals() {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedDeals.includes(deal.id)}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            toggleSelectDeal(deal.id);
-                          }}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
-                        />
                         <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
                           <Building2 className="w-5 h-5 text-green-600" />
                         </div>

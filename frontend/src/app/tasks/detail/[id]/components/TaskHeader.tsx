@@ -28,13 +28,13 @@ export default function TaskHeader({
   const [isUpdating, setIsUpdating] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignedUser, setAssignedUser] = useState<UserType | null>(null);
-  
+
   const { users, isLoading: isLoadingUsers } = useUsers();
 
   // Update assigned user when task or users change
   useEffect(() => {
     if (task?.assigned_to && users.length > 0) {
-      const currentUser = users.find(user => 
+      const currentUser = users.find(user =>
         user.id.toString() === task.assigned_to?.toString()
       );
       setAssignedUser(currentUser || null);
@@ -43,39 +43,51 @@ export default function TaskHeader({
 
   // Handle status change
   const handleStatusChange = async (newStatus: string) => {
-    if (!task || newStatus === task.status) {
-      setIsStatusDropdownOpen(false);
-      return;
-    }
-    
-    setIsUpdating(true);
-    try {
-      await onStatusChange(task.id, newStatus);
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: `Task status updated to "${newStatus}" successfully!`,
-        timer: 2000,
-        showConfirmButton: false
-      });
-    } catch (error) {
-      console.error('Error updating status:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed',
-        text: 'Failed to update task status. Please try again.'
-      });
-    } finally {
-      setIsUpdating(false);
-      setIsStatusDropdownOpen(false);
+    const confirm = await Swal.fire({
+      title: 'Update Status?',
+      text: `Do you want to change the status to "${newStatus}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirm',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
+
+    if (confirm.isConfirmed) {
+      if (!task || newStatus === task.status) {
+        setIsStatusDropdownOpen(false);
+        return;
+      }
+
+      setIsUpdating(true);
+      try {
+        await onStatusChange(task.id, newStatus);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: `Task status updated to "${newStatus}" successfully!`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        console.error('Error updating status:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: 'Failed to update task status. Please try again.'
+        });
+      } finally {
+        setIsUpdating(false);
+        setIsStatusDropdownOpen(false);
+      }
     }
   };
 
   // Handle user assignment
   const handleAssignToUser = async (userId: number) => {
     if (!task || isAssigning) return;
-    
+
     if (userId.toString() === task.assigned_to?.toString()) {
       setIsAssignDropdownOpen(false);
       return;
@@ -84,10 +96,10 @@ export default function TaskHeader({
     setIsAssigning(true);
     try {
       await onAssignmentChange(task.id, userId);
-      
+
       const selectedUser = users.find(user => user.id === userId);
       setAssignedUser(selectedUser || null);
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Success',
@@ -209,9 +221,8 @@ export default function TaskHeader({
                         <button
                           key={user.id}
                           onClick={() => handleAssignToUser(user.id)}
-                          className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${
-                            assignedUser?.id === user.id ? 'bg-gray-50 font-medium' : ''
-                          }`}
+                          className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${assignedUser?.id === user.id ? 'bg-gray-50 font-medium' : ''
+                            }`}
                         >
                           <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                             <span className="text-xs font-medium text-blue-700">
@@ -232,7 +243,7 @@ export default function TaskHeader({
                 </div>
               )}
             </div>
-            
+
             {/* Status Dropdown */}
             <div className="relative">
               <button
@@ -261,9 +272,8 @@ export default function TaskHeader({
                       <button
                         key={status.value}
                         onClick={() => handleStatusChange(status.value)}
-                        className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${
-                          status.value === task.status ? 'bg-gray-50 font-medium' : ''
-                        }`}
+                        className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.value === task.status ? 'bg-gray-50 font-medium' : ''
+                          }`}
                       >
                         <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
                         <span className="capitalize">{status.label}</span>

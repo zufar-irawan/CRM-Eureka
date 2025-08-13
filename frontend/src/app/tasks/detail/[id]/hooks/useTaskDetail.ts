@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Task } from '../types';
 import { makeAuthenticatedRequest } from '../utils/auth';
+import Swal from 'sweetalert2';
 
 export const useTaskDetail = (id: string | string[] | undefined) => {
   const router = useRouter();

@@ -104,6 +104,83 @@ export default function TasksList() {
     allFields.map(col => col.key)
   )
 
+  // Fungsi untuk mendapatkan warna status yang sesuai dengan kanban
+  const getStatusColor = (status: string) => {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'new':
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+      case 'pending':
+        return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border border-green-200';
+      case 'overdue':
+        return 'bg-red-100 text-red-800 border border-red-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+    }
+  };
+
+  const renderStatusBadge = (status: string) => {
+    const normalizedStatus = status.toLowerCase();
+    let dotColor = '';
+    
+    switch (normalizedStatus) {
+      case 'new':
+        dotColor = 'bg-gray-700';
+        break;
+      case 'pending':
+        dotColor = 'bg-blue-600';
+        break;
+      case 'completed':
+        dotColor = 'bg-green-700';
+        break;
+      case 'overdue':
+        dotColor = 'bg-red-600';
+        break;
+      case 'cancelled':
+        dotColor = 'bg-red-600';
+        break;
+      default:
+        dotColor = 'bg-gray-700';
+    }
+
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+        <div className={`w-2 h-2 rounded-full ${dotColor} flex-shrink-0`}></div>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
+  };
+
+  // Fungsi untuk render badge priority
+  const renderPriorityBadge = (priority: string) => {
+    const normalizedPriority = priority.toLowerCase();
+    let colorClass = '';
+    
+    switch (normalizedPriority) {
+      case 'low':
+        colorClass = 'bg-green-100 text-green-800 border border-green-200';
+        break;
+      case 'medium':
+        colorClass = 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+        break;
+      case 'high':
+        colorClass = 'bg-red-100 text-red-800 border border-red-200';
+        break;
+      default:
+        colorClass = 'bg-gray-100 text-gray-800 border border-gray-200';
+    }
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${colorClass}`}>
+        {priority.charAt(0).toUpperCase() + priority.slice(1)}
+      </span>
+    );
+  };
+
   const toggleColumn = (key: string) => {
     setVisibleColumns(prev =>
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
@@ -225,8 +302,6 @@ export default function TasksList() {
                     </div>
                   </div>
 
-
-
                   <div className="px-4 py-3">
                     <p className="text-sm font-semibold text-gray-700 mb-1">Search</p>
                     <div className="relative mt-2">
@@ -311,7 +386,12 @@ export default function TasksList() {
 
         <DesktopTable
           pathname="/tasks/"
-          columns={allColumns}
+          columns={allColumns.map(col => ({
+            ...col,
+            render: col.key === 'status' ? (value) => renderStatusBadge(value) :
+                    col.key === 'priority' ? (value) => renderPriorityBadge(value) :
+                    col.render
+          }))}
           visibleColumns={visibleColumns}
           loading={loading}
           setLoading={setLoading}
@@ -322,7 +402,16 @@ export default function TasksList() {
           searchTerm={searchTerm}
         />
 
-        <MobileCards pathname="/tasks/" fields={allFields} visibleFields={visibleColumns} />
+        <MobileCards 
+          pathname="/tasks/" 
+          fields={allFields.map(field => ({
+            ...field,
+            render: field.key === 'status' ? (value) => renderStatusBadge(value) :
+                    field.key === 'priority' ? (value) => renderPriorityBadge(value) :
+                    field.render
+          }))} 
+          visibleFields={visibleColumns} 
+        />
 
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
           <div className="text-sm text-gray-700">

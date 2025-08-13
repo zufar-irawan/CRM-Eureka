@@ -1,3 +1,5 @@
+// utils/constant.ts - Complete constants file for deals
+
 import {
   BarChart3,
   Mail,
@@ -29,7 +31,6 @@ export const STATUS_OPTIONS: StatusOption[] = [
   { name: "Converted", color: "bg-purple-500", backendStage: "Converted" },
 ];
 
-// Tab navigasi pada halaman detail lead/deal
 export const TABS: TabConfig[] = [
   { name: "Activity", icon: BarChart3 },
   { name: "Emails", icon: Mail },
@@ -41,7 +42,6 @@ export const TABS: TabConfig[] = [
   { name: "Attachments", icon: Paperclip },
 ];
 
-// Endpoint API yang digunakan di seluruh aplikasi
 export const API_ENDPOINTS = {
   LEADS: 'http://localhost:5000/api/leads',
   DEALS: 'http://localhost:5000/api/deals',
@@ -53,7 +53,6 @@ export const API_ENDPOINTS = {
   COMPANIES: 'http://localhost:5000/api/companies',
 } as const;
 
-// Data fallback user sesuai dengan SQL database (7 users dari id 1-7)
 export const FALLBACK_USERS = [
   { 
     id: 1, 
@@ -141,7 +140,6 @@ export const FALLBACK_USERS = [
   },
 ];
 
-// Role mapping sesuai dengan database
 export const ROLE_MAPPING = {
   1: 'admin',
   2: 'sales', 
@@ -149,16 +147,13 @@ export const ROLE_MAPPING = {
   4: 'akunting'
 };
 
-// User role assignments sesuai dengan user_roles table
 export const USER_ROLE_ASSIGNMENTS = {
-  1: [1], // Admin User -> admin role
-  2: [2], // Sales One -> sales role  
-  3: [3], // Partnership One -> partnership role
-  4: [4], // Akunting One -> akunting role
-  // Users 5,6,7 tidak punya role khusus
+  1: [1], 
+  2: [2], 
+  3: [3], 
+  4: [4], 
 };
 
-// Mapping tahap leads dari frontend ke backend
 export const STAGE_MAPPING: { [key: string]: string } = {
   'New': 'New',
   'Contacted': 'Contacted',
@@ -167,7 +162,6 @@ export const STAGE_MAPPING: { [key: string]: string } = {
   'Converted': 'Converted',
 };
 
-// Mapping tahap deals dari frontend ke backend
 export const DEAL_STAGE_MAPPING: { [key: string]: string } = {
   'Proposal': 'proposal',
   'Negotiation': 'negotiation',
@@ -176,5 +170,14 @@ export const DEAL_STAGE_MAPPING: { [key: string]: string } = {
   'Qualified': 'qualified',
 };
 
-// Maksimum level reply untuk komentar (threaded)
 export const MAX_REPLY_DEPTH = 5;
+
+export const ASSIGNMENT_ACTIONS = {
+  ASSIGN_DEAL: 'ASSIGN_DEAL',
+  UNASSIGN_DEAL: 'UNASSIGN_DEAL',
+  ASSIGN_LEAD: 'ASSIGN_LEAD',
+  UNASSIGN_LEAD: 'UNASSIGN_LEAD',
+} as const;
+
+export const USER_DISPLAY_LIMIT = 10; 
+export const USER_SEARCH_MIN_LENGTH = 2; 

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { TaskResult, CurrentUser } from '../types';
 import { formatDate, getFirstChar } from '../utils/formatting';
 import { RESULT_TYPES, makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
+import Swal from 'sweetalert2';
 
 type ResultType = typeof RESULT_TYPES[number]["value"];
 
@@ -67,19 +68,43 @@ export default function TaskResultItem({
       if (response.ok) {
         setIsEditing(false);
         onUpdate();
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Result updated successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
       } else {
         throw new Error('Failed to update result');
       }
     } catch (error) {
       console.error('Error updating result:', error);
-      alert('Failed to update result. Please try again.');
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Failed to update result. Please try again.',
+      });
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this result?')) return;
+    const deleteConfirmation = await Swal.fire({
+      title: 'Delete Result?',
+      text: 'Are you sure you want to delete this result? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!deleteConfirmation.isConfirmed) return;
 
     setIsDeleting(true);
     try {
@@ -92,12 +117,25 @@ export default function TaskResultItem({
 
       if (response.ok) {
         onDelete();
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted',
+          text: 'Result has been deleted successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
       } else {
         throw new Error('Failed to delete result');
       }
     } catch (error) {
       console.error('Error deleting result:', error);
-      alert('Failed to delete result. Please try again.');
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Failed',
+        text: 'Failed to delete result. Please try again.',
+      });
     } finally {
       setIsDeleting(false);
     }

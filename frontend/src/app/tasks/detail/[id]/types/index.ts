@@ -4,6 +4,8 @@ export interface Task {
   lead_id: number;
   assigned_to: number;
   assigned_user_name?: string;
+  created_by_name?: string;       
+  created_by_user_name?: string;
   title: string;
   description?: string;
   category: string;

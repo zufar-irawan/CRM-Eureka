@@ -43,8 +43,6 @@ const Sidebar = ({ isMinimized, setIsMinimized }: sidebarProps) => {
     { icon: CheckSquare, label: "Tasks", link: "/tasks" },
     { icon: Mail, label: "Contacts", link: "/contacts" },
     { icon: Building, label: "Companies", link: "/companies" },
-    { icon: FileText, label: "Quotations", link: "/quotations" },
-    { icon: FileSignature, label: "Contracts", link: "/contracts" },
     { icon: LineChart, label: "Reports", link: "/reports" },
   ];
 

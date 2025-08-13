@@ -1,5 +1,14 @@
 // Functions/DeleteData.ts
 import Swal from 'sweetalert2';
+import axios from "axios";
+
+const api = axios.create({
+    baseURL: "http://localhost:3000/api",
+    headers: {
+        "Content-Type": "application/json",
+    },
+    timeout: 10000,
+})
 
 interface DeleteDataParams {
   url: string;
@@ -26,16 +35,8 @@ export default async function deleteData({
 
   if (result.isConfirmed) {
     try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ids }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete: ${response.statusText}`);
+      for (const id of ids) {
+        await api.delete(`${url}${id}`);
       }
 
       await Swal.fire('Deleted!', 'Your data has been deleted.', 'success');

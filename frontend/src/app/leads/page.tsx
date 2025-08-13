@@ -446,56 +446,56 @@ export default function MainLeads() {
   };
 
   // Ganti fungsi getStageColor yang ada dengan ini:
-const getStageColor = (stage: string) => {
-  const normalizedStage = stage.toLowerCase();
-  switch (normalizedStage) {
-    case 'new':
-      return 'bg-gray-100 text-gray-800 border border-gray-200';
-    case 'contacted':
-      return 'bg-blue-100 text-blue-800 border border-blue-200';
-    case 'qualification':
-      return 'bg-red-100 text-red-800 border border-red-200';
-    case 'converted':
-      return 'bg-green-100 text-green-800 border border-green-200';
-    case 'unqualified':
-      return 'bg-gray-800 text-white border border-gray-900';
-    default:
-      return 'bg-gray-100 text-gray-800 border border-gray-200';
-  }
-};
+  const getStageColor = (stage: string) => {
+    const normalizedStage = stage.toLowerCase();
+    switch (normalizedStage) {
+      case 'new':
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+      case 'contacted':
+        return 'bg-blue-100 text-blue-800 border border-blue-200';
+      case 'qualification':
+        return 'bg-red-100 text-red-800 border border-red-200';
+      case 'converted':
+        return 'bg-green-100 text-green-800 border border-green-200';
+      case 'unqualified':
+        return 'bg-gray-800 text-white border border-gray-900';
+      default:
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+    }
+  };
 
-// Tambahkan fungsi baru ini setelah getStageColor:
-const renderStageBadge = (stage: string) => {
-  const normalizedStage = stage.toLowerCase();
-  let dotColor = '';
-  
-  switch (normalizedStage) {
-    case 'new':
-      dotColor = 'bg-gray-700';
-      break;
-    case 'contacted':
-      dotColor = 'bg-blue-600';
-      break;
-    case 'qualification':
-      dotColor = 'bg-red-600';
-      break;
-    case 'converted':
-      dotColor = 'bg-green-600';
-      break;
-    case 'unqualified':
-      dotColor = 'bg-gray-800';
-      break;
-    default:
-      dotColor = 'bg-gray-700';
-  }
+  // Tambahkan fungsi baru ini setelah getStageColor:
+  const renderStageBadge = (stage: string) => {
+    const normalizedStage = stage.toLowerCase();
+    let dotColor = '';
 
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStageColor(stage)}`}>
-      <div className={`w-2 h-2 rounded-full ${dotColor} flex-shrink-0`}></div>
-      {stage.charAt(0).toUpperCase() + stage.slice(1)}
-    </span>
-  );
-};
+    switch (normalizedStage) {
+      case 'new':
+        dotColor = 'bg-gray-700';
+        break;
+      case 'contacted':
+        dotColor = 'bg-blue-600';
+        break;
+      case 'qualification':
+        dotColor = 'bg-red-600';
+        break;
+      case 'converted':
+        dotColor = 'bg-green-600';
+        break;
+      case 'unqualified':
+        dotColor = 'bg-gray-800';
+        break;
+      default:
+        dotColor = 'bg-gray-700';
+    }
+
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStageColor(stage)}`}>
+        <div className={`w-2 h-2 rounded-full ${dotColor} flex-shrink-0`}></div>
+        {stage.charAt(0).toUpperCase() + stage.slice(1)}
+      </span>
+    );
+  };
 
   const renderCellContent = (lead: any, columnKey: string) => {
     switch (columnKey) {
@@ -511,7 +511,7 @@ const renderStageBadge = (stage: string) => {
       case 'company':
         return <span className="text-xs text-gray-900">{lead.company || '-'}</span>;
       case 'stage':
-  return renderStageBadge(lead.stage);
+        return renderStageBadge(lead.stage);
       case 'email':
         return <span className="text-xs text-blue-600 hover:underline">{lead.email || '-'}</span>;
       case 'mobile':
@@ -732,16 +732,6 @@ const renderStageBadge = (stage: string) => {
           <table className="w-full relative">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-
-                <th className="px-6 py-3 text-left sticky left-0 bg-gray-50 z-10">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={toggleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
-
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   No
                 </th>
@@ -790,15 +780,6 @@ const renderStageBadge = (stage: string) => {
                   className="hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => handleRowClick(lead.id)}
                 >
-                  <td className="px-6 py-4 sticky left-0 bg-white z-10" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={selectedLeads.includes(lead.id.toString())}
-                      onChange={() => toggleSelectLead(lead.id.toString())}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
-
                   <td className="px-6 py-4 text-sm text-center">{index + 1}</td>
 
                   {visibleColumns.map((columnKey) => (
@@ -882,13 +863,6 @@ const renderStageBadge = (stage: string) => {
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedLeads.includes(lead.id.toString())}
-                  onChange={() => toggleSelectLead(lead.id.toString())}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
-                  onClick={(e) => e.stopPropagation()}
-                />
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                   <User className="w-5 h-5 text-blue-600" />
                 </div>

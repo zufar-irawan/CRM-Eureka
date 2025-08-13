@@ -250,12 +250,10 @@ export default function MainLeads() {
 
       setLeads(sortedLeads);
     } else {
-      // Reset to original order
       setLeads([...originalLeads]);
     }
   };
 
-  // Update leads when originalLeads changes (after fetch)
   useEffect(() => {
     if (sortConfig) {
       handleSort(sortConfig.key);
@@ -451,21 +449,57 @@ export default function MainLeads() {
     }
   };
 
-  const getStageColor = (stage: string) => {
-    const normalizedStage = stage.toLowerCase();
-    switch (normalizedStage) {
-      case 'new':
-        return 'bg-gray-100 text-gray-700';
-      case 'contacted':
-        return 'bg-blue-100 text-blue-700';
-      case 'qualification':
-        return 'bg-red-100 text-red-700';
-      case 'unqualified':
-        return 'bg-gray-900 text-white';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
+  // Ganti fungsi getStageColor yang ada dengan ini:
+const getStageColor = (stage: string) => {
+  const normalizedStage = stage.toLowerCase();
+  switch (normalizedStage) {
+    case 'new':
+      return 'bg-gray-100 text-gray-800 border border-gray-200';
+    case 'contacted':
+      return 'bg-blue-100 text-blue-800 border border-blue-200';
+    case 'qualification':
+      return 'bg-red-100 text-red-800 border border-red-200';
+    case 'converted':
+      return 'bg-green-100 text-green-800 border border-green-200';
+    case 'unqualified':
+      return 'bg-gray-800 text-white border border-gray-900';
+    default:
+      return 'bg-gray-100 text-gray-800 border border-gray-200';
+  }
+};
+
+// Tambahkan fungsi baru ini setelah getStageColor:
+const renderStageBadge = (stage: string) => {
+  const normalizedStage = stage.toLowerCase();
+  let dotColor = '';
+  
+  switch (normalizedStage) {
+    case 'new':
+      dotColor = 'bg-gray-700';
+      break;
+    case 'contacted':
+      dotColor = 'bg-blue-600';
+      break;
+    case 'qualification':
+      dotColor = 'bg-red-600';
+      break;
+    case 'converted':
+      dotColor = 'bg-green-600';
+      break;
+    case 'unqualified':
+      dotColor = 'bg-gray-800';
+      break;
+    default:
+      dotColor = 'bg-gray-700';
+  }
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStageColor(stage)}`}>
+      <div className={`w-2 h-2 rounded-full ${dotColor} flex-shrink-0`}></div>
+      {stage.charAt(0).toUpperCase() + stage.slice(1)}
+    </span>
+  );
+};
 
   const renderCellContent = (lead: any, columnKey: string) => {
     switch (columnKey) {
@@ -481,11 +515,7 @@ export default function MainLeads() {
       case 'company':
         return <span className="text-xs text-gray-900">{lead.company || '-'}</span>;
       case 'stage':
-        return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStageColor(lead.stage)}`}>
-            {lead.stage}
-          </span>
-        );
+  return renderStageBadge(lead.stage);
       case 'email':
         return <span className="text-xs text-blue-600 hover:underline">{lead.email || '-'}</span>;
       case 'mobile':

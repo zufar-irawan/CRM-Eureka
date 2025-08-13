@@ -2,9 +2,30 @@ import { Tasks } from "../models/tasks/tasksModel.js";
 import { TaskComments } from "../models/tasks/tasksCommentModel.js";
 import { TaskResults } from "../models/tasks/tasksResultModel.js";
 import { User } from "../models/usersModel.js";
+import { Leads } from "../models/leads/leadsModel.js";
 import { Op } from "sequelize";
+import { sequelize } from '../config/db.js';
 
-// GET /api/tasks - List task berdasarkan filter
+const generateTaskCode = async (transaction) => {
+    const lastTask = await Tasks.findOne({
+        where: {
+            code: {
+                [Op.like]: 'TK-%'
+            }
+        },
+        order: [['id', 'DESC']],
+        transaction
+    });
+
+    let nextNumber = 1;
+    if (lastTask && lastTask.code) {
+        const lastNumber = parseInt(lastTask.code.split('-')[1]);
+        nextNumber = lastNumber + 1;
+    }
+
+    return `TK-${nextNumber.toString().padStart(3, '0')}`;
+};
+
 export const getTasks = async (req, res) => {
   try {
     const { status, priority, category, assigned_to, lead_id, search, } = req.query;
@@ -13,7 +34,20 @@ export const getTasks = async (req, res) => {
 
     // Filter berdasarkan lead_id (PENTING untuk detail lead)
     if (lead_id) {
-      whereClause.lead_id = lead_id;
+      // Cek apakah lead_id adalah kode atau ID numerik
+      if (isNaN(lead_id)) {
+        const lead = await Leads.findOne({ where: { code: lead_id } });
+        if (lead) {
+          whereClause.lead_id = lead.id;
+        } else {
+          return res.status(404).json({
+            success: false,
+            message: "Lead not found"
+          });
+        }
+      } else {
+        whereClause.lead_id = parseInt(lead_id);
+      }
     }
 
     if (status) {
@@ -43,6 +77,11 @@ export const getTasks = async (req, res) => {
           category: {
             [Op.like]: `%${search}%`
           }
+        },
+        {
+          code: {
+            [Op.like]: `%${search}%`
+          }
         }
       ];
     }
@@ -54,6 +93,12 @@ export const getTasks = async (req, res) => {
           model: User,
           as: 'assignee',
           attributes: ['id', 'name', 'email'],
+          required: false
+        },
+        {
+          model: Leads,
+          as: 'lead',
+          attributes: ['id', 'code', 'company', 'fullname'],
           required: false
         },
         {
@@ -94,7 +139,10 @@ export const getTasks = async (req, res) => {
   }
 };
 
+// POST /api/tasks - Create task
 export const createTask = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  
   try {
     const {
       lead_id,
@@ -107,14 +155,43 @@ export const createTask = async (req, res) => {
     } = req.body;
 
     if (!lead_id || !assigned_to || !title) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message: "lead_id, assigned_to, dan title wajib diisi"
       });
     }
 
+    // Cek apakah lead_id adalah kode atau ID numerik
+    let finalLeadId;
+    if (isNaN(lead_id)) {
+      const lead = await Leads.findOne({ where: { code: lead_id }, transaction });
+      if (!lead) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: "Lead not found"
+        });
+      }
+      finalLeadId = lead.id;
+    } else {
+      finalLeadId = parseInt(lead_id);
+      const lead = await Leads.findByPk(finalLeadId, { transaction });
+      if (!lead) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: "Lead not found"
+        });
+      }
+    }
+
+    // Generate kode task otomatis
+    const taskCode = await generateTaskCode(transaction);
+
     const newTask = await Tasks.create({
-      lead_id: parseInt(lead_id),
+      code: taskCode, // Tambah kode otomatis
+      lead_id: finalLeadId,
       assigned_to: parseInt(assigned_to),
       title,
       description,
@@ -122,7 +199,9 @@ export const createTask = async (req, res) => {
       due_date,
       priority: priority || 'medium',
       status: 'new'
-    });
+    }, { transaction });
+
+    await transaction.commit();
 
     // Ambil data task dengan include user untuk response
     const taskWithUser = await Tasks.findOne({
@@ -132,6 +211,11 @@ export const createTask = async (req, res) => {
           model: User,
           as: 'assignee',
           attributes: ['id', 'name', 'email']
+        },
+        {
+          model: Leads,
+          as: 'lead',
+          attributes: ['id', 'code', 'company', 'fullname']
         }
       ]
     });
@@ -145,6 +229,7 @@ export const createTask = async (req, res) => {
       data: responseData
     });
   } catch (error) {
+    await transaction.rollback();
     console.error('Error creating task:', error);
     res.status(500).json({
       success: false,
@@ -160,7 +245,10 @@ export const updateTask = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const task = await Tasks.findByPk(id);
+    // Cek apakah id adalah kode atau ID numerik
+    const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+    const task = await Tasks.findOne({ where: whereCondition });
 
     if (!task) {
       return res.status(404).json({
@@ -169,16 +257,44 @@ export const updateTask = async (req, res) => {
       });
     }
 
+    // Jika ada lead_id yang akan diupdate, validasi dulu
+    if (updateData.lead_id) {
+      if (isNaN(updateData.lead_id)) {
+        const lead = await Leads.findOne({ where: { code: updateData.lead_id } });
+        if (!lead) {
+          return res.status(404).json({
+            success: false,
+            message: "Lead not found"
+          });
+        }
+        updateData.lead_id = lead.id;
+      } else {
+        const lead = await Leads.findByPk(parseInt(updateData.lead_id));
+        if (!lead) {
+          return res.status(404).json({
+            success: false,
+            message: "Lead not found"
+          });
+        }
+        updateData.lead_id = parseInt(updateData.lead_id);
+      }
+    }
+
     await task.update(updateData);
 
     // Ambil data terbaru dengan include
     const updatedTask = await Tasks.findOne({
-      where: { id },
+      where: whereCondition,
       include: [
         {
           model: User,
           as: 'assignee',
           attributes: ['id', 'name', 'email']
+        },
+        {
+          model: Leads,
+          as: 'lead',
+          attributes: ['id', 'code', 'company', 'fullname']
         }
       ]
     });
@@ -206,13 +322,21 @@ export const getTaskById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Cek apakah id adalah kode atau ID numerik
+    const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
     const task = await Tasks.findOne({
-      where: { id },
+      where: whereCondition,
       include: [
         {
           model: User,
           as: 'assignee',
           attributes: ['id', 'name', 'email']
+        },
+        {
+          model: Leads,
+          as: 'lead',
+          attributes: ['id', 'code', 'company', 'fullname']
         },
         {
           model: TaskComments,
@@ -267,7 +391,10 @@ export const updateTaskStatus = async (req, res) => {
       });
     }
 
-    const task = await Tasks.findByPk(id);
+    // Cek apakah id adalah kode atau ID numerik
+    const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+    const task = await Tasks.findOne({ where: whereCondition });
     if (!task) {
       return res.status(404).json({
         success: false,
@@ -282,12 +409,17 @@ export const updateTaskStatus = async (req, res) => {
 
     // Ambil data terbaru
     const updatedTask = await Tasks.findOne({
-      where: { id },
+      where: whereCondition,
       include: [
         {
           model: User,
           as: 'assignee',
           attributes: ['id', 'name', 'email']
+        },
+        {
+          model: Leads,
+          as: 'lead',
+          attributes: ['id', 'code', 'company', 'fullname']
         }
       ]
     });
@@ -295,7 +427,7 @@ export const updateTaskStatus = async (req, res) => {
     const responseData = updatedTask.toJSON();
     responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
 
-    console.log(`✅ Task ${id} status updated from "${oldStatus}" to "${status}"`);
+    console.log(`✅ Task ${task.code} (ID: ${task.id}) status updated from "${oldStatus}" to "${status}"`);
 
     res.status(200).json({
       success: true,
@@ -317,7 +449,10 @@ export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const task = await Tasks.findByPk(id);
+    // Cek apakah id adalah kode atau ID numerik
+    const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+    const task = await Tasks.findOne({ where: whereCondition });
     if (!task) {
       return res.status(404).json({
         success: false,
@@ -346,8 +481,30 @@ export const getTaskComments = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Cek apakah id adalah kode atau ID numerik
+    let taskId;
+    if (isNaN(id)) {
+      const task = await Tasks.findOne({ where: { code: id } });
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+      taskId = task.id;
+    } else {
+      taskId = parseInt(id);
+      const task = await Tasks.findByPk(taskId);
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+    }
+
     const comments = await TaskComments.findAll({
-      where: { task_id: id },
+      where: { task_id: taskId },
       order: [['commented_at', 'ASC']]
     });
 
@@ -378,16 +535,30 @@ export const addTaskComment = async (req, res) => {
       });
     }
 
-    const task = await Tasks.findByPk(id);
-    if (!task) {
-      return res.status(404).json({
-        success: false,
-        message: "Task tidak ditemukan"
-      });
+    // Cek apakah id adalah kode atau ID numerik
+    let taskId;
+    if (isNaN(id)) {
+      const task = await Tasks.findOne({ where: { code: id } });
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+      taskId = task.id;
+    } else {
+      taskId = parseInt(id);
+      const task = await Tasks.findByPk(taskId);
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
     }
 
     const newComment = await TaskComments.create({
-      task_id: id,
+      task_id: taskId,
       comment_text,
       commented_by
     });
@@ -407,6 +578,7 @@ export const addTaskComment = async (req, res) => {
   }
 };
 
+// PUT /api/tasks/task-comments/:commentId - Edit komentar tertentu
 export const updateTaskComment = async (req, res) => {
   try {
     const { commentId } = req.params;
@@ -482,17 +654,30 @@ export const getTaskResults = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Cek apakah task ada
-    const task = await Tasks.findByPk(id);
-    if (!task) {
-      return res.status(404).json({
-        success: false,
-        message: "Task tidak ditemukan"
-      });
+    // Cek apakah id adalah kode atau ID numerik
+    let taskId;
+    if (isNaN(id)) {
+      const task = await Tasks.findOne({ where: { code: id } });
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+      taskId = task.id;
+    } else {
+      taskId = parseInt(id);
+      const task = await Tasks.findByPk(taskId);
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
     }
 
     const results = await TaskResults.findAll({
-      where: { task_id: id },
+      where: { task_id: taskId },
       order: [['result_date', 'DESC']]
     });
 
@@ -524,13 +709,26 @@ export const addTaskResult = async (req, res) => {
       });
     }
 
-    // Check if task exists
-    const task = await Tasks.findByPk(id);
-    if (!task) {
-      return res.status(404).json({
-        success: false,
-        message: "Task tidak ditemukan"
-      });
+    // Cek apakah id adalah kode atau ID numerik
+    let taskId;
+    if (isNaN(id)) {
+      const task = await Tasks.findOne({ where: { code: id } });
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+      taskId = task.id;
+    } else {
+      taskId = parseInt(id);
+      const task = await Tasks.findByPk(taskId);
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
     }
 
     // Validasi result_type jika diberikan
@@ -543,7 +741,7 @@ export const addTaskResult = async (req, res) => {
     }
 
     const newResult = await TaskResults.create({
-      task_id: id,
+      task_id: taskId,
       result_text,
       result_type: result_type || 'note',
       created_by: created_by || null,
@@ -565,7 +763,7 @@ export const addTaskResult = async (req, res) => {
   }
 };
 
-// PUT /api/tasks/task-results/:resultId - Edit hasil tertentu
+// PUT /api/tasks/task-results/:resultId
 export const updateTaskResult = async (req, res) => {
   try {
     const { resultId } = req.params;
@@ -618,7 +816,7 @@ export const updateTaskResult = async (req, res) => {
   }
 };
 
-// DELETE /api/tasks/task-results/:resultId - Hapus hasil tertentu
+// DELETE /api/tasks/task-results/:resultId 
 export const deleteTaskResult = async (req, res) => {
   try {
     const { resultId } = req.params;

@@ -1,4 +1,4 @@
-//models/deals/dealsModel.js
+// models/deals/dealsModel.js - Updated with code field
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -7,6 +7,11 @@ export const Deals = sequelize.define('Deals', {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
+    },
+    code: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+        unique: true
     },
     lead_id: {
         type: DataTypes.INTEGER,

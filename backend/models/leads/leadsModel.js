@@ -1,4 +1,4 @@
-// File: models/leads/leadsModel.js - Updated with work_email field
+// models/leads/leadsModel.js - Updated with code field
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -7,6 +7,11 @@ export const Leads = sequelize.define('Lead', {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
+  },
+  code: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    unique: true
   },
   owner: {
     type: DataTypes.INTEGER,
@@ -46,7 +51,6 @@ export const Leads = sequelize.define('Lead', {
       }
     }
   },
-  // ADDED: Work email field for company email
   work_email: {
     type: DataTypes.STRING(100),
     allowNull: true,

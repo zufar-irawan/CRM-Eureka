@@ -7,6 +7,27 @@ import { Contacts } from "../models/contacts/contactsModel.js";
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js'; 
 
+// Fungsi untuk generate kode leads otomatis
+const generateLeadCode = async (transaction) => {
+    const lastLead = await Leads.findOne({
+        where: {
+            code: {
+                [Op.like]: 'LD-%'
+            }
+        },
+        order: [['id', 'DESC']],
+        transaction
+    });
+
+    let nextNumber = 1;
+    if (lastLead && lastLead.code) {
+        const lastNumber = parseInt(lastLead.code.split('-')[1]);
+        nextNumber = lastNumber + 1;
+    }
+
+    return `LD-${nextNumber.toString().padStart(3, '0')}`;
+};
+
 const buildCommentTree = (comments) => {
   const commentMap = {};
   const rootComments = [];
@@ -73,7 +94,8 @@ export const getLeads = async (req, res) => {
             whereClause[Op.or] = [
                 { company: { [Op.like]: `%${search}%` } },
                 { fullname: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } }
+                { email: { [Op.like]: `%${search}%` } },
+                { code: { [Op.like]: `%${search}%` } } // Tambah pencarian berdasarkan kode
             ];
         }
 
@@ -106,17 +128,15 @@ export const getLeads = async (req, res) => {
 
 export const getLeadById = async (req, res) => {
     try {
-        const leadId = parseInt(req.params.id);
+        const { id } = req.params;
         
-        if (isNaN(leadId)) {
-            return res.status(400).json({ message: "Invalid lead ID" });
-        }
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const response = await Leads.findOne({
-            where: {
-                id: leadId
-            }
+            where: whereCondition
         });
+        
         if (!response) {
             return res.status(404).json({ message: "Lead not found" });
         }
@@ -164,7 +184,11 @@ export const createLead = async (req, res) => {
             });
         }
 
+        // Generate kode otomatis
+        const leadCode = await generateLeadCode(transaction);
+
         const newLead = await Leads.create({
+            code: leadCode, // Tambah kode otomatis
             owner,
             company,
             title: title || 'Mr',
@@ -220,14 +244,16 @@ export const updateLead = async (req, res) => {
     const transaction = await sequelize.transaction();
     
     try {
-        const leadId = parseInt(req.params.id);
+        const { id } = req.params;
         
-        if (isNaN(leadId)) {
-            await transaction.rollback();
-            return res.status(400).json({ message: "Invalid lead ID" });
-        }
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
-        const lead = await Leads.findByPk(leadId, { transaction });
+        const lead = await Leads.findOne({ 
+            where: whereCondition,
+            transaction 
+        });
+        
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
@@ -287,7 +313,7 @@ export const updateLead = async (req, res) => {
 
         await transaction.commit();
 
-        const updatedLead = await Leads.findByPk(leadId);
+        const updatedLead = await Leads.findOne({ where: whereCondition });
         res.status(200).json({
             message: "Lead updated successfully",
             lead: updatedLead
@@ -316,13 +342,16 @@ export const deleteLead = async (req, res) => {
     const transaction = await sequelize.transaction();
     
     try {
-        const leadId = parseInt(req.params.id);
-        if (isNaN(leadId)) {
-            await transaction.rollback();
-            return res.status(400).json({ message: "Invalid lead ID" });
-        }
+        const { id } = req.params;
+        
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
-        const lead = await Leads.findByPk(leadId, { transaction });
+        const lead = await Leads.findOne({ 
+            where: whereCondition,
+            transaction 
+        });
+        
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
@@ -344,24 +373,23 @@ export const deleteLead = async (req, res) => {
 export const convertLead = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-        const leadId = parseInt(req.params.id);
+        const { id } = req.params;
         
-        if (isNaN(leadId)) {
-            await transaction.rollback();
-            return res.status(400).json({ message: "Invalid lead ID" });
-        }
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const { dealTitle, dealValue, dealStage } = req.body;
         
         console.log('[DEBUG] Received convert request:', {
-            leadId,
+            id,
             dealTitle,
             dealValue,
             dealStage,
             valueType: typeof dealValue
         });
 
-        const lead = await Leads.findByPk(leadId, { 
+        const lead = await Leads.findOne({ 
+            where: whereCondition,
             transaction,
             lock: true
         });
@@ -497,8 +525,12 @@ export const convertLead = async (req, res) => {
             isNaN: isNaN(numericValue)
         });
 
+        // Generate kode deal otomatis
+        const dealCode = await generateDealCode(transaction);
+
         const newDeal = await Deals.create({
-            lead_id: leadId,
+            code: dealCode, // Tambah kode otomatis
+            lead_id: lead.id,
             title: dealTitle || `Deal from Lead Conversion - ${lead.fullname || lead.company}`,
             value: isNaN(numericValue) ? 0 : numericValue,
             stage: dealStage || 'proposal',
@@ -514,10 +546,12 @@ export const convertLead = async (req, res) => {
 
         console.log('[DEBUG] Conversion completed successfully:', {
             dealId: newDeal.id,
+            dealCode: newDeal.code,
             companyId,
             contactId,
             value: newDeal.value
         });
+        
         const createdCompany = companyId ? await Companies.findByPk(companyId) : null;
         const createdContact = contactId ? await Contacts.findByPk(contactId, {
             include: [{
@@ -526,12 +560,14 @@ export const convertLead = async (req, res) => {
                 attributes: ['id', 'name']
             }]
         }) : null;
+        
         res.status(200).json({
             success: true,
             message: "Lead converted successfully",
             data: {
                 lead: {
                     id: lead.id,
+                    code: lead.code,
                     stage: lead.stage,
                     status: lead.status
                 },
@@ -552,6 +588,7 @@ export const convertLead = async (req, res) => {
                 } : null,
                 deal: {
                     id: newDeal.id,
+                    code: newDeal.code,
                     lead_id: newDeal.lead_id,
                     title: newDeal.title,
                     value: newDeal.value,
@@ -566,7 +603,7 @@ export const convertLead = async (req, res) => {
     } catch (error) {
         await transaction.rollback();
         console.error('Error converting lead:', {
-            leadId,
+            id,
             error: error.message,
             stack: error.stack
         });
@@ -579,16 +616,35 @@ export const convertLead = async (req, res) => {
     }
 };
 
+// Fungsi untuk generate kode deal otomatis (diperlukan untuk convert)
+const generateDealCode = async (transaction) => {
+    const lastDeal = await Deals.findOne({
+        where: {
+            code: {
+                [Op.like]: 'DL-%'
+            }
+        },
+        order: [['id', 'DESC']],
+        transaction
+    });
+
+    let nextNumber = 1;
+    if (lastDeal && lastDeal.code) {
+        const lastNumber = parseInt(lastDeal.code.split('-')[1]);
+        nextNumber = lastNumber + 1;
+    }
+
+    return `DL-${nextNumber.toString().padStart(3, '0')}`;
+};
+
 export const updateLeadStage = async (req, res) => {
     const transaction = await sequelize.transaction();
     
     try {
-        const leadId = parseInt(req.params.id);
+        const { id } = req.params;
         
-        if (isNaN(leadId)) {
-            await transaction.rollback();
-            return res.status(400).json({ message: "Invalid lead ID" });
-        }
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const { stage } = req.body;
         const validStages = ['New', 'Contacted', 'Qualification', 'Converted', 'Unqualified'];
@@ -598,7 +654,9 @@ export const updateLeadStage = async (req, res) => {
                 message: "Invalid stage. Valid stages are: " + validStages.join(', ')
             });
         }
-        const lead = await Leads.findByPk(leadId, { 
+        
+        const lead = await Leads.findOne({ 
+            where: whereCondition,
             transaction,
             lock: true
         });
@@ -629,7 +687,8 @@ export const updateLeadStage = async (req, res) => {
             return res.status(200).json({
                 message: "No stage change detected",
                 data: {
-                    lead_id: leadId,
+                    lead_id: lead.id,
+                    lead_code: lead.code,
                     stage: stage,
                     updated_at: lead.updated_at
                 }
@@ -639,13 +698,14 @@ export const updateLeadStage = async (req, res) => {
         await lead.update({ stage }, { transaction });
         await transaction.commit();
 
-        console.log(`Lead ${leadId} stage updated from "${oldStage}" to "${stage}"`);
+        console.log(`Lead ${lead.code} (ID: ${lead.id}) stage updated from "${oldStage}" to "${stage}"`);
         
         res.status(200).json({
             success: true,
             message: "Lead stage updated successfully",
             data: {
-                lead_id: leadId,
+                lead_id: lead.id,
+                lead_code: lead.code,
                 old_stage: oldStage,
                 new_stage: stage,
                 updated_at: new Date()
@@ -660,19 +720,18 @@ export const updateLeadStage = async (req, res) => {
 
 export const getLeadComments = async (req, res) => {
     try {
-        const leadId = parseInt(req.params.id);
+        const { id } = req.params;
         
-        if (isNaN(leadId)) {
-            return res.status(400).json({ message: "Invalid lead ID" });
-        }
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
-        const lead = await Leads.findByPk(leadId);
+        const lead = await Leads.findOne({ where: whereCondition });
         if (!lead) {
             return res.status(404).json({ message: "Lead not found" });
         }
 
         const comments = await LeadComments.findAll({
-            where: { lead_id: leadId },
+            where: { lead_id: lead.id },
             order: [['created_at', 'DESC']] 
         });
 
@@ -698,12 +757,10 @@ export const addLeadComment = async (req, res) => {
     const transaction = await sequelize.transaction();
     
     try {
-        const leadId = parseInt(req.params.id);
+        const { id } = req.params;
         
-        if (isNaN(leadId)) {
-            await transaction.rollback();
-            return res.status(400).json({ message: "Invalid lead ID" });
-        }
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const { message, user_id, user_name, parent_id } = req.body;
         
@@ -712,7 +769,11 @@ export const addLeadComment = async (req, res) => {
             return res.status(400).json({ message: "Comment message is required" });
         }
 
-        const lead = await Leads.findByPk(leadId, { transaction });
+        const lead = await Leads.findOne({ 
+            where: whereCondition,
+            transaction 
+        });
+        
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
@@ -725,7 +786,7 @@ export const addLeadComment = async (req, res) => {
             parentComment = await LeadComments.findOne({
                 where: { 
                     id: parent_id,
-                    lead_id: leadId 
+                    lead_id: lead.id 
                 },
                 transaction
             });
@@ -746,7 +807,7 @@ export const addLeadComment = async (req, res) => {
         }
 
         const comment = await LeadComments.create({
-            lead_id: leadId,
+            lead_id: lead.id,
             parent_id: parent_id || null,
             reply_level,
             user_id,
@@ -874,7 +935,8 @@ export const getUnconvertedLeads = async (req, res) => {
             whereClause[Op.or] = [
                 { company: { [Op.like]: `%${search}%` } },
                 { fullname: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } }
+                { email: { [Op.like]: `%${search}%` } },
+                { code: { [Op.like]: `%${search}%` } } // Tambah pencarian berdasarkan kode
             ];
         }
 
@@ -922,7 +984,8 @@ export const getConvertedLeads = async (req, res) => {
             whereClause[Op.or] = [
                 { company: { [Op.like]: `%${search}%` } },
                 { fullname: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } }
+                { email: { [Op.like]: `%${search}%` } },
+                { code: { [Op.like]: `%${search}%` } } 
             ];
         }
 

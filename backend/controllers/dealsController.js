@@ -3,6 +3,27 @@ import { Deals, DealComments, Leads, User, Companies, Contacts } from '../models
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js';
 
+// Fungsi untuk generate kode deals otomatis
+const generateDealCode = async (transaction) => {
+    const lastDeal = await Deals.findOne({
+        where: {
+            code: {
+                [Op.like]: 'DL-%'
+            }
+        },
+        order: [['id', 'DESC']],
+        transaction
+    });
+
+    let nextNumber = 1;
+    if (lastDeal && lastDeal.code) {
+        const lastNumber = parseInt(lastDeal.code.split('-')[1]);
+        nextNumber = lastNumber + 1;
+    }
+
+    return `DL-${nextNumber.toString().padStart(3, '0')}`;
+};
+
 const buildCommentTree = (comments) => {
     const commentMap = {};
     const rootComments = [];
@@ -63,7 +84,8 @@ export const getAllDeals = async (req, res) => {
             whereConditions[Op.or] = [
                 { title: { [Op.like]: `%${search}%` } },
                 { stage: { [Op.like]: `%${search}%` } },
-                { fullname: { [Op.like]: `%${search}%` } }
+                { fullname: { [Op.like]: `%${search}%` } },
+                { code: { [Op.like]: `%${search}%` } } // Tambah pencarian berdasarkan kode
             ];
         }
 
@@ -73,7 +95,7 @@ export const getAllDeals = async (req, res) => {
                 {
                     model: Leads,
                     as: 'lead',
-                    attributes: ['id', 'company', 'fullname', 'email', 'phone'],
+                    attributes: ['id', 'code', 'company', 'fullname', 'email', 'phone'],
                     required: false
                 },
                 {
@@ -145,12 +167,16 @@ export const getDealById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const deal = await Deals.findByPk(id, {
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+        const deal = await Deals.findOne({
+            where: whereCondition,
             include: [
                 {
                     model: Leads,
                     as: 'lead',
-                    attributes: ['id', 'company', 'fullname', 'email', 'phone', 'industry'],
+                    attributes: ['id', 'code', 'company', 'fullname', 'email', 'phone', 'industry'],
                     required: false
                 },
                 {
@@ -262,7 +288,13 @@ export const createDeal = async (req, res) => {
         let finalOwnerId = owner;
 
         if (lead_id) {
-            const lead = await Leads.findByPk(lead_id, { transaction });
+            // Cek apakah lead_id adalah kode atau ID numerik
+            const leadWhereCondition = isNaN(lead_id) ? { code: lead_id } : { id: parseInt(lead_id) };
+            const lead = await Leads.findOne({ 
+                where: leadWhereCondition,
+                transaction 
+            });
+            
             if (!lead) {
                 await transaction.rollback();
                 return res.status(404).json({
@@ -335,7 +367,11 @@ export const createDeal = async (req, res) => {
             }
         }
 
+        // Generate kode deal otomatis
+        const dealCode = await generateDealCode(transaction);
+
         const deal = await Deals.create({
+            code: dealCode, // Tambah kode otomatis
             lead_id: lead_id || null,
             title: title.trim(),
             value: parseFloat(value) || 0,
@@ -355,7 +391,7 @@ export const createDeal = async (req, res) => {
                 {
                     model: Leads,
                     as: 'lead',
-                    attributes: ['id', 'company', 'fullname', 'email'],
+                    attributes: ['id', 'code', 'company', 'fullname', 'email'],
                     required: false
                 },
                 {
@@ -414,7 +450,11 @@ export const createDealFromLead = async (req, res) => {
             stage = 'proposal'
         } = req.body;
 
-        const lead = await Leads.findByPk(leadId, {
+        // Cek apakah leadId adalah kode atau ID numerik
+        const leadWhereCondition = isNaN(leadId) ? { code: leadId } : { id: parseInt(leadId) };
+
+        const lead = await Leads.findOne({
+            where: leadWhereCondition,
             transaction,
             lock: true
         });
@@ -479,8 +519,17 @@ export const createDealFromLead = async (req, res) => {
             }
         }
 
+        await lead.update({
+            stage: 'Converted',
+            status: true
+        }, { transaction });
+
+        // Generate kode deal otomatis
+        const dealCode = await generateDealCode(transaction);
+
         const deal = await Deals.create({
-            lead_id: leadId,
+            code: dealCode, // Tambah kode otomatis
+            lead_id: lead.id,
             title: title || `Deal from Lead - ${lead.fullname || lead.company}`,
             value: parseFloat(value) || 0,
             stage,
@@ -492,18 +541,14 @@ export const createDealFromLead = async (req, res) => {
             updated_at: new Date()
         }, { transaction });
 
-        await lead.update({
-            stage: 'Converted',
-            status: true
-        }, { transaction });
-
         await transaction.commit();
+        
         const completeDeal = await Deals.findByPk(deal.id, {
             include: [
                 {
                     model: Leads,
                     as: 'lead',
-                    attributes: ['id', 'company', 'fullname', 'email']
+                    attributes: ['id', 'code', 'company', 'fullname', 'email']
                 },
                 {
                     model: Companies,
@@ -545,7 +590,10 @@ export const updateDeal = async (req, res) => {
 
         updateData.updated_at = new Date();
 
-        const deal = await Deals.findByPk(id);
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+        const deal = await Deals.findOne({ where: whereCondition });
         if (!deal) {
             return res.status(404).json({
                 success: false,
@@ -554,13 +602,16 @@ export const updateDeal = async (req, res) => {
         }
 
         if (updateData.lead_id && updateData.lead_id !== deal.lead_id) {
-            const lead = await Leads.findByPk(updateData.lead_id);
+            // Cek apakah lead_id adalah kode atau ID numerik
+            const leadWhereCondition = isNaN(updateData.lead_id) ? { code: updateData.lead_id } : { id: parseInt(updateData.lead_id) };
+            const lead = await Leads.findOne({ where: leadWhereCondition });
             if (!lead) {
                 return res.status(404).json({
                     success: false,
                     message: 'Lead not found'
                 });
             }
+            updateData.lead_id = lead.id; // Pastikan menggunakan ID numerik
         }
 
         if (updateData.id_company !== undefined) {
@@ -593,12 +644,13 @@ export const updateDeal = async (req, res) => {
 
         await deal.update(updateData);
 
-        const updatedDeal = await Deals.findByPk(id, {
+        const updatedDeal = await Deals.findOne({
+            where: whereCondition,
             include: [
                 {
                     model: Leads,
                     as: 'lead',
-                    attributes: ['id', 'company', 'fullname', 'email'],
+                    attributes: ['id', 'code', 'company', 'fullname', 'email'],
                     required: false
                 },
                 {
@@ -650,7 +702,10 @@ export const updateDealStage = async (req, res) => {
             });
         }
 
-        const deal = await Deals.findByPk(id);
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+        const deal = await Deals.findOne({ where: whereCondition });
         if (!deal) {
             return res.status(404).json({
                 success: false,
@@ -666,7 +721,11 @@ export const updateDealStage = async (req, res) => {
         res.json({
             success: true,
             message: 'Deal stage updated successfully',
-            data: { id: deal.id, stage: deal.stage }
+            data: { 
+                id: deal.id, 
+                code: deal.code, 
+                stage: deal.stage 
+            }
         });
     } catch (error) {
         console.error('Error updating deal stage:', error);
@@ -683,7 +742,10 @@ export const deleteDeal = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const deal = await Deals.findByPk(id);
+        // Cek apakah id adalah kode atau ID numerik
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+        const deal = await Deals.findOne({ where: whereCondition });
         if (!deal) {
             return res.status(404).json({
                 success: false,
@@ -711,20 +773,29 @@ export const deleteDeal = async (req, res) => {
 export const getDealComments = async (req, res) => {
     try {
         const { id } = req.params;
-        const dealId = parseInt(id);
-        if (isNaN(dealId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid deal ID"
-            });
+        
+        // Cek apakah id adalah kode atau ID numerik
+        let dealId;
+        if (isNaN(id)) {
+            const deal = await Deals.findOne({ where: { code: id } });
+            if (!deal) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Deal not found"
+                });
+            }
+            dealId = deal.id;
+        } else {
+            dealId = parseInt(id);
+            const deal = await Deals.findByPk(dealId);
+            if (!deal) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Deal not found"
+                });
+            }
         }
-        const deal = await Deals.findByPk(dealId);
-        if (!deal) {
-            return res.status(404).json({
-                success: false,
-                message: "Deal not found"
-            });
-        }
+
         const comments = await DealComments.findAll({
             where: { deal_id: dealId },
             include: [{
@@ -763,15 +834,31 @@ export const addDealComment = async (req, res) => {
 
     try {
         const { id } = req.params;
-        const dealId = parseInt(id);
-
-        if (isNaN(dealId)) {
-            await transaction.rollback();
-            return res.status(400).json({
-                success: false,
-                message: "Invalid deal ID"
-            });
+        
+        // Cek apakah id adalah kode atau ID numerik
+        let dealId;
+        if (isNaN(id)) {
+            const deal = await Deals.findOne({ where: { code: id }, transaction });
+            if (!deal) {
+                await transaction.rollback();
+                return res.status(404).json({
+                    success: false,
+                    message: "Deal not found"
+                });
+            }
+            dealId = deal.id;
+        } else {
+            dealId = parseInt(id);
+            const deal = await Deals.findByPk(dealId, { transaction });
+            if (!deal) {
+                await transaction.rollback();
+                return res.status(404).json({
+                    success: false,
+                    message: "Deal not found"
+                });
+            }
         }
+
         const { message, user_id, user_name, parent_id } = req.body;
 
         if (!message || !message.trim()) {
@@ -779,15 +866,6 @@ export const addDealComment = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Comment message is required"
-            });
-        }
-
-        const deal = await Deals.findByPk(dealId, { transaction });
-        if (!deal) {
-            await transaction.rollback();
-            return res.status(404).json({
-                success: false,
-                message: "Deal not found"
             });
         }
 
@@ -864,13 +942,28 @@ export const addDealComment = async (req, res) => {
 export const getDealCommentThread = async (req, res) => {
     try {
         const { id, commentId } = req.params;
-        const dealId = parseInt(id);
+        
+        // Cek apakah id adalah kode atau ID numerik
+        let dealId;
+        if (isNaN(id)) {
+            const deal = await Deals.findOne({ where: { code: id } });
+            if (!deal) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Deal not found"
+                });
+            }
+            dealId = deal.id;
+        } else {
+            dealId = parseInt(id);
+        }
+        
         const commentIdInt = parseInt(commentId);
 
-        if (isNaN(dealId) || isNaN(commentIdInt)) {
+        if (isNaN(commentIdInt)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid deal ID or comment ID"
+                message: "Invalid comment ID"
             });
         }
 
@@ -943,14 +1036,30 @@ export const deleteDealComment = async (req, res) => {
 
     try {
         const { id, commentId } = req.params;
-        const dealId = parseInt(id);
+        
+        // Cek apakah id adalah kode atau ID numerik
+        let dealId;
+        if (isNaN(id)) {
+            const deal = await Deals.findOne({ where: { code: id }, transaction });
+            if (!deal) {
+                await transaction.rollback();
+                return res.status(404).json({
+                    success: false,
+                    message: "Deal not found"
+                });
+            }
+            dealId = deal.id;
+        } else {
+            dealId = parseInt(id);
+        }
+        
         const commentIdInt = parseInt(commentId);
 
-        if (isNaN(dealId) || isNaN(commentIdInt)) {
+        if (isNaN(commentIdInt)) {
             await transaction.rollback();
             return res.status(400).json({
                 success: false,
-                message: "Invalid deal ID or comment ID"
+                message: "Invalid comment ID"
             });
         }
 
@@ -972,6 +1081,7 @@ export const deleteDealComment = async (req, res) => {
 
         await comment.destroy({ transaction });
         await transaction.commit();
+        
         res.json({
             success: true,
             message: 'Comment deleted successfully'
@@ -986,16 +1096,3 @@ export const deleteDealComment = async (req, res) => {
         });
     }
 };
-
-/*
-export {
-    createDeal,
-    createDealFromLead,
-    updateDeal,
-    updateDealStage,
-    deleteDeal,
-    getDealComments,
-    addDealComment,
-    getDealCommentThread,
-    deleteDealComment
-};*/

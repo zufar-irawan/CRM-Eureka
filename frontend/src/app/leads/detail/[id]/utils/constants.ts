@@ -23,12 +23,12 @@ export const STATUS_OPTIONS: StatusOption[] = [
 // Tab navigasi pada halaman detail lead
 export const TABS: TabConfig[] = [
   { name: "Activity", icon: BarChart3 },
-  { name: "Emails", icon: Mail },
+  { name: "Emails", icon: Mail, disabled: true },
   { name: "Comments", icon: MessageSquare },
-  { name: "Data", icon: Database },
-  { name: "Calls", icon: Phone },
+  { name: "Data", icon: Database, disabled: true },
+  { name: "Calls", icon: Phone, disabled: true },
   { name: "Tasks", icon: CheckSquare },
-  { name: "Notes", icon: StickyNote },
+  { name: "Notes", icon: StickyNote, disabled: true },
   { name: "Attachments", icon: Paperclip },
 ];
 

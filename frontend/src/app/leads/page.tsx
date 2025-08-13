@@ -198,7 +198,6 @@ export default function MainLeads() {
     }
   };
 
-  // Sorting function - now with 3-state toggle: none -> asc -> desc -> none
   const handleSort = (columnKey: string) => {
     const column = ALL_COLUMNS[columnKey as keyof typeof ALL_COLUMNS];
     if (!column?.sortable) return;
@@ -206,13 +205,10 @@ export default function MainLeads() {
     let newSortConfig: SortConfig | null = null;
 
     if (!sortConfig || sortConfig.key !== columnKey) {
-      // First click: set to ascending
       newSortConfig = { key: columnKey, direction: 'asc' };
     } else if (sortConfig.direction === 'asc') {
-      // Second click: set to descending
       newSortConfig = { key: columnKey, direction: 'desc' };
     } else {
-      // Third click: clear sorting (back to original order)
       newSortConfig = null;
     }
 

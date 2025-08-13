@@ -148,7 +148,8 @@ export interface StatusOption {
 
 export interface TabConfig {
   name: string;
-  icon: any; // LucideIcon type
+  icon: any; 
+  disabled?: boolean;
 }
 
 export interface SubmittingState {

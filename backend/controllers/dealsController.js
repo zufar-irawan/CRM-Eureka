@@ -53,11 +53,12 @@ export const getAllDeals = async (req, res) => {
         if (stage) {
             whereConditions.stage = stage;
         }
-
+        if (req.query.stage_ne) {
+            whereConditions.stage = { [Op.ne]: req.query.stage_ne };
+        }
         if (owner) {
             whereConditions.owner = owner;
         }
-
         if (search) {
             whereConditions[Op.or] = [
                 { title: { [Op.like]: `%${search}%` } },
@@ -102,7 +103,7 @@ export const getAllDeals = async (req, res) => {
                 {
                     model: DealComments,
                     as: 'comments',
-                    where: { parent_id: null }, // Only get top-level comments for listing
+                    where: { parent_id: null },
                     include: [{
                         model: User,
                         as: 'user',
@@ -179,7 +180,7 @@ export const getDealById = async (req, res) => {
                 {
                     model: DealComments,
                     as: 'comments',
-                    where: { parent_id: null }, // Only top-level comments for deal details
+                    where: { parent_id: null },
                     include: [
                         {
                             model: User,
@@ -233,31 +234,21 @@ export const createDeal = async (req, res) => {
             title,
             value = 0,
             stage = 'proposal',
-
-            // Optional lead reference (for converted deals)
             lead_id = null,
-
-            // Optional direct company/contact references (backward compatibility)
             id_contact = null,
             id_company = null,
-
-            // Manual company/contact creation data
             company_name,
             company_email,
             company_phone,
             company_address,
-
             contact_name,
             contact_email,
             contact_phone,
             contact_position,
-
-            // Owner/creator info
             owner = 0,
             created_by = null
         } = req.body;
 
-        // Validate required fields
         if (!title || title.trim() === '') {
             await transaction.rollback();
             return res.status(400).json({
@@ -270,7 +261,6 @@ export const createDeal = async (req, res) => {
         let finalContactId = id_contact;
         let finalOwnerId = owner;
 
-        // SCENARIO 1: Deal from lead reference
         if (lead_id) {
             const lead = await Leads.findByPk(lead_id, { transaction });
             if (!lead) {
@@ -281,19 +271,15 @@ export const createDeal = async (req, res) => {
                 });
             }
 
-            // Use lead owner if no owner specified
             if (!finalOwnerId) {
                 finalOwnerId = lead.owner || 0;
             }
         }
 
-        // SCENARIO 2: Handle backward compatibility for id_company = 0 or id_contact = 0
         if (finalCompanyId === 0) finalCompanyId = null;
         if (finalContactId === 0) finalContactId = null;
 
-        // SCENARIO 3: Manual company creation (if company_name provided but no id_company)
         if (company_name && company_name.trim() && !finalCompanyId) {
-            // Check if company already exists
             let existingCompany = await Companies.findOne({
                 where: { name: company_name.trim() },
                 transaction
@@ -302,7 +288,6 @@ export const createDeal = async (req, res) => {
             if (existingCompany) {
                 finalCompanyId = existingCompany.id;
             } else {
-                // Create new company
                 const newCompany = await Companies.create({
                     name: company_name.trim(),
                     email: company_email || null,
@@ -315,11 +300,9 @@ export const createDeal = async (req, res) => {
             }
         }
 
-        // SCENARIO 4: Manual contact creation (if contact_name provided but no id_contact)
         if (contact_name && contact_name.trim() && !finalContactId) {
-            // Create new contact
             const newContact = await Contacts.create({
-                company_id: finalCompanyId, // Link to company if exists
+                company_id: finalCompanyId,
                 name: contact_name.trim(),
                 email: contact_email || null,
                 phone: contact_phone || null,
@@ -330,7 +313,6 @@ export const createDeal = async (req, res) => {
             finalContactId = newContact.id;
         }
 
-        // Validate existing company/contact if IDs provided
         if (finalCompanyId) {
             const company = await Companies.findByPk(finalCompanyId, { transaction });
             if (!company) {
@@ -353,7 +335,6 @@ export const createDeal = async (req, res) => {
             }
         }
 
-        // Create the deal
         const deal = await Deals.create({
             lead_id: lead_id || null,
             title: title.trim(),
@@ -369,7 +350,6 @@ export const createDeal = async (req, res) => {
 
         await transaction.commit();
 
-        // Fetch created deal with associations
         const createdDeal = await Deals.findByPk(deal.id, {
             include: [
                 {
@@ -455,11 +435,9 @@ export const createDealFromLead = async (req, res) => {
             });
         }
 
-        // Use the conversion logic from leadsController
         let companyId = null;
         let contactId = null;
 
-        // Create/find company if lead has company info
         if (lead.company && lead.company.trim()) {
             let existingCompany = await Companies.findOne({
                 where: { name: lead.company.trim() },
@@ -484,7 +462,6 @@ export const createDealFromLead = async (req, res) => {
             }
         }
 
-        // Create contact if lead has personal info
         if (lead.fullname || lead.first_name || lead.last_name || lead.email) {
             const contactName = lead.fullname || `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
 
@@ -502,7 +479,6 @@ export const createDealFromLead = async (req, res) => {
             }
         }
 
-        // Create deal
         const deal = await Deals.create({
             lead_id: leadId,
             title: title || `Deal from Lead - ${lead.fullname || lead.company}`,
@@ -516,15 +492,12 @@ export const createDealFromLead = async (req, res) => {
             updated_at: new Date()
         }, { transaction });
 
-        // Update lead status
         await lead.update({
             stage: 'Converted',
             status: true
         }, { transaction });
 
         await transaction.commit();
-
-        // Fetch complete deal data
         const completeDeal = await Deals.findByPk(deal.id, {
             include: [
                 {
@@ -570,7 +543,6 @@ export const updateDeal = async (req, res) => {
         const { id } = req.params;
         const updateData = { ...req.body };
 
-        // Add updated_at timestamp
         updateData.updated_at = new Date();
 
         const deal = await Deals.findByPk(id);
@@ -581,7 +553,6 @@ export const updateDeal = async (req, res) => {
             });
         }
 
-        // Validate lead_id if provided
         if (updateData.lead_id && updateData.lead_id !== deal.lead_id) {
             const lead = await Leads.findByPk(updateData.lead_id);
             if (!lead) {
@@ -592,7 +563,6 @@ export const updateDeal = async (req, res) => {
             }
         }
 
-        // Validate company if provided
         if (updateData.id_company !== undefined) {
             if (updateData.id_company !== null && updateData.id_company !== 0) {
                 const company = await Companies.findByPk(updateData.id_company);
@@ -603,11 +573,10 @@ export const updateDeal = async (req, res) => {
                     });
                 }
             } else {
-                updateData.id_company = null; // Convert 0 to null
+                updateData.id_company = null;
             }
         }
 
-        // Validate contact if provided
         if (updateData.id_contact !== undefined) {
             if (updateData.id_contact !== null && updateData.id_contact !== 0) {
                 const contact = await Contacts.findByPk(updateData.id_contact);
@@ -618,13 +587,12 @@ export const updateDeal = async (req, res) => {
                     });
                 }
             } else {
-                updateData.id_contact = null; // Convert 0 to null
+                updateData.id_contact = null;
             }
         }
 
         await deal.update(updateData);
 
-        // Fetch updated deal with associations
         const updatedDeal = await Deals.findByPk(id, {
             include: [
                 {

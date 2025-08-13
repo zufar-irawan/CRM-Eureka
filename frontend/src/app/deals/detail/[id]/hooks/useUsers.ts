@@ -19,7 +19,6 @@ export const useUsers = () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Handle different response structures
         const userData = data.data || data;
         
         if (Array.isArray(userData) && userData.length > 0) {
@@ -30,9 +29,9 @@ export const useUsers = () => {
           }));
           
           setUsers(processedUsers);
-          console.log('✅ Users loaded from API:', processedUsers.length);
+          console.log('Users loaded from API:', processedUsers.length);
         } else {
-          console.warn('⚠️ No users from API, using fallback');
+          console.warn('No users from API, using fallback');
           setUsers(FALLBACK_USERS);
         }
       } else {

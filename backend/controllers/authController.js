@@ -6,8 +6,6 @@ import crypto from "crypto";
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        // Find user with roles
         const user = await User.findOne({ 
             where: { email },
             include: [{
@@ -101,7 +99,7 @@ export const me = async (req, res) => {
             roles: roles,
             roleNames: roles.map(role => role.name),
             primaryRole: primaryRole,
-            role: primaryRole, // For backward compatibility
+            role: primaryRole, 
             isAdmin: roles.some(role => role.name === 'admin'),
             isSales: roles.some(role => role.name === 'sales'),
             isPartnership: roles.some(role => role.name === 'partnership'),
@@ -126,7 +124,6 @@ export const me = async (req, res) => {
     }
 };
 
-// New endpoint to refresh user session and get updated roles
 export const refreshUser = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, { 

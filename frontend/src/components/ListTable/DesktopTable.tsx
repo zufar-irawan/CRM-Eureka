@@ -220,15 +220,6 @@ export default function DesktopTable({
       <table className="w-full relative">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
-            <th className="px-6 py-3 text-left">
-              <input
-                type="checkbox"
-                checked={isAllSelected}
-                onChange={toggleSelectAll}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-            </th>
-
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               No
             </th>
@@ -238,11 +229,10 @@ export default function DesktopTable({
               .map((col) => (
                 <th
                   key={col.key}
-                  className={`group px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    col.sortable !== false
+                  className={`group px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${col.sortable !== false
                       ? "cursor-pointer hover:bg-gray-100 select-none"
                       : ""
-                  }`}
+                    }`}
                   onClick={() => col.sortable !== false && handleSort(col.key)}
                 >
                   <div className="flex items-center justify-between">
@@ -280,15 +270,6 @@ export default function DesktopTable({
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
                 onClick={() => handleRowClick(row.id)}
               >
-                <td className="px-6 py-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedData.includes(row.id.toString())}
-                    onChange={() => toggleSelectData(row.id.toString())}
-                    className="rounded border-gray-300 text-blue-600"
-                  />
-                </td>
-
                 <td className="px-6 py-4 text-sm text-center">{index + 1}</td>
 
                 {columns
@@ -331,11 +312,10 @@ export default function DesktopTable({
                         />
 
                         <div
-                          className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${
-                            data.indexOf(row) >= data.length - 2
+                          className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${data.indexOf(row) >= data.length - 2
                               ? "bottom-full mb-1"
                               : "top-full mt-1"
-                          }`}
+                            }`}
                         >
                           <div className="py-1">
                             <button

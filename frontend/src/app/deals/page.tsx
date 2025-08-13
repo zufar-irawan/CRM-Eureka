@@ -74,6 +74,53 @@ const api = axios.create({
   timeout: 10000,
 });
 
+// Helper function to get stage colors (matching leads style)
+const getStageColor = (stage: string) => {
+  const normalizedStage = stage.toLowerCase();
+  switch (normalizedStage) {
+    case 'proposal':
+      return 'bg-gray-100 text-gray-800 border border-gray-200';
+    case 'negotiation':
+      return 'bg-blue-100 text-blue-800 border border-blue-200';
+    case 'won':
+      return 'bg-green-100 text-green-800 border border-green-200';
+    case 'lost':
+      return 'bg-red-100 text-red-800 border border-red-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border border-gray-200';
+  }
+};
+
+// Function to render stage badge with dot indicator (matching leads style)
+const renderStageBadge = (stage: string) => {
+  const normalizedStage = stage.toLowerCase();
+  let dotColor = '';
+
+  switch (normalizedStage) {
+    case 'proposal':
+      dotColor = 'bg-gray-700';
+      break;
+    case 'negotiation':
+      dotColor = 'bg-blue-600';
+      break;
+    case 'won':
+      dotColor = 'bg-green-600';
+      break;
+    case 'lost':
+      dotColor = 'bg-red-600';
+      break;
+    default:
+      dotColor = 'bg-gray-700';
+  }
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStageColor(stage)}`}>
+      <div className={`w-2 h-2 rounded-full ${dotColor} flex-shrink-0`}></div>
+      {stage.charAt(0).toUpperCase() + stage.slice(1)}
+    </span>
+  );
+};
+
 export default function Deals() {
   const router = useRouter();
   const pathname = usePathname();
@@ -316,25 +363,20 @@ export default function Deals() {
       case 'title':
         return <span className="text-xs text-gray-900">{deal.title || '-'}</span>;
 
-     case 'value':
-  return (
-    <span className="text-xs text-gray-900">
-      {deal.value
-        ? new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }).format(Number(deal.value))
-        : '-'}
-    </span>
-  );
-
-      case 'stage':
+      case 'value':
         return (
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium`}>
-            {deal.stage}
+          <span className="text-xs text-gray-900">
+            {deal.value
+              ? new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(Number(deal.value))
+              : '-'}
           </span>
         );
+
+      case 'stage':
+        return renderStageBadge(deal.stage);
 
       // Lead fields
       case 'lead_fullname':
@@ -595,15 +637,6 @@ export default function Deals() {
               <table className="w-full table-auto">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={isAllSelected}
-                        onChange={toggleSelectAll}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </th>
-
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       No
                     </th>
@@ -653,18 +686,6 @@ export default function Deals() {
                         className="hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() => handleRowClick(deal.id)}
                       >
-                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={selectedDeals.includes(deal.id)}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              toggleSelectDeal(deal.id);
-                            }}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                        </td>
-
                         <td className="px-6 py-4 text-sm text-center">{index + 1}</td>
 
                         {visibleColumns.map((columnKey) => (
@@ -749,31 +770,26 @@ export default function Deals() {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedDeals.includes(deal.id)}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            toggleSelectDeal(deal.id);
-                          }}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
-                        />
                         <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
                           <Building2 className="w-5 h-5 text-green-600" />
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">
-                            {deal.organization}
+                            {deal.title || deal.organization}
                           </h3>
                           <div className="flex items-center text-xs text-gray-500 mt-1">
-                            {/*<DollarSign className="w-3 h-3" />*/}
-                            {deal.annualRevenue}
+                            <DollarSign className="w-3 h-3 mr-1" />
+                            {deal.value ? new Intl.NumberFormat('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(deal.value)) : '-'}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border`}>
-                          {deal.status}
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStageColor(deal.stage)}`}>
+                          <div className={`w-2 h-2 rounded-full ${deal.stage === 'proposal' ? 'bg-gray-700' : deal.stage === 'negotiation' ? 'bg-blue-600' : deal.stage === 'won' ? 'bg-green-600' : 'bg-red-600'} flex-shrink-0`}></div>
+                          {deal.stage}
                         </span>
 
                         <div className="relative" data-action-menu onClick={(e) => e.stopPropagation()}>
@@ -833,21 +849,25 @@ export default function Deals() {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center text-gray-600">
                         <Mail className="w-4 h-4 mr-2" />
-                        <span className="text-blue-600">{deal.email}</span>
+                        <span className="text-blue-600">{deal.lead?.email || deal.email || '-'}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Phone className="w-4 h-4 mr-2" />
-                        {deal.mobile}
+                        {deal.lead?.phone || deal.mobile || '-'}
                       </div>
                       <div className="flex items-center text-gray-600">
                         <User className="w-4 h-4 mr-2" />
-                        {deal.assignedTo}
+                        {deal.lead?.fullname || deal.assignedTo || '-'}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                       <span className="text-xs text-gray-500">
-                        {deal.updated_at}
+                        {new Date(deal.updated_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
                       </span>
                     </div>
                   </div>

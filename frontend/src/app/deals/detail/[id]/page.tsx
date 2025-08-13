@@ -18,29 +18,19 @@ export default function DealDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { currentUser, userLoading } = useAuth();
-
-  // UI State
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Activity");
-
-  // Data State
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
-  
-  // Loading & Error States
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [contactsLoading, setContactsLoading] = useState(false);
-
-  // Sidebar State
   const [isContactsExpanded, setIsContactsExpanded] = useState(true);
   const [isOrgDetailsExpanded, setIsOrgDetailsExpanded] = useState(true);
-
-  // ==================== UTILITY FUNCTIONS ====================
 
   const safeString = (value: any): string => {
     if (value === null || value === undefined) return "";
@@ -103,9 +93,6 @@ export default function DealDetailPage() {
     return formatDate(dateString);
   };
 
-  // ==================== EVENT HANDLERS ====================
-
-  // Enhanced handleDealUpdate to handle all deal changes
   const handleDealUpdate = useCallback((updatedDeal: Deal) => {
     const prevOwner = deal?.owner;
     setDeal(updatedDeal);
@@ -116,8 +103,6 @@ export default function DealDetailPage() {
       console.log(`Deal ownership changed from ${prevOwner || 'unassigned'} to ${updatedDeal.owner || 'unassigned'}`);
     }
   }, [deal?.owner]);
-
-  // ==================== API FUNCTIONS ====================
 
   const fetchDeal = async () => {
     if (!id) {
@@ -153,7 +138,6 @@ export default function DealDetailPage() {
 
       const responseData = await response.json();
       
-      // Handle different response structures
       const dealData = responseData.data || responseData;
 
       if (!dealData || typeof dealData !== "object") {
@@ -225,7 +209,6 @@ export default function DealDetailPage() {
       
       const contactsToFetch: Contact[] = [];
 
-      // Add deal's direct contact if exists
       if (deal.contact && deal.contact.id && deal.contact.name) {
         contactsToFetch.push({
           id: deal.contact.id,
@@ -240,7 +223,6 @@ export default function DealDetailPage() {
         });
       }
 
-      // Fetch contacts from deal's company
       if (deal.company?.id) {
         console.log(`[DEBUG] Fetching contacts for company: ${deal.company.id}`);
         const response = await makeAuthenticatedRequest(
@@ -264,7 +246,6 @@ export default function DealDetailPage() {
           });
         }
       } else if (deal.lead?.company && !deal.company?.id) {
-        // Search contacts by lead's company name if no direct company
         console.log(`[DEBUG] Searching contacts by lead company: ${deal.lead.company}`);
         const response = await makeAuthenticatedRequest(
           `http://localhost:5000/api/contacts?search=${encodeURIComponent(
@@ -379,8 +360,6 @@ export default function DealDetailPage() {
     }
   };
 
-  // ==================== TAB CONTENT RENDERER ====================
-
   const renderTabContent = () => {
     if (!deal) return null;
 
@@ -427,8 +406,6 @@ export default function DealDetailPage() {
     }
   };
 
-  // ==================== EFFECTS ====================
-
   useEffect(() => {
     if (!id) {
       setError("Invalid deal ID");
@@ -443,8 +420,6 @@ export default function DealDetailPage() {
       fetchRelatedContacts();
     }
   }, [deal]);
-
-  // ==================== DERIVED STATE ====================
 
   const currentDeal = deal || {
     id: Array.isArray(id) ? id[0] : id || "",
@@ -462,9 +437,6 @@ export default function DealDetailPage() {
     description: "",
   };
 
-  // ==================== RENDER CONDITIONS ====================
-
-  // Show loading while user is being authenticated
   if (userLoading) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -483,7 +455,6 @@ export default function DealDetailPage() {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -521,7 +492,6 @@ export default function DealDetailPage() {
     );
   }
 
-  // Show loading state for deal data
   if (isLoading) {
     return (
       <div className="flex h-screen bg-gray-50">
@@ -540,8 +510,6 @@ export default function DealDetailPage() {
       </div>
     );
   }
-
-  // ==================== MAIN RENDER ====================
 
   return (
     <div className="flex h-screen bg-gray-50">

@@ -8,11 +8,12 @@ import TaskHeader from "./components/TaskHeader";
 import TaskSidebar from "./components/TaskSidebar";
 import TaskCommentsTab from "./components/TaskCommentsTab";
 import TaskResultsTab from "./components/TaskResultsTab";
-import { MessageSquare, FileText } from "lucide-react";
+import { MessageSquare, FileText, Paperclip } from "lucide-react";
 
 const TASK_TABS = [
   { name: "Comments", icon: MessageSquare },
   { name: "Results", icon: FileText },
+  { name: "Attachments", icon: Paperclip }
 ];
 
 export default function TaskDetailPage() {

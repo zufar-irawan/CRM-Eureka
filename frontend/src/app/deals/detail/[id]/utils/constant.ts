@@ -162,7 +162,6 @@ export const STAGE_MAPPING: { [key: string]: string } = {
   'Converted': 'Converted',
 };
 
-// Mapping tahap deals dari frontend ke backend
 export const DEAL_STAGE_MAPPING: { [key: string]: string } = {
   'Proposal': 'proposal',
   'Negotiation': 'negotiation',

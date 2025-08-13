@@ -54,7 +54,7 @@ export const useAuth = () => {
           name: user.name,
           email: user.email,
           role: user.role || 'user',
-          avatar: user.avatar // ✅ pastikan avatar ada di type
+          avatar: user.avatar 
         });
       } else {
         console.warn('No user data found, using fallback user');

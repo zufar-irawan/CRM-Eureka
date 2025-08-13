@@ -121,7 +121,7 @@ export const createTask = async (req, res) => {
       category: category || 'Lainnya',
       due_date,
       priority: priority || 'medium',
-      status: 'pending'
+      status: 'new'
     });
 
     // Ambil data task dengan include user untuk response
@@ -259,7 +259,7 @@ export const updateTaskStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['pending', 'completed', 'cancelled'];
+    const validStatuses = ['new', 'pending', 'completed', 'cancelled'];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -341,8 +341,6 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// ===== TASK COMMENTS FUNCTIONS =====
-
 // GET /api/tasks/:id/comments - Ambil semua komentar pada task tertentu
 export const getTaskComments = async (req, res) => {
   try {
@@ -380,7 +378,6 @@ export const addTaskComment = async (req, res) => {
       });
     }
 
-    // Check if task exists
     const task = await Tasks.findByPk(id);
     if (!task) {
       return res.status(404).json({

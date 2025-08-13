@@ -4,7 +4,9 @@ import Sidebar from "@/components/Sidebar"
 import dynamic from "next/dynamic"
 import ActivityTable from "./components/ActivityTable"
 import useUser from "../../../hooks/useUser"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { number } from "framer-motion"
 
 export default function Dashboard() {
     const { user, loading } = useUser()
@@ -12,28 +14,108 @@ export default function Dashboard() {
 
     const BarChart = dynamic(() => import("./components/BarChart"), { ssr: false })
 
-    const cards = [
+    const [cards, setCards] = useState([
         {
             id: 1,
-            number: "120",
-            title: "Open Leads"
+            number: "0",
+            title: "New Leads"
         },
         {
             id: 2,
-            number: "45",
-            title: "Deals in Progress"
+            number: "0",
+            title: "All Leads"
         },
         {
             id: 3,
-            number: "$18,500",
-            title: "Revenue"
+            number: "0",
+            title: "Active Deals"
         },
         {
             id: 4,
-            number: "12",
-            title: "Tasks"
+            number: "0",
+            title: "Unconverted Leads"
         },
-    ]
+    ])
+
+    const fetchNewLeads = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/leads', {
+                params: { stage: 'New' }
+            })
+
+            return response.data.leads
+        } catch (error: any) {
+            console.error('Error fetching leads: ', error.message)
+            throw error
+        }
+    }
+
+    const fetchAllDeals = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/deals', {
+                params: { stage_ne: 'won' }
+            })
+
+            const data = response.data.data
+            return data.length.toString()
+        } catch (error: any) {
+            console.error('Error fetching leads: ', error.message)
+            throw error
+        }
+    }
+
+    const fetchALlLeads = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/leads', {
+                params: { status: '' }
+            })
+
+            const res = response.data.leads
+            return res.length.toString()
+        } catch (error: any) {
+            console.error('Error fetching leads: ', error.message)
+            throw error
+        }
+    }
+
+    const fetchAllUnconvertedLeads = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/leads')
+
+            const res = response.data.leads
+            return res.length.toString()
+        } catch (error: any) {
+            console.error('Error fetching leads: ', error.message)
+            throw error
+        }
+    }
+
+    useEffect(() => {
+        const loadData = async () => {
+            const newleads = await fetchNewLeads()
+            const allLeads = await fetchALlLeads()
+            const notWonDeals = await fetchAllDeals()
+            const unconvertedLeads = await fetchAllUnconvertedLeads()
+            setCards(prevCards =>
+                prevCards.map(card =>
+                    card.id === 1
+                        ? { ...card, number: newleads.length.toString() }
+                        : (card.id === 2
+                            ? { ...card, number: allLeads }
+                            : (card.id === 3
+                                ? { ...card, number: notWonDeals }
+                                : (card.id === 4
+                                    ? { ...card, number: unconvertedLeads }
+                                    : card
+                                )
+                            )
+                        )
+                )
+            )
+        }
+
+        loadData()
+    }, [])
 
     return (
         <div className="flex min-h-screen">
@@ -63,7 +145,7 @@ export default function Dashboard() {
 
                     <div className="border rounded-3xl border-gray-300 p-8 bg-white">
                         <p className="text-xl text-gray-900 mb-4">
-                            Deals by Stage
+                            All Tasks
                         </p>
 
                         <BarChart />

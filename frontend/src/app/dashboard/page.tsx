@@ -145,7 +145,7 @@ export default function Dashboard() {
 
                     <div className="border rounded-3xl border-gray-300 p-8 bg-white">
                         <p className="text-xl text-gray-900 mb-4">
-                            Deals by Stage
+                            All Tasks
                         </p>
 
                         <BarChart />

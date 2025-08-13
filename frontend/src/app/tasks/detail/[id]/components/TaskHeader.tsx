@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { CheckSquare, User, ChevronDown, AlertTriangle } from 'lucide-react';
+import { CheckSquare, User, ChevronDown, AlertTriangle, UserCircle } from 'lucide-react';
 import type { Task, CurrentUser, User as UserType } from '../types';
 import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS } from '../utils/constants';
-import { displayValue } from "../utils/formatting";
+import { displayValue, getFirstChar } from "../utils/formatting";
 import { useUsers } from "../../../../leads/detail/[id]/hooks/useUsers";
+import { useLeadUser } from "../hooks/useLeadUser";
+import AddTaskResult from './AddTaskResult';
 import Swal from 'sweetalert2';
 
 interface TaskHeaderProps {
   task: Task | null;
   isLoading: boolean;
+  currentUser: CurrentUser | null;
   onTaskUpdate: () => void;
   onStatusChange: (taskId: number, status: string) => Promise<void>;
   onAssignmentChange: (taskId: number, userId: number) => Promise<void>;
@@ -19,6 +22,7 @@ interface TaskHeaderProps {
 export default function TaskHeader({
   task,
   isLoading,
+  currentUser,
   onTaskUpdate,
   onStatusChange,
   onAssignmentChange
@@ -28,10 +32,12 @@ export default function TaskHeader({
   const [isUpdating, setIsUpdating] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignedUser, setAssignedUser] = useState<UserType | null>(null);
+  const [showAddResultModal, setShowAddResultModal] = useState(false);
+  const [pendingCompletion, setPendingCompletion] = useState(false);
   
   const { users, isLoading: isLoadingUsers } = useUsers();
+  const { leadUser, isLoading: isLoadingLeadUser } = useLeadUser(task?.lead_id || null);
 
-  // Update assigned user when task or users change
   useEffect(() => {
     if (task?.assigned_to && users.length > 0) {
       const currentUser = users.find(user => 
@@ -41,30 +47,55 @@ export default function TaskHeader({
     }
   }, [task?.assigned_to, users]);
 
-  // Handle status change
+  const getStatusLabel = (status: string) => {
+    const statusOption = TASK_STATUS_OPTIONS.find(s => s.value === status);
+    return statusOption?.label || status;
+  };
+
   const handleStatusChange = async (newStatus: string) => {
     if (!task || newStatus === task.status) {
+      setIsStatusDropdownOpen(false);
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Konfirmasi Perubahan Status',
+      text: `Apakah benar ingin mengganti status dari "${getStatusLabel(task.status)}" ke "${getStatusLabel(newStatus)}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Ganti',
+      cancelButtonText: 'Batal',
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) {
       setIsStatusDropdownOpen(false);
       return;
     }
     
     setIsUpdating(true);
     try {
-      await onStatusChange(task.id, newStatus);
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: `Task status updated to "${newStatus}" successfully!`,
-        timer: 2000,
-        showConfirmButton: false
-      });
+      if (newStatus !== 'completed') {
+        await onStatusChange(task.id, newStatus);
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil',
+          text: `Status task berhasil diubah ke "${getStatusLabel(newStatus)}"!`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        setPendingCompletion(true);
+        setShowAddResultModal(true);
+      }
     } catch (error) {
       console.error('Error updating status:', error);
       Swal.fire({
         icon: 'error',
-        title: 'Failed',
-        text: 'Failed to update task status. Please try again.'
+        title: 'Gagal',
+        text: 'Gagal mengubah status task. Silakan coba lagi.'
       });
     } finally {
       setIsUpdating(false);
@@ -72,7 +103,47 @@ export default function TaskHeader({
     }
   };
 
-  // Handle user assignment
+  const handleResultAdded = async () => {
+    if (!task) return;
+    
+    try {
+      if (pendingCompletion) {
+        await onStatusChange(task.id, 'completed');
+      }
+      setShowAddResultModal(false);
+      setPendingCompletion(false);
+      onTaskUpdate();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: 'Task telah diselesaikan dan hasil berhasil ditambahkan!',
+        timer: 3000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Error completing task:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Gagal menyelesaikan task. Silakan coba lagi.'
+      });
+    }
+  };
+
+  const handleCancelAddResult = () => {
+    setShowAddResultModal(false);
+    setPendingCompletion(false);
+    
+    Swal.fire({
+      icon: 'info',
+      title: 'Dibatalkan',
+      text: 'Penambahan hasil task dibatalkan. Status task tidak berubah.',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  };
+
   const handleAssignToUser = async (userId: number) => {
     if (!task || isAssigning) return;
     
@@ -90,8 +161,8 @@ export default function TaskHeader({
       
       Swal.fire({
         icon: 'success',
-        title: 'Success',
-        text: `Task assigned to ${selectedUser?.name || 'user'} successfully!`,
+        title: 'Berhasil',
+        text: `Task berhasil ditugaskan ke ${selectedUser?.name || 'user'}!`,
         timer: 2000,
         showConfirmButton: false
       });
@@ -99,8 +170,8 @@ export default function TaskHeader({
       console.error('Error assigning user:', error);
       Swal.fire({
         icon: 'error',
-        title: 'Failed',
-        text: 'Failed to assign user. Please try again.'
+        title: 'Gagal',
+        text: 'Gagal menugaskan user. Silakan coba lagi.'
       });
     } finally {
       setIsAssigning(false);
@@ -134,7 +205,6 @@ export default function TaskHeader({
   return (
     <>
       <div className="border-b border-gray-200 p-6">
-        {/* Breadcrumb */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center space-x-2 text-gray-600 text-sm">
             <span>Tasks</span>
@@ -157,20 +227,37 @@ export default function TaskHeader({
           </div>
         </div>
 
-        {/* Header Content */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              {displayValue(task.title)}
-            </h1>
-            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
-              {task.priority?.toUpperCase()}
-            </span>
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col space-y-3">
+            {task.lead_id && (
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-semibold text-gray-900">
+                  {isLoadingLeadUser ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Loading...</span>
+                    </div>
+                  ) : leadUser ? (
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-blue-700">
+                          {getFirstChar(leadUser.name)}
+                        </span>
+                      </div>
+                      <span>{leadUser.name}</span>
+                    </div>
+                  ) : (
+                    "Unknown User"
+                  )}
+                </h1>
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+                  LEAD-{task.lead_id}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Actions */}
           <div className="flex items-center space-x-3">
-            {/* Assign To Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
@@ -233,7 +320,6 @@ export default function TaskHeader({
               )}
             </div>
             
-            {/* Status Dropdown */}
             <div className="relative">
               <button
                 onClick={() => !isUpdating && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
@@ -279,6 +365,29 @@ export default function TaskHeader({
           </div>
         </div>
       </div>
+
+      {showAddResultModal && task && (
+        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  Task Completed! Add Result
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Tambahkan hasil atau catatan untuk task yang telah diselesaikan.
+                </p>
+              </div>
+              <AddTaskResult
+                taskId={task.id.toString()}
+                currentUser={currentUser}
+                onResultAdded={handleResultAdded}
+                onCancel={handleCancelAddResult}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

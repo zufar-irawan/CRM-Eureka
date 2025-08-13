@@ -225,7 +225,6 @@ export const updateCompany = async (req, res) => {
             email
         } = req.body;
 
-        // Check if another company with same name exists (excluding current company)
         if (name && name.trim() !== company.name) {
             const existingCompany = await Companies.findOne({
                 where: { 
@@ -253,7 +252,6 @@ export const updateCompany = async (req, res) => {
 
         await transaction.commit();
 
-        // Fetch updated company with relations
         const updatedCompany = await Companies.findByPk(companyId, {
             include: [
                 {

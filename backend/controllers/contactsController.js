@@ -121,7 +121,7 @@ export const getContactById = async (req, res) => {
 }
 
 export const createContact = async (req, res) => {
-    const transaction = await sequelize.transaction(); // Fixed: Added missing transaction
+    const transaction = await sequelize.transaction(); 
     try {
         const {
             company_id,

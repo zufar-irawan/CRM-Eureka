@@ -361,7 +361,6 @@ export const convertLead = async (req, res) => {
             valueType: typeof dealValue
         });
 
-        // Find lead with transaction lock
         const lead = await Leads.findByPk(leadId, { 
             transaction,
             lock: true
@@ -372,7 +371,6 @@ export const convertLead = async (req, res) => {
             return res.status(404).json({ message: "Lead not found" });
         }
 
-        // Check if lead is already converted
         if (lead.status === true) {
             await transaction.rollback();
             return res.status(400).json({ 
@@ -383,9 +381,7 @@ export const convertLead = async (req, res) => {
         let companyId = null;
         let contactId = null;
 
-        // STEP 1: Create or find Company if company name exists
         if (lead.company && lead.company.trim()) {
-            // Check if company already exists by name
             let existingCompany = await Companies.findOne({
                 where: {
                     name: lead.company.trim()
@@ -397,12 +393,10 @@ export const convertLead = async (req, res) => {
                 companyId = existingCompany.id;
                 console.log('[DEBUG] Using existing company:', companyId);
                 
-                // Update company info if we have more details from lead
                 const updateData = {};
                 if (lead.phone && !existingCompany.phone) updateData.phone = lead.phone;
                 if (lead.work_email && !existingCompany.email) updateData.email = lead.work_email;
                 
-                // Build address from lead address fields
                 if (lead.street || lead.city || lead.state || lead.postal_code) {
                     const addressParts = [lead.street, lead.city, lead.state, lead.postal_code].filter(Boolean);
                     if (addressParts.length > 0 && !existingCompany.address) {
@@ -436,7 +430,6 @@ export const convertLead = async (req, res) => {
             if (contactName) {
                 let existingContact = null;
                 
-                // Check if contact already exists by email or name+company combination
                 if (lead.email) {
                     existingContact = await Contacts.findOne({
                         where: {
@@ -451,7 +444,6 @@ export const convertLead = async (req, res) => {
                         transaction
                     });
                 } else {
-                    // If no email, check by name and company
                     existingContact = await Contacts.findOne({
                         where: {
                             name: contactName,
@@ -465,7 +457,6 @@ export const convertLead = async (req, res) => {
                     contactId = existingContact.id;
                     console.log('[DEBUG] Using existing contact:', contactId);
                     
-                    // Update contact info if we have more details
                     const updateData = {};
                     if (lead.email && !existingContact.email) updateData.email = lead.email;
                     if (lead.mobile && !existingContact.phone) updateData.phone = lead.mobile;
@@ -476,7 +467,6 @@ export const convertLead = async (req, res) => {
                         await existingContact.update(updateData, { transaction });
                     }
                 } else {
-                    // Create new contact
                     const newContact = await Contacts.create({
                         company_id: companyId, 
                         name: contactName,
@@ -492,7 +482,6 @@ export const convertLead = async (req, res) => {
             }
         }
 
-        // STEP 3: Update lead stage to Converted and status to true
         await lead.update({ 
             stage: 'Converted',
             status: true
@@ -650,7 +639,7 @@ export const updateLeadStage = async (req, res) => {
         await lead.update({ stage }, { transaction });
         await transaction.commit();
 
-        console.log(`✅ Lead ${leadId} stage updated from "${oldStage}" to "${stage}"`);
+        console.log(`Lead ${leadId} stage updated from "${oldStage}" to "${stage}"`);
         
         res.status(200).json({
             success: true,
@@ -682,16 +671,13 @@ export const getLeadComments = async (req, res) => {
             return res.status(404).json({ message: "Lead not found" });
         }
 
-        // Fetch all comments for this lead (including replies)
         const comments = await LeadComments.findAll({
             where: { lead_id: leadId },
-            order: [['created_at', 'DESC']] // Top-level comments newest first
+            order: [['created_at', 'DESC']] 
         });
 
-        // Build nested tree structure
         const nestedComments = buildCommentTree(comments);
 
-        // Add statistics
         const stats = {
             total_comments: comments.length,
             top_level_comments: comments.filter(c => c.parent_id === null).length,
@@ -735,12 +721,11 @@ export const addLeadComment = async (req, res) => {
         let reply_level = 0;
         let parentComment = null;
 
-        // If this is a reply to another comment
         if (parent_id) {
             parentComment = await LeadComments.findOne({
                 where: { 
                     id: parent_id,
-                    lead_id: leadId // Ensure parent belongs to same lead
+                    lead_id: leadId 
                 },
                 transaction
             });
@@ -752,7 +737,6 @@ export const addLeadComment = async (req, res) => {
 
             reply_level = parentComment.reply_level + 1;
 
-            // Limit nesting depth (e.g., max 3 levels: comment -> reply -> reply to reply)
             if (reply_level > 3) {
                 await transaction.rollback();
                 return res.status(400).json({ 
@@ -801,25 +785,23 @@ export const getCommentThread = async (req, res) => {
             return res.status(404).json({ message: "Comment not found" });
         }
 
-        // Get the root comment if this is a reply
         let rootComment = comment;
         if (comment.parent_id) {
             rootComment = await LeadComments.findOne({
                 where: { 
                     id: comment.parent_id,
                     lead_id: comment.lead_id,
-                    parent_id: null // Ensure we get the root
+                    parent_id: null 
                 }
             });
         }
 
-        // Get all comments in this thread
         const threadComments = await LeadComments.findAll({
             where: {
                 lead_id: comment.lead_id,
                 [Op.or]: [
-                    { id: rootComment.id }, // Root comment
-                    { parent_id: rootComment.id } // Direct replies
+                    { id: rootComment.id }, 
+                    { parent_id: rootComment.id } 
                 ]
             },
             order: [['created_at', 'ASC']]
@@ -828,7 +810,7 @@ export const getCommentThread = async (req, res) => {
         const thread = buildCommentTree(threadComments);
 
         res.status(200).json({
-            thread: thread[0], // Should be single root comment with nested replies
+            thread: thread[0],
             stats: {
                 total_comments: threadComments.length,
                 replies_count: threadComments.length - 1

@@ -341,8 +341,6 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// ===== TASK COMMENTS FUNCTIONS =====
-
 // GET /api/tasks/:id/comments - Ambil semua komentar pada task tertentu
 export const getTaskComments = async (req, res) => {
   try {
@@ -380,7 +378,6 @@ export const addTaskComment = async (req, res) => {
       });
     }
 
-    // Check if task exists
     const task = await Tasks.findByPk(id);
     if (!task) {
       return res.status(404).json({

@@ -13,21 +13,18 @@ import {
 
 import type { TaskStatusOption, TaskPriorityOption, TaskCategory, ResultType } from "../types";
 
-// Task Status Options
 export const TASK_STATUS_OPTIONS: TaskStatusOption[] = [
   { value: "pending", label: "Pending", color: "bg-yellow-500" },
   { value: "completed", label: "Completed", color: "bg-green-500" },
   { value: "cancelled", label: "Cancelled", color: "bg-red-500" },
 ];
 
-// Task Priority Options
 export const TASK_PRIORITY_OPTIONS: TaskPriorityOption[] = [
   { value: "low", label: "Low", color: "bg-green-100 text-green-800 border-green-200" },
   { value: "medium", label: "Medium", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
   { value: "high", label: "High", color: "bg-red-100 text-red-800 border-red-200" },
 ];
 
-// Task Categories (same as in lead detail)
 export const TASK_CATEGORIES: TaskCategory[] = [
   { value: "Kanvasing", label: "Kanvasing" },
   { value: "Followup", label: "Follow Up" },
@@ -35,7 +32,6 @@ export const TASK_CATEGORIES: TaskCategory[] = [
   { value: "Lainnya", label: "Lainnya" },
 ];
 
-// Result Types for task outcomes
 export const RESULT_TYPES: ResultType[] = [
   {
     value: "meeting",
@@ -89,21 +85,18 @@ export const TASK_API_ENDPOINTS = {
   RESULT_UPDATE: (resultId: string) => `http://localhost:5000/api/tasks/task-results/${resultId}`,
 } as const;
 
-// Task Status Colors Map
 export const TASK_STATUS_COLORS = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
   completed: "bg-green-100 text-green-800 border-green-200",
   cancelled: "bg-red-100 text-red-800 border-red-200",
 } as const;
 
-// Task Priority Colors Map
 export const TASK_PRIORITY_COLORS = {
   low: "bg-green-100 text-green-800",
   medium: "bg-yellow-100 text-yellow-800",
   high: "bg-red-100 text-red-800",
 } as const;
 
-// Default values
 export const DEFAULT_TASK_VALUES = {
   status: 'pending',
   priority: 'medium',
@@ -111,7 +104,6 @@ export const DEFAULT_TASK_VALUES = {
   result_type: 'note'
 } as const;
 
-// utils/auth.ts (reuse from lead detail)
 export const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
@@ -133,7 +125,6 @@ export const makeAuthenticatedRequest = async (url: string, options: RequestInit
   });
 };
 
-// utils/formatting.ts (reuse from lead detail)
 export const safeString = (value: any): string => {
   if (value === null || value === undefined) return '';
   return String(value);
@@ -170,7 +161,6 @@ export const formatDate = (dateString: string): string => {
   }
 };
 
-// Utility functions untuk task detail
 export const getTaskStatusInfo = (status: string) => {
   return TASK_STATUS_OPTIONS.find(s => s.value === status) || TASK_STATUS_OPTIONS[0];
 };
@@ -180,7 +170,7 @@ export const getTaskPriorityInfo = (priority: string) => {
 };
 
 export const getResultTypeInfo = (type: string) => {
-  return RESULT_TYPES.find(t => t.value === type) || RESULT_TYPES[4]; // default to 'note'
+  return RESULT_TYPES.find(t => t.value === type) || RESULT_TYPES[4];
 };
 
 export const isTaskOverdue = (dueDate: string, status: string): boolean => {

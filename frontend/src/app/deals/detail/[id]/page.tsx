@@ -13,10 +13,25 @@ import DealCommentTab from "./components/Comments/DealCommentTab";
 import { useAuth } from "../[id]/hooks/useAuth";
 import { makeAuthenticatedRequest } from "../[id]/utils/auth";
 import { Deal, Contact, Comment, Company } from "./types";
+import Swal from "sweetalert2";
 
 export default function DealDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
   const { currentUser, userLoading } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -80,11 +95,11 @@ export default function DealDetailPage() {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    
+
     const diffInDays = Math.floor(diffInSeconds / 86400);
     if (diffInDays === 0) return "Today";
     if (diffInDays === 1) return "Yesterday";
@@ -97,7 +112,7 @@ export default function DealDetailPage() {
     const prevOwner = deal?.owner;
     setDeal(updatedDeal);
     console.log("Deal updated in parent:", updatedDeal);
-    
+
     // If owner was updated, log the change
     if (updatedDeal.owner !== prevOwner) {
       console.log(`Deal ownership changed from ${prevOwner || 'unassigned'} to ${updatedDeal.owner || 'unassigned'}`);
@@ -137,7 +152,7 @@ export default function DealDetailPage() {
       }
 
       const responseData = await response.json();
-      
+
       const dealData = responseData.data || responseData;
 
       if (!dealData || typeof dealData !== "object") {
@@ -153,17 +168,17 @@ export default function DealDetailPage() {
 
     } catch (err: unknown) {
       let errorMessage = "An unexpected error occurred";
-      
+
       if (err instanceof TypeError && err.message.includes("fetch")) {
         errorMessage =
           "Network error: Unable to connect to server. Please check if backend server is running on localhost:5000";
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
-      
+
       console.error("[ERROR] Fetch deal failed:", err);
       setError(errorMessage);
-      
+
       if (err instanceof Error && err.message.includes("not found")) {
         setTimeout(() => router.push("/deals"), 3000);
       }
@@ -174,15 +189,15 @@ export default function DealDetailPage() {
 
   const fetchComments = async () => {
     if (!id) return;
-    
+
     try {
       setCommentsLoading(true);
       console.log(`[DEBUG] Fetching comments for deal: ${id}`);
-      
+
       const response = await makeAuthenticatedRequest(
         `http://localhost:5000/api/deals/${id}/comments`
       );
-      
+
       if (response.ok) {
         const responseData = await response.json();
         const commentsData = responseData.data || responseData || [];
@@ -202,11 +217,11 @@ export default function DealDetailPage() {
 
   const fetchRelatedContacts = async () => {
     if (!deal) return;
-    
+
     try {
       setContactsLoading(true);
       console.log("[DEBUG] Fetching related contacts for deal:", deal.id);
-      
+
       const contactsToFetch: Contact[] = [];
 
       if (deal.contact && deal.contact.id && deal.contact.name) {
@@ -442,9 +457,8 @@ export default function DealDetailPage() {
       <div className="flex h-screen bg-gray-50">
         <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
         <div
-          className={`flex-1 ${
-            isMinimized ? "ml-16" : "ml-50"
-          } flex items-center justify-center`}
+          className={`flex-1 ${isMinimized ? "ml-16" : "ml-50"
+            } flex items-center justify-center`}
         >
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
@@ -460,9 +474,8 @@ export default function DealDetailPage() {
       <div className="flex h-screen bg-gray-50">
         <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
         <div
-          className={`flex-1 ${
-            isMinimized ? "ml-16" : "ml-50"
-          } transition-all duration-300`}
+          className={`flex-1 ${isMinimized ? "ml-16" : "ml-50"
+            } transition-all duration-300`}
         >
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md mx-4">
@@ -497,9 +510,8 @@ export default function DealDetailPage() {
       <div className="flex h-screen bg-gray-50">
         <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
         <div
-          className={`flex-1 ${
-            isMinimized ? "ml-16" : "ml-50"
-          } flex items-center justify-center transition-all duration-300`}
+          className={`flex-1 ${isMinimized ? "ml-16" : "ml-50"
+            } flex items-center justify-center transition-all duration-300`}
         >
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
@@ -527,9 +539,9 @@ export default function DealDetailPage() {
           />
 
           {/* Tab Navigation */}
-          <TabNavigation 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
+          <TabNavigation
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
           />
 
           {/* Tab Content */}

@@ -24,7 +24,8 @@ import {
   LineChart
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 interface Contact {
   id: number;
@@ -53,6 +54,22 @@ interface Contact {
 }
 
 const ContactDetailPage = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
+
   const params = useParams();
   const contactId = params.id;
   const [contact, setContact] = useState<Contact | null>(null);
@@ -275,7 +292,7 @@ const ContactDetailPage = () => {
                     </th>
                   </tr>
                 </thead>
-                
+
                 {/* Table Body */}
                 <tbody className="bg-white divide-y divide-gray-200">
                   {contact.deals.map((deal) => (

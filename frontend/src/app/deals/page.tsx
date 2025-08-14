@@ -123,6 +123,21 @@ const renderStageBadge = (stage: string) => {
 
 export default function Deals() {
   const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
+
   const pathname = usePathname();
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

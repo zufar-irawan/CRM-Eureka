@@ -12,6 +12,8 @@ import EditLeadModal from "../leads/components/EditLeadModal";
 import DesktopTable, { Column } from "@/components/ListTable/DesktopTable";
 import MobileCards, { Field } from "@/components/ListTable/MobileCards";
 import fetchData from "@/components/ListTable/Functions/FetchData";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 const allColumns: Column[] = [
   { key: "name", label: "Name" },
@@ -67,6 +69,22 @@ const allFields: Field[] = [
 
 
 export default function CompaniesList() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
+
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSortDropdown, setShowSortDropdown] = useState(false);

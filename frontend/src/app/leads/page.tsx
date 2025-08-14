@@ -136,6 +136,21 @@ const ALL_COLUMNS = {
 
 export default function MainLeads() {
   const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
+
   const [leads, setLeads] = useState<any[]>([]);
   const [originalLeads, setOriginalLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

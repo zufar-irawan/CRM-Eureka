@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { getToken } from "../utils/auth";
+import axios from "axios";
 
 interface User {
   id: number;
@@ -23,19 +24,13 @@ export default function useUser() {
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
-          method: "GET",
+        const response = await axios.get("http://localhost:5000/api/auth/me", {
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error("Gagal mengambil user");
-        }
-
-        const data = await res.json();
-        setUser(data);
+            Authorization: `Bearer ${token}`
+          }
+        })
+        
+        setUser(response.data.data);
       } catch (error) {
         console.error("Gagal mengambil data user:", error);
       } finally {

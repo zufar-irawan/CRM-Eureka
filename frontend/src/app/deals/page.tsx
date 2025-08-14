@@ -27,7 +27,6 @@ import CreateDealsModal from "./add/AddDealsModal";
 import Swal from "sweetalert2";
 import { useDealEditStore } from "@/Store/dealModalStore";
 import axios from "axios";
-import { useAuth } from "../../../hooks/useAuth";
 
 interface SortConfig {
   key: string;
@@ -143,26 +142,6 @@ export default function Deals() {
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
   const [originalLeads, setOriginalLeads] = useState<any[]>([]);
   const openEditModal = useDealEditStore((state) => state.openModal)
-
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    Swal.fire({
-      icon: "info",
-      title: "You're not logged in!",
-      text: "Make sure to logged in first"
-    })
-
-    return null; // useAuth akan handle redirect
-  }
 
   const stages = ["proposal", "negotiation", "won", "lost"];
 

@@ -11,7 +11,7 @@ interface User {
 }
 
 export default function useUser() {
-  const [users, setUsers] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function useUser() {
         }
 
         const data = await res.json();
-        setUsers(data);
+        setUser(data);
       } catch (error) {
         console.error("Gagal mengambil data user:", error);
       } finally {
@@ -46,5 +46,5 @@ export default function useUser() {
     fetchUser();
   }, []);
 
-  return { users, loading };
+  return { user, loading };
 }

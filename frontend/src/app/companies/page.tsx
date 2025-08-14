@@ -12,8 +12,6 @@ import EditLeadModal from "../leads/components/EditLeadModal";
 import DesktopTable, { Column } from "@/components/ListTable/DesktopTable";
 import MobileCards, { Field } from "@/components/ListTable/MobileCards";
 import fetchData from "@/components/ListTable/Functions/FetchData";
-import { useAuth } from "../../../hooks/useAuth";
-import Swal from "sweetalert2";
 
 const allColumns: Column[] = [
     { key: "name", label: "Name" },
@@ -60,26 +58,6 @@ export default function CompaniesList() {
     const [currentLead, setCurrentLead] = useState<any>(null);
     const [showColumnDropdown, setShowColumnDropdown] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-
-    const { isAuthenticated, isLoading, user } = useAuth();
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-        );
-    }
-
-    if (!isAuthenticated) {
-        Swal.fire({
-            icon: "info",
-            title: "You're not logged in!",
-            text: "Make sure to logged in first"
-        })
-
-        return null; // useAuth akan handle redirect
-    }
 
     const [visibleColumns, setVisibleColumns] = useState<string[]>(
         allColumns.map(col => col.key)

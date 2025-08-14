@@ -194,7 +194,7 @@ export default function Login() {
               </div>
 
               {/* Remember Me & Forgot Password */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
@@ -210,7 +210,7 @@ export default function Login() {
                 >
                   Lupa password?
                 </a>
-              </div>
+              </div> */}
 
               {/* Login Button */}
               <button

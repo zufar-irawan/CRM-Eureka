@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import EditLeadModal from "./components/EditLeadModal";
 import Swal from "sweetalert2";
+import { useAuth } from "../../../hooks/useAuth";
 
 interface DeleteLeadModalProps {
   selectedCount: number;
@@ -151,6 +152,26 @@ export default function MainLeads() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leadsToDelete, setLeadsToDelete] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    Swal.fire({
+      icon: "info",
+      title: "You're not logged in!",
+      text: "Make sure to logged in first"
+    })
+
+    return null; // useAuth akan handle redirect
+  }
 
   // Initialize visible columns with defaults
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {

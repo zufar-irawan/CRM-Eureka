@@ -7,9 +7,31 @@ import useUser from "../../../hooks/useUser"
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { number } from "framer-motion"
+import { useAuth } from "../../../hooks/useAuth"
+import Swal from "sweetalert2"
 
 export default function Dashboard() {
-    const { user, loading } = useUser()
+    const { isAuthenticated, isLoading, user } = useAuth();
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        Swal.fire({
+            icon: "info",
+            title: "You're not logged in!",
+            text: "Make sure to logged in first"
+        })
+
+        return null; // useAuth akan handle redirect
+    }
+
+    // const { users, loading } = useUser()
     const [isMinimized, setIsMinimized] = useState(false)
 
     const BarChart = dynamic(() => import("./components/BarChart"), { ssr: false })
@@ -124,7 +146,7 @@ export default function Dashboard() {
             <div className={`flex ${isMinimized ? 'ml-16' : 'ml-50'} flex-1 flex-col bg-slate-100`}>
                 <header className="bg-slate-800 text-white p-8 text-right">
                     <p className="text-xl">
-                        Hi, <span>{loading ? "..." : user?.name || "User"}</span>
+                        Hi, <span>{isLoading ? "..." : user?.name || "User"}</span>
                     </p>
                 </header>
 

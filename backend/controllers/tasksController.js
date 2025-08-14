@@ -29,12 +29,10 @@ const generateTaskCode = async (transaction) => {
 export const getTasks = async (req, res) => {
   try {
     const { status, priority, category, assigned_to, lead_id, search, } = req.query;
-
     let whereClause = {};
 
     // Filter berdasarkan lead_id (PENTING untuk detail lead)
     if (lead_id) {
-      // Cek apakah lead_id adalah kode atau ID numerik
       if (isNaN(lead_id)) {
         const lead = await Leads.findOne({ where: { code: lead_id } });
         if (lead) {
@@ -162,7 +160,6 @@ export const createTask = async (req, res) => {
       });
     }
 
-    // Cek apakah lead_id adalah kode atau ID numerik
     let finalLeadId;
     if (isNaN(lead_id)) {
       const lead = await Leads.findOne({ where: { code: lead_id }, transaction });

@@ -13,23 +13,23 @@ import { MessageSquare, FileText, Paperclip } from "lucide-react";
 const TASK_TABS = [
   { name: "Comments", icon: MessageSquare },
   { name: "Results", icon: FileText },
-  { name: "Attachments", icon: Paperclip }
+  { name: "Attachments", icon: Paperclip, disabled: true },
 ];
 
 export default function TaskDetailPage() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("Comments");
-  
+
   const { currentUser, userLoading } = useAuth();
-  const { 
-    task, 
-    error, 
+  const {
+    task,
+    error,
     isLoading,
-    fetchTask, 
-    refreshTask, 
+    fetchTask,
+    refreshTask,
     updateTaskStatus,
     updateTaskAssignment,
-    setTask 
+    setTask,
   } = useTaskDetail(id);
 
   useEffect(() => {
@@ -90,38 +90,41 @@ export default function TaskDetailPage() {
         <TaskHeader
           task={task}
           isLoading={isLoading}
+          currentUser={currentUser}
           onTaskUpdate={refreshTask}
           onStatusChange={updateTaskStatus}
           onAssignmentChange={updateTaskAssignment}
         />
 
         {/* Task Tabs */}
-        <div className="border-b border-gray-200">
-          <div className="flex space-x-0 px-6">
-            {TASK_TABS.map((tab) => (
-              <button
-                key={tab.name}
-                onClick={() => setActiveTab(tab.name)}
-                className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  tab.name === activeTab
-                    ? "border-gray-900 text-gray-900"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        <div className="flex space-x-0 px-6">
+          {TASK_TABS.map((tab) => (
+            <button
+              key={tab.name}
+              onClick={() => !tab.disabled && setActiveTab(tab.name)}
+              className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                tab.name === activeTab
+                  ? "border-gray-900 text-gray-900"
+                  : tab.disabled
+                  ? "border-transparent text-red-500 cursor-not-allowed" 
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+              disabled={tab.disabled}
+            >
+              <tab.icon
+                className={`w-4 h-4 ${
+                  tab.disabled ? "text-red-500" : "text-current" 
                 }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.name}</span>
-              </button>
-            ))}
-          </div>
+              />
+              <span>{tab.name}</span>
+            </button>
+          ))}
         </div>
 
         {renderTabContent()}
       </div>
 
-      <TaskSidebar
-        task={task}
-        currentUser={currentUser}
-      />
+      <TaskSidebar task={task} currentUser={currentUser} />
     </div>
   );
 }

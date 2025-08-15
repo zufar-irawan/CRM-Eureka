@@ -1,47 +1,45 @@
 {
   "info": {
-    "name": "CRM API Testing",
-    "description": "Complete API testing for Leads, Deals, and Tasks",
+    "name": "CRM KPI API",
+    "description": "Collection untuk testing KPI endpoints",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Leads",
+      "name": "KPI Targets",
       "item": [
         {
-          "name": "Get All Leads",
+          "name": "Get KPI Targets",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/leads?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads"],
+              "raw": "{{base_url}}/api/kpi/targets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "targets"]
+            }
+          }
+        },
+        {
+          "name": "Get Daily Targets Only",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kpi/targets?type=daily",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "targets"],
               "query": [
-                {"key": "page", "value": "1"},
-                {"key": "limit", "value": "10"},
-                {"key": "stage", "value": "New", "disabled": true},
-                {"key": "rating", "value": "Hot", "disabled": true},
-                {"key": "owner", "value": "1", "disabled": true},
-                {"key": "search", "value": "PT", "disabled": true}
+                {
+                  "key": "type",
+                  "value": "daily"
+                }
               ]
             }
           }
         },
         {
-          "name": "Get Lead by ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/leads/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads", "1"]
-            }
-          }
-        },
-        {
-          "name": "Create Lead",
+          "name": "Update Daily Targets",
           "request": {
             "method": "POST",
             "header": [
@@ -52,38 +50,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"owner\": 1,\n    \"company\": \"PT Test Company\",\n    \"title\": \"Mr\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"job_position\": \"Manager\",\n    \"email\": \"john@testcompany.com\",\n    \"phone\": \"021-1234567\",\n    \"mobile\": \"081234567890\",\n    \"website\": \"https://testcompany.com\",\n    \"industry\": \"Manufacturing\",\n    \"number_of_employees\": 50,\n    \"lead_source\": \"Website\",\n    \"stage\": \"New\",\n    \"rating\": \"Warm\",\n    \"street\": \"Jl. Test No. 123\",\n    \"city\": \"Jakarta\",\n    \"state\": \"DKI Jakarta\",\n    \"postal_code\": \"12345\",\n    \"country\": \"Indonesia\",\n    \"description\": \"Test lead description\"\n}"
+              "raw": "{\n  \"type\": \"daily\",\n  \"targets\": {\n    \"kanvasing_target\": 5,\n    \"followup_target\": 3,\n    \"penawaran_target\": 2,\n    \"kesepakatan_tarif_target\": 1,\n    \"deal_do_target\": 1\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/leads",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads"]
+              "raw": "{{base_url}}/api/kpi/targets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "targets"]
             }
           }
         },
         {
-          "name": "Update Lead",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"company\": \"PT Test Company Updated\",\n    \"rating\": \"Hot\",\n    \"stage\": \"Contacted\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/leads/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads", "1"]
-            }
-          }
-        },
-        {
-          "name": "Convert Lead to Deal",
+          "name": "Update Monthly Targets",
           "request": {
             "method": "POST",
             "header": [
@@ -94,119 +71,70 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"deal_title\": \"Deal from Lead Conversion\",\n    \"deal_value\": 50000000,\n    \"deal_stage\": \"proposal_sent\",\n    \"owner\": 1\n}"
+              "raw": "{\n  \"type\": \"monthly\",\n  \"targets\": {\n    \"kanvasing_target\": 100,\n    \"followup_target\": 80,\n    \"penawaran_target\": 50,\n    \"kesepakatan_tarif_target\": 25,\n    \"deal_do_target\": 15\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/leads/1/convert",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads", "1", "convert"]
-            }
-          }
-        },
-        {
-          "name": "Update Lead Stage",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"stage\": \"Qualification\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/leads/1/stage",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads", "1", "stage"]
-            }
-          }
-        },
-        {
-          "name": "Get Lead Comments",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/leads/1/comments",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads", "1", "comments"]
-            }
-          }
-        },
-        {
-          "name": "Add Lead Comment",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"message\": \"Sudah follow up via email\",\n    \"user_id\": 2,\n    \"user_name\": \"Sales One\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/leads/1/comments",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads", "1", "comments"]
-            }
-          }
-        },
-        {
-          "name": "Delete Lead",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/leads/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "leads", "1"]
+              "raw": "{{base_url}}/api/kpi/targets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "targets"]
             }
           }
         }
       ]
     },
     {
-      "name": "Deals",
+      "name": "Daily KPI",
       "item": [
         {
-          "name": "Get All Deals",
+          "name": "Get Daily KPI - Today",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/deals?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deals"],
+              "raw": "{{base_url}}/api/kpi/hari",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "hari"]
+            }
+          }
+        },
+        {
+          "name": "Get Daily KPI - Specific Date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kpi/hari?date=2025-08-14",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "hari"],
               "query": [
-                {"key": "page", "value": "1"},
-                {"key": "limit", "value": "10"},
-                {"key": "stage", "value": "proposal_sent", "disabled": true},
-                {"key": "owner", "value": "1", "disabled": true},
-                {"key": "search", "value": "Deal", "disabled": true}
+                {
+                  "key": "date",
+                  "value": "2025-08-14"
+                }
               ]
             }
           }
         },
         {
-          "name": "Get Deal by ID",
+          "name": "Get Daily KPI - By Sales ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/deals/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deals", "1"]
+              "raw": "{{base_url}}/api/kpi/hari?sales_id=2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "hari"],
+              "query": [
+                {
+                  "key": "sales_id",
+                  "value": "2"
+                }
+              ]
             }
           }
         },
         {
-          "name": "Create Deal",
+          "name": "Calculate Daily KPI - Manual",
           "request": {
             "method": "POST",
             "header": [
@@ -217,139 +145,82 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"lead_id\": 1,\n    \"title\": \"Deal Pengiriman Jakarta-Surabaya\",\n    \"value\": 25000000,\n    \"stage\": \"proposal_sent\",\n    \"owner\": 1,\n    \"id_contact\": 0,\n    \"id_company\": 0\n}"
+              "raw": "{\n  \"user_id\": 2,\n  \"date\": \"2025-08-14\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/deals",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deals"]
-            }
-          }
-        },
-        {
-          "name": "Update Deal",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"title\": \"Deal Pengiriman Jakarta-Surabaya Updated\",\n    \"value\": 30000000,\n    \"stage\": \"negotiation\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/deals/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deals", "1"]
-            }
-          }
-        },
-        {
-          "name": "Update Deal Stage",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"stage\": \"won\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/deals/1/updateStage",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deals", "1", "updateStage"]
-            }
-          }
-        },
-        {
-          "name": "Get Deal Comments",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/deals/1/comments",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deals", "1", "comments"]
-            }
-          }
-        },
-        {
-          "name": "Add Deal Comment",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"message\": \"Deal sudah masuk tahap negosiasi\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/deals/1/comments",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deals", "1", "comments"]
-            }
-          }
-        },
-        {
-          "name": "Delete Deal",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/deals/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deals", "1"]
+              "raw": "{{base_url}}/api/kpi/perhitungan-hari",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "perhitungan-hari"]
             }
           }
         }
       ]
     },
     {
-      "name": "Tasks",
+      "name": "Monthly KPI",
       "item": [
         {
-          "name": "Get All Tasks",
+          "name": "Get Monthly KPI - Current Month",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/tasks",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks"],
+              "raw": "{{base_url}}/api/kpi/bulan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "bulan"]
+            }
+          }
+        },
+        {
+          "name": "Get Monthly KPI - Specific Month",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kpi/bulan?year=2025&month=8",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "bulan"],
               "query": [
-                {"key": "status", "value": "new", "disabled": true},
-                {"key": "priority", "value": "high", "disabled": true},
-                {"key": "category", "value": "Kanvasing", "disabled": true},
-                {"key": "assigned_to", "value": "2", "disabled": true}
+                {
+                  "key": "year",
+                  "value": "2025"
+                },
+                {
+                  "key": "month",
+                  "value": "8"
+                }
               ]
             }
           }
         },
         {
-          "name": "Get Task by ID",
+          "name": "Get Monthly KPI - By Sales ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/tasks/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks", "1"]
+              "raw": "{{base_url}}/api/kpi/bulan?sales_id=2&year=2025&month=8",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "bulan"],
+              "query": [
+                {
+                  "key": "sales_id",
+                  "value": "2"
+                },
+                {
+                  "key": "year",
+                  "value": "2025"
+                },
+                {
+                  "key": "month",
+                  "value": "8"
+                }
+              ]
             }
           }
         },
         {
-          "name": "Create Task",
+          "name": "Calculate Monthly KPI - Manual",
           "request": {
             "method": "POST",
             "header": [
@@ -360,50 +231,115 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"lead_id\": 1,\n    \"assigned_to\": 2,\n    \"title\": \"Follow up call client PT ABC\",\n    \"description\": \"Menghubungi client untuk follow up penawaran\",\n    \"category\": \"Followup\",\n    \"due_date\": \"2025-07-30 14:00:00\",\n    \"priority\": \"medium\"\n}"
+              "raw": "{\n  \"user_id\": 2,\n  \"year\": 2025,\n  \"month\": 8\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/tasks",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks"]
+              "raw": "{{base_url}}/api/kpi/perhitungan-bulan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "perhitungan-bulan"]
             }
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "KPI Summary & Reports",
+      "item": [
         {
-          "name": "Update Task",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"status\": \"completed\",\n    \"priority\": \"high\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/tasks/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks", "1"]
-            }
-          }
-        },
-        {
-          "name": "Get Task Comments",
+          "name": "Get Daily Summary",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/tasks/1/comments",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks", "1", "comments"]
+              "raw": "{{base_url}}/api/kpi/summary?type=daily",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "summary"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "daily"
+                }
+              ]
             }
           }
         },
         {
-          "name": "Add Task Comment",
+          "name": "Get Monthly Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kpi/summary?type=monthly",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "summary"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "monthly"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get KPI Report - Daily Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kpi/report?type=daily&start_date=2025-08-01&end_date=2025-08-14",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "report"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "daily"
+                },
+                {
+                  "key": "start_date",
+                  "value": "2025-08-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2025-08-14"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get KPI Report - Monthly with Sales Filter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kpi/report?type=monthly&sales_id=2&year=2025",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kpi", "report"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "monthly"
+                },
+                {
+                  "key": "sales_id",
+                  "value": "2"
+                },
+                {
+                  "key": "year",
+                  "value": "2025"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Task Integration",
+      "item": [
+        {
+          "name": "Complete Task (Auto KPI Update)",
           "request": {
             "method": "POST",
             "header": [
@@ -414,17 +350,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"comment_text\": \"Sudah melakukan follow up, client tertarik\",\n    \"commented_by\": 2\n}"
+              "raw": "{\n  \"result_text\": \"Berhasil menyelesaikan kanvasing ke client baru\",\n  \"result_type\": \"visit\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/tasks/1/comments",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks", "1", "comments"]
+              "raw": "{{base_url}}/api/tasks/{{task_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "{{task_id}}", "complete"]
             }
           }
         },
         {
-          "name": "Update Task Comment",
+          "name": "Update Task Status (Auto KPI Update)",
           "request": {
             "method": "PUT",
             "header": [
@@ -435,24 +371,45 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"comment_text\": \"Update: Client sudah memberikan feedback positif\"\n}"
+              "raw": "{\n  \"status\": \"completed\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/tasks/task-comments/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks", "task-comments", "1"]
+              "raw": "{{base_url}}/api/tasks/{{task_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "{{task_id}}", "status"]
             }
           }
         },
         {
-          "name": "Delete Task Comment",
+          "name": "Get Task KPI Impact",
           "request": {
-            "method": "DELETE",
+            "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/tasks/task-comments/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks", "task-comments", "1"]
+              "raw": "{{base_url}}/api/tasks/{{task_id}}/kpi-impact",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "{{task_id}}", "kpi-impact"]
+            }
+          }
+        },
+        {
+          "name": "Bulk Recalculate KPI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_ids\": [2, 3, 5],\n  \"start_date\": \"2025-08-01\",\n  \"end_date\": \"2025-08-14\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tasks/bulk-recalculate-kpi",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tasks", "bulk-recalculate-kpi"]
             }
           }
         }
@@ -461,8 +418,13 @@
   ],
   "variable": [
     {
-      "key": "baseUrl",
+      "key": "base_url",
       "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "1",
       "type": "string"
     }
   ]

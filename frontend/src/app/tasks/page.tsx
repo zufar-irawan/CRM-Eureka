@@ -13,6 +13,8 @@ import MobileCards, { Field } from "@/components/ListTable/MobileCards";
 import fetchData from "@/components/ListTable/Functions/FetchData";
 import EditTasksModal from "./edit/editModal";
 import { useTaskModalStore } from "@/Store/taskModalStore";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 const allColumns: Column[] = [
   { key: "title", label: "Title" },
@@ -79,6 +81,22 @@ const allFields: Field[] = [
 ]
 
 export default function TasksList() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
+
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -126,7 +144,7 @@ export default function TasksList() {
   const renderStatusBadge = (status: string) => {
     const normalizedStatus = status.toLowerCase();
     let dotColor = '';
-    
+
     switch (normalizedStatus) {
       case 'new':
         dotColor = 'bg-gray-700';
@@ -159,7 +177,7 @@ export default function TasksList() {
   const renderPriorityBadge = (priority: string) => {
     const normalizedPriority = priority.toLowerCase();
     let colorClass = '';
-    
+
     switch (normalizedPriority) {
       case 'low':
         colorClass = 'bg-green-100 text-green-800 border border-green-200';
@@ -389,8 +407,8 @@ export default function TasksList() {
           columns={allColumns.map(col => ({
             ...col,
             render: col.key === 'status' ? (value) => renderStatusBadge(value) :
-                    col.key === 'priority' ? (value) => renderPriorityBadge(value) :
-                    col.render
+              col.key === 'priority' ? (value) => renderPriorityBadge(value) :
+                col.render
           }))}
           visibleColumns={visibleColumns}
           loading={loading}
@@ -402,15 +420,15 @@ export default function TasksList() {
           searchTerm={searchTerm}
         />
 
-        <MobileCards 
-          pathname="/tasks/" 
+        <MobileCards
+          pathname="/tasks/"
           fields={allFields.map(field => ({
             ...field,
             render: field.key === 'status' ? (value) => renderStatusBadge(value) :
-                    field.key === 'priority' ? (value) => renderPriorityBadge(value) :
-                    field.render
-          }))} 
-          visibleFields={visibleColumns} 
+              field.key === 'priority' ? (value) => renderPriorityBadge(value) :
+                field.render
+          }))}
+          visibleFields={visibleColumns}
         />
 
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">

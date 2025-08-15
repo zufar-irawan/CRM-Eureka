@@ -24,6 +24,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import useUser from "../../hooks/useUser";
+import { logout } from "../../utils/auth";
 
 type sidebarProps = {
   isMinimized: boolean;
@@ -74,7 +75,8 @@ const Sidebar = ({ isMinimized, setIsMinimized }: sidebarProps) => {
             />
             <div className="text-left">
               <p className="text-xs text-slate-400 leading-tight flex items-center gap-1">
-                Administrator <ChevronDown size={14} />
+                {loading ? "..." : user?.name || "Administrator"}
+                <ChevronDown size={14} />
               </p>
             </div>
           </button>
@@ -101,19 +103,7 @@ const Sidebar = ({ isMinimized, setIsMinimized }: sidebarProps) => {
             >
               <ul className="py-1">
                 <li>
-                  <button className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-100">
-                    <Sun size={15} />
-                    Toggle Theme
-                  </button>
-                </li>
-                <li>
-                  <button className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-100">
-                    <Settings size={15} />
-                    Settings
-                  </button>
-                </li>
-                <li>
-                  <button className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-100">
+                  <button onClick={() => logout()} className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-100">
                     <LogOut size={15} />
                     Log Out
                   </button>

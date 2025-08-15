@@ -15,6 +15,7 @@ import {
   Calendar,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 interface SalesData {
   id: string;
@@ -58,6 +59,22 @@ api.interceptors.request.use(config => {
 });
 
 export default function ReportsPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
+
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -300,7 +317,7 @@ export default function ReportsPage() {
       filters.viewType === "BULANAN" ? "Bulan" : "Tanggal",
       "Nama Sales",
       "KANVASING task",
-      "FOLLOWUP task", 
+      "FOLLOWUP task",
       "DATABASE PENAWARAN task",
       "KESEPAKATAN TARIF task",
       "DEAL DO task",
@@ -332,7 +349,7 @@ export default function ReportsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     Swal.fire({
       icon: "success",
       title: "Export Successful",
@@ -396,21 +413,19 @@ export default function ReportsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setFilters(prev => ({ ...prev, viewType: "BULANAN" }))}
-                      className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
-                        filters.viewType === "BULANAN"
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      }`}
+                      className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${filters.viewType === "BULANAN"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        }`}
                     >
                       BULANAN
                     </button>
                     <button
                       onClick={() => setFilters(prev => ({ ...prev, viewType: "HARIAN" }))}
-                      className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
-                        filters.viewType === "HARIAN"
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      }`}
+                      className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${filters.viewType === "HARIAN"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        }`}
                     >
                       HARIAN
                     </button>
@@ -490,21 +505,19 @@ export default function ReportsPage() {
           <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1">
             <button
               onClick={() => handleViewTypeChange("BULANAN")}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                filters.viewType === "BULANAN"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${filters.viewType === "BULANAN"
+                ? "bg-blue-600 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               BULANAN
             </button>
             <button
               onClick={() => handleViewTypeChange("HARIAN")}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                filters.viewType === "HARIAN"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${filters.viewType === "HARIAN"
+                ? "bg-blue-600 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               HARIAN
             </button>

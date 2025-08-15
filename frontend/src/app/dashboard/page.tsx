@@ -7,8 +7,27 @@ import useUser from "../../../hooks/useUser"
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { number } from "framer-motion"
+import { isLoggedIn } from "../../../utils/auth"
+import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
+import Swal from "sweetalert2"
 
 export default function Dashboard() {
+    const router = useRouter()
+
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            Swal.fire({
+                icon: "info",
+                title: "You're not logged in",
+                text: "Make sure to login first!"
+            })
+
+            router.replace('/login')
+        }
+    }, [router])
+
     const { user, loading } = useUser()
     const [isMinimized, setIsMinimized] = useState(false)
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation";
@@ -12,6 +12,17 @@ interface LoginData {
 }
 
 export default function Login() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (token) {
+      router.replace('/dashboard')
+    }
+  }, [])
+
+
   const [loginData, setLoginData] = useState<LoginData>({
     email: "",
     password: "",
@@ -20,7 +31,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
-  const router = useRouter();
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -194,7 +204,7 @@ export default function Login() {
               </div>
 
               {/* Remember Me & Forgot Password */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
@@ -210,7 +220,7 @@ export default function Login() {
                 >
                   Lupa password?
                 </a>
-              </div>
+              </div> */}
 
               {/* Login Button */}
               <button

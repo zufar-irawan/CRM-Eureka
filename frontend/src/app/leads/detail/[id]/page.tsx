@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useLead } from "./hooks/useLead";
@@ -9,7 +9,7 @@ import LeadTabs from "./components/LeadTabs";
 import LeadSidebar from "./components/LeadSidebar";
 import CommentsTab from "./components/Comments/CommentTab";
 import TasksTab from "./components/Tasks/TasksTab";
-import {ActivityTab } from "./components/ActivityTab";
+import { ActivityTab } from "./components/ActivityTab";
 import ConvertToDealModal from "../../components/ConvertToDealModal";
 import { makeAuthenticatedRequest } from "./utils/auth";
 import { API_ENDPOINTS } from "./utils/constants";
@@ -57,6 +57,22 @@ const AttachmentsTab = ({ lead }: { lead: any }) => (
 );
 
 export default function LeadDetailPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
+
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("Notes");
   const [selectedStatus, setSelectedStatus] = useState("New");
@@ -183,10 +199,10 @@ export default function LeadDetailPage() {
 
       // Close modal
       setShowConvertModal(false);
-      
+
       // Refresh lead data
       await refreshLead();
-      
+
       // Show success message
       Swal.fire({
         icon: 'success',

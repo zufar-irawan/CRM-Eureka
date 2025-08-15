@@ -24,7 +24,8 @@ import {
   LineChart
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 interface Company {
   id: number;
@@ -53,6 +54,22 @@ interface Company {
 }
 
 const CompanyDetailPage = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      Swal.fire({
+        icon: "info",
+        title: "You're not logged in",
+        text: "Make sure to login first!"
+      })
+
+      router.replace('/login')
+    }
+  }, [router])
+
   const params = useParams();
   const companyId = params.id;
   const [company, setCompany] = useState<Company | null>(null);
@@ -65,18 +82,18 @@ const CompanyDetailPage = () => {
       try {
         setLoading(true);
         console.log('Fetching company with ID:', companyId);
-        
+
         const response = await fetch(`/api/companies/${companyId}`);
         console.log('Response status:', response.status);
-        
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.message || `HTTP Error: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('API Response:', data);
-        
+
         if (data.success) {
           console.log('Company data:', data.data);
           setCompany(data.data);
@@ -112,8 +129,8 @@ const CompanyDetailPage = () => {
       <div className="flex min-h-screen bg-gray-50 items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 mb-2">Error: {error}</div>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Retry
@@ -242,11 +259,10 @@ const CompanyDetailPage = () => {
             <nav className="flex space-x-8 px-6" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('deals')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'deals'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } transition-colors`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'deals'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } transition-colors`}
               >
                 <div className="flex items-center">
                   <Handshake className="w-4 h-4 mr-2" />
@@ -258,11 +274,10 @@ const CompanyDetailPage = () => {
               </button>
               <button
                 onClick={() => setActiveTab('contacts')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'contacts'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } transition-colors`}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'contacts'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } transition-colors`}
               >
                 <div className="flex items-center">
                   <Users className="w-4 h-4 mr-2" />
@@ -302,7 +317,7 @@ const CompanyDetailPage = () => {
                         </th>
                       </tr>
                     </thead>
-                    
+
                     {/* Table Body */}
                     <tbody className="bg-white divide-y divide-gray-200">
                       {company.deals.map((deal) => (
@@ -374,7 +389,7 @@ const CompanyDetailPage = () => {
                         </th>
                       </tr>
                     </thead>
-                    
+
                     {/* Table Body */}
                     <tbody className="bg-white divide-y divide-gray-200">
                       {company.contacts.map((contact) => (

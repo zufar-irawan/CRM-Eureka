@@ -15,23 +15,18 @@ export default function ReportsLayout(
 
   const pathname = usePathname()
 
-  // DETEKSI HALAMAN DETAIL (jika ada detail page untuk reports)
-  const isDetailPage = pathname.includes("/detail")
-
   return (
     <div className="flex h-screen">
       <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
       <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex flex-col bg-gray-50 transition-all duration-300`}>
         {/* Tampilkan Header hanya jika BUKAN di halaman detail */}
-        {!isDetailPage && (
-          <Header
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
-            setIsModalOpen={setIsModalOpen}
-            pathname={pathname}
-          />
-        )}
+        <Header
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          setIsModalOpen={setIsModalOpen}
+          pathname={pathname}
+        />
 
         <div className="flex-1 overflow-y-auto">
           {children}

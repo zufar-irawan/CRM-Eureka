@@ -6,8 +6,26 @@ import Kanban, { DNDType } from "@/components/Kanban/Kanban"
 import { Filter, KanbanIcon, RotateCcw, X, Search } from "lucide-react"
 import { useEffect, useState, useCallback } from 'react'
 import { setStyle } from 'framer-motion'
+import { useRouter } from 'next/router'
+import Swal from 'sweetalert2'
 
 export default function LeadsKanban() {
+    const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+
+        if (!token) {
+            Swal.fire({
+                icon: "info",
+                title: "You're not logged in",
+                text: "Make sure to login first!"
+            })
+
+            router.replace('/login')
+        }
+    }, [router])
+
     const [data, setData] = useState<any[]>([])
     const [containers, setContainers] = useState<DNDType[]>([
         {

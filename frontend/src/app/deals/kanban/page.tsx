@@ -7,9 +7,26 @@ import { Filter, KanbanIcon, RotateCcw, Search, X } from "lucide-react"
 import { useCallback, useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 export default function DealsKanban() {
+    const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+
+        if (!token) {
+            Swal.fire({
+                icon: "info",
+                title: "You're not logged in",
+                text: "Make sure to login first!"
+            })
+
+            router.replace('/login')
+        }
+    }, [router])
+
     const [data, setData] = useState<any[]>([]);
     const [isMinimized, setIsMinimized] = useState(false);
     const [isOpen, setIsOpen] = useState(false);

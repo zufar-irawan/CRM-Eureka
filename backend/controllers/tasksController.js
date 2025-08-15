@@ -1,3 +1,4 @@
+// controllers/tasksController.js - Updated dengan integrasi KPI
 import { Tasks } from "../models/tasks/tasksModel.js";
 import { TaskComments } from "../models/tasks/tasksCommentModel.js";
 import { TaskResults } from "../models/tasks/tasksResultModel.js";
@@ -5,6 +6,7 @@ import { User } from "../models/usersModel.js";
 import { Leads } from "../models/leads/leadsModel.js";
 import { Op } from "sequelize";
 import { sequelize } from '../config/db.js';
+import { autoUpdateKPI } from "./kpiContoller.js";
 
 const generateTaskCode = async (transaction) => {
     const lastTask = await Tasks.findOne({
@@ -187,9 +189,9 @@ export const createTask = async (req, res) => {
     const taskCode = await generateTaskCode(transaction);
 
     const newTask = await Tasks.create({
-      code: taskCode, // Tambah kode otomatis
+      code: taskCode,
       lead_id: finalLeadId,
-      assigned_to: parseInt(assigned_to),
+      assigned_to: Number(assigned_to),
       title,
       description,
       category: category || 'Lainnya',
@@ -254,6 +256,9 @@ export const updateTask = async (req, res) => {
       });
     }
 
+    // Simpan status lama untuk pengecekan perubahan
+    const oldStatus = task.status;
+
     // Jika ada lead_id yang akan diupdate, validasi dulu
     if (updateData.lead_id) {
       if (isNaN(updateData.lead_id)) {
@@ -278,6 +283,12 @@ export const updateTask = async (req, res) => {
     }
 
     await task.update(updateData);
+
+    // 🔥 INTEGRASI KPI: Auto-update KPI jika task status berubah menjadi completed
+    if (oldStatus !== 'completed' && updateData.status === 'completed') {
+      await autoUpdateKPI(task.id, task.assigned_to);
+      console.log(`📊 KPI auto-updated for task ${task.code} completion`);
+    }
 
     // Ambil data terbaru dengan include
     const updatedTask = await Tasks.findOne({
@@ -403,6 +414,12 @@ export const updateTaskStatus = async (req, res) => {
 
     // Update status
     await task.update({ status });
+
+    // 🔥 INTEGRASI KPI: Auto-update KPI jika task status berubah menjadi completed
+    if (oldStatus !== 'completed' && status === 'completed') {
+      await autoUpdateKPI(task.id, task.assigned_to);
+      console.log(`📊 KPI auto-updated for task ${task.code} status change to completed`);
+    }
 
     // Ambil data terbaru
     const updatedTask = await Tasks.findOne({

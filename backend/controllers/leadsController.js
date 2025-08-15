@@ -4,8 +4,29 @@ import { Tasks } from "../models/tasks/tasksModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
 import { Companies } from "../models/companies/companiesModel.js";
 import { Contacts } from "../models/contacts/contactsModel.js";
+import { autoUpdateKPIForDeal } from './kpiContoller.js';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js'; 
+
+const generateDealCode = async (transaction) => {
+    const lastDeal = await Deals.findOne({
+        where: {
+            code: {
+                [Op.like]: 'DL-%'
+            }
+        },
+        order: [['id', 'DESC']],
+        transaction
+    });
+
+    let nextNumber = 1;
+    if (lastDeal && lastDeal.code) {
+        const lastNumber = parseInt(lastDeal.code.split('-')[1]);
+        nextNumber = lastNumber + 1;
+    }
+
+    return `DL-${nextNumber.toString().padStart(3, '0')}`;
+};
 
 // Fungsi untuk generate kode leads otomatis
 const generateLeadCode = async (transaction) => {
@@ -375,7 +396,7 @@ export const convertLead = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Cek apakah id adalah kode atau ID numerik
+        // Check if id is code or numeric ID
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const { dealTitle, dealValue, dealStage } = req.body;
@@ -396,12 +417,16 @@ export const convertLead = async (req, res) => {
         
         if (!lead) {
             await transaction.rollback();
-            return res.status(404).json({ message: "Lead not found" });
+            return res.status(404).json({ 
+                success: false,
+                message: "Lead not found" 
+            });
         }
 
         if (lead.status === true) {
             await transaction.rollback();
             return res.status(400).json({ 
+                success: false,
                 message: "Lead has already been converted to deal" 
             });
         }
@@ -409,6 +434,7 @@ export const convertLead = async (req, res) => {
         let companyId = null;
         let contactId = null;
 
+        // Create company if exists
         if (lead.company && lead.company.trim()) {
             let existingCompany = await Companies.findOne({
                 where: {
@@ -421,6 +447,7 @@ export const convertLead = async (req, res) => {
                 companyId = existingCompany.id;
                 console.log('[DEBUG] Using existing company:', companyId);
                 
+                // Update existing company with lead data if needed
                 const updateData = {};
                 if (lead.phone && !existingCompany.phone) updateData.phone = lead.phone;
                 if (lead.work_email && !existingCompany.email) updateData.email = lead.work_email;
@@ -436,6 +463,7 @@ export const convertLead = async (req, res) => {
                     await existingCompany.update(updateData, { transaction });
                 }
             } else {
+                // Create new company
                 const addressParts = [lead.street, lead.city, lead.state, lead.postal_code].filter(Boolean);
                 const companyAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
 
@@ -452,12 +480,14 @@ export const convertLead = async (req, res) => {
             }
         }
 
+        // Create contact if exists
         if (lead.fullname || lead.first_name || lead.last_name || lead.email) {
             const contactName = lead.fullname || `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
             
             if (contactName) {
                 let existingContact = null;
                 
+                // Check for existing contact by email or name+company
                 if (lead.email) {
                     existingContact = await Contacts.findOne({
                         where: {
@@ -485,6 +515,7 @@ export const convertLead = async (req, res) => {
                     contactId = existingContact.id;
                     console.log('[DEBUG] Using existing contact:', contactId);
                     
+                    // Update existing contact with lead data if needed
                     const updateData = {};
                     if (lead.email && !existingContact.email) updateData.email = lead.email;
                     if (lead.mobile && !existingContact.phone) updateData.phone = lead.mobile;
@@ -495,6 +526,7 @@ export const convertLead = async (req, res) => {
                         await existingContact.update(updateData, { transaction });
                     }
                 } else {
+                    // Create new contact
                     const newContact = await Contacts.create({
                         company_id: companyId, 
                         name: contactName,
@@ -510,12 +542,21 @@ export const convertLead = async (req, res) => {
             }
         }
 
+        // Update lead status
         await lead.update({ 
             stage: 'Converted',
-            status: true
+            status: true,
+            updated_at: new Date()
         }, { transaction });
 
-        const numericValue = dealValue ? parseFloat(dealValue.toString()) : 0;
+        // Process deal value safely
+        let numericValue = 0;
+        if (dealValue !== undefined && dealValue !== null && dealValue !== '') {
+            const parsedValue = parseFloat(dealValue.toString());
+            if (!isNaN(parsedValue) && parsedValue >= 0) {
+                numericValue = parsedValue;
+            }
+        }
         
         console.log('[DEBUG] Creating deal with:', {
             originalValue: dealValue,
@@ -525,24 +566,35 @@ export const convertLead = async (req, res) => {
             isNaN: isNaN(numericValue)
         });
 
-        // Generate kode deal otomatis
+        // Generate deal code automatically
         const dealCode = await generateDealCode(transaction);
 
+        // Create new deal
         const newDeal = await Deals.create({
-            code: dealCode, // Tambah kode otomatis
+            code: dealCode,
             lead_id: lead.id,
             title: dealTitle || `Deal from Lead Conversion - ${lead.fullname || lead.company}`,
-            value: isNaN(numericValue) ? 0 : numericValue,
+            value: numericValue,
             stage: dealStage || 'proposal',
             owner: lead.owner || 0,
             id_contact: contactId, 
             id_company: companyId, 
-            created_by: req.user?.id || 1,
+            created_by: lead.owner || req.user?.id || 1,
             created_at: new Date(),
             updated_at: new Date()
         }, { transaction });
 
         await transaction.commit();
+
+        // Auto-update KPI if needed
+        // Always trigger KPI update on conversion
+        try {
+            await autoUpdateKPIForDeal(newDeal.id, lead.owner);
+            console.log(`[KPI] Auto-updated for deal conversion ${newDeal.code} with stage: ${dealStage}`);
+        } catch (kpiError) {
+            console.error('[KPI] Error updating KPI:', kpiError);
+            // Don't fail the whole conversion if KPI update fails
+        }
 
         console.log('[DEBUG] Conversion completed successfully:', {
             dealId: newDeal.id,
@@ -552,12 +604,14 @@ export const convertLead = async (req, res) => {
             value: newDeal.value
         });
         
+        // Fetch created entities for response
         const createdCompany = companyId ? await Companies.findByPk(companyId) : null;
         const createdContact = contactId ? await Contacts.findByPk(contactId, {
             include: [{
                 model: Companies,
                 as: 'company',
-                attributes: ['id', 'name']
+                attributes: ['id', 'name'],
+                required: false
             }]
         }) : null;
         
@@ -603,7 +657,7 @@ export const convertLead = async (req, res) => {
     } catch (error) {
         await transaction.rollback();
         console.error('Error converting lead:', {
-            id,
+            id: req.params.id,
             error: error.message,
             stack: error.stack
         });
@@ -614,27 +668,6 @@ export const convertLead = async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
-};
-
-// Fungsi untuk generate kode deal otomatis (diperlukan untuk convert)
-const generateDealCode = async (transaction) => {
-    const lastDeal = await Deals.findOne({
-        where: {
-            code: {
-                [Op.like]: 'DL-%'
-            }
-        },
-        order: [['id', 'DESC']],
-        transaction
-    });
-
-    let nextNumber = 1;
-    if (lastDeal && lastDeal.code) {
-        const lastNumber = parseInt(lastDeal.code.split('-')[1]);
-        nextNumber = lastNumber + 1;
-    }
-
-    return `DL-${nextNumber.toString().padStart(3, '0')}`;
 };
 
 export const updateLeadStage = async (req, res) => {

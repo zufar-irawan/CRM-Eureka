@@ -1,4 +1,4 @@
-// models/associations.js
+// models/associations.js - Updated dengan KPI models
 import { Leads } from "./leads/leadsModel.js";
 import { LeadComments } from "./leads/leadsCommentModel.js";
 import { Tasks } from "./tasks/tasksModel.js";
@@ -10,6 +10,7 @@ import { Deals } from "./deals/dealsModel.js";
 import { DealComments } from "./deals/dealsCommentModel.js";
 import { Companies } from "./companies/companiesModel.js";
 import { Contacts } from "./contacts/contactsModel.js";
+import { SalesKpiDaily, SalesKpiMonthly, KpiTargets, TaskKpiLogs } from "../models/kpi/kpiModel.js";
 
 export const setupAssociations = () => {
     User.belongsToMany(Role, {
@@ -116,6 +117,7 @@ export const setupAssociations = () => {
         as: 'taskResults'
     });
 
+    // Deals associations
     Leads.hasMany(Deals, {
         foreignKey: 'lead_id',
         as: 'deals'
@@ -153,6 +155,7 @@ export const setupAssociations = () => {
         as: 'user'
     });
     
+    // Companies and Contacts associations
     Companies.hasMany(Contacts, {
         foreignKey: 'company_id',
         as: 'contacts'
@@ -180,7 +183,50 @@ export const setupAssociations = () => {
         constraints: false 
     });
 
-    console.log('All associations have been set up successfully');
+    // 🔥 NEW KPI ASSOCIATIONS
+    
+    // User to KPI Daily associations
+    User.hasMany(SalesKpiDaily, {
+        foreignKey: 'sales_id',
+        as: 'daily_kpi'
+    });
+    SalesKpiDaily.belongsTo(User, {
+        foreignKey: 'sales_id',
+        as: 'sales_user'
+    });
+
+    // User to KPI Monthly associations
+    User.hasMany(SalesKpiMonthly, {
+        foreignKey: 'sales_id',
+        as: 'monthly_kpi'
+    });
+    SalesKpiMonthly.belongsTo(User, {
+        foreignKey: 'sales_id',
+        as: 'sales_user'
+    });
+
+    // Task to KPI Logs associations
+    Tasks.hasMany(TaskKpiLogs, {
+        foreignKey: 'task_id',
+        as: 'kpi_logs',
+        onDelete: 'CASCADE'
+    });
+    TaskKpiLogs.belongsTo(Tasks, {
+        foreignKey: 'task_id',
+        as: 'task'
+    });
+
+    // User to KPI Logs associations
+    User.hasMany(TaskKpiLogs, {
+        foreignKey: 'user_id',
+        as: 'task_kpi_logs'
+    });
+    TaskKpiLogs.belongsTo(User, {
+        foreignKey: 'user_id',
+        as: 'user'
+    });
+
+    console.log('All associations including KPI have been set up successfully');
 };
 
 export { 
@@ -195,5 +241,9 @@ export {
     Deals, 
     DealComments,
     Companies,
-    Contacts
+    Contacts,
+    SalesKpiDaily,
+    SalesKpiMonthly,
+    KpiTargets,
+    TaskKpiLogs
 };

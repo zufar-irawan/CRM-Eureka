@@ -1,9 +1,8 @@
-//controllers/dealsController.js
 import { Deals, DealComments, Leads, User, Companies, Contacts } from '../models/associations.js';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js';
+import { autoUpdateKPIForDeal } from './kpiContoller.js';
 
-// Fungsi untuk generate kode deals otomatis
 const generateDealCode = async (transaction) => {
     const lastDeal = await Deals.findOne({
         where: {
@@ -85,7 +84,7 @@ export const getAllDeals = async (req, res) => {
                 { title: { [Op.like]: `%${search}%` } },
                 { stage: { [Op.like]: `%${search}%` } },
                 { fullname: { [Op.like]: `%${search}%` } },
-                { code: { [Op.like]: `%${search}%` } } // Tambah pencarian berdasarkan kode
+                { code: { [Op.like]: `%${search}%` } }
             ];
         }
 
@@ -286,9 +285,9 @@ export const createDeal = async (req, res) => {
         let finalCompanyId = id_company;
         let finalContactId = id_contact;
         let finalOwnerId = owner;
+        let finalCreatedBy = created_by || req.user?.id || 1;
 
         if (lead_id) {
-            // Cek apakah lead_id adalah kode atau ID numerik
             const leadWhereCondition = isNaN(lead_id) ? { code: lead_id } : { id: parseInt(lead_id) };
             const lead = await Leads.findOne({ 
                 where: leadWhereCondition,
@@ -367,11 +366,10 @@ export const createDeal = async (req, res) => {
             }
         }
 
-        // Generate kode deal otomatis
         const dealCode = await generateDealCode(transaction);
 
         const deal = await Deals.create({
-            code: dealCode, // Tambah kode otomatis
+            code: dealCode,
             lead_id: lead_id || null,
             title: title.trim(),
             value: parseFloat(value) || 0,
@@ -379,12 +377,17 @@ export const createDeal = async (req, res) => {
             owner: finalOwnerId,
             id_contact: finalContactId,
             id_company: finalCompanyId,
-            created_by: created_by || req.user?.id || 1,
+            created_by: finalCreatedBy,
             created_at: new Date(),
             updated_at: new Date()
         }, { transaction });
 
         await transaction.commit();
+
+        if (['negotiation', 'proposal', 'qualified', 'won'].includes(stage)) {
+            await autoUpdateKPIForDeal(deal.id, finalCreatedBy);
+            console.log(`KPI auto-updated for new deal ${deal.code} with stage: ${stage}`);
+        }
 
         const createdDeal = await Deals.findByPk(deal.id, {
             include: [
@@ -438,7 +441,223 @@ export const createDeal = async (req, res) => {
     }
 };
 
-// POST /api/deals/from-lead/:leadId - Specific endpoint for lead conversion
+// PUT /api/deals/:id - Update deal with KPI integration
+export const updateDeal = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
+    try {
+        const { id } = req.params;
+        const updateData = { ...req.body };
+        
+        updateData.updated_at = new Date();
+
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+        const deal = await Deals.findOne({ 
+            where: whereCondition,
+            transaction,
+            lock: true
+        });
+        
+        if (!deal) {
+            await transaction.rollback();
+            return res.status(404).json({
+                success: false,
+                message: 'Deal not found'
+            });
+        }
+
+        const oldStage = deal.stage;
+        if (updateData.lead_id && updateData.lead_id !== deal.lead_id) {
+            const leadWhereCondition = isNaN(updateData.lead_id) ? { code: updateData.lead_id } : { id: parseInt(updateData.lead_id) };
+            const lead = await Leads.findOne({ where: leadWhereCondition, transaction });
+            if (!lead) {
+                await transaction.rollback();
+                return res.status(404).json({
+                    success: false,
+                    message: 'Lead not found'
+                });
+            }
+            updateData.lead_id = lead.id;
+        }
+
+        if (updateData.id_company !== undefined) {
+            if (updateData.id_company !== null && updateData.id_company !== 0) {
+                const company = await Companies.findByPk(updateData.id_company, { transaction });
+                if (!company) {
+                    await transaction.rollback();
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Company not found'
+                    });
+                }
+            } else {
+                updateData.id_company = null;
+            }
+        }
+
+        if (updateData.id_contact !== undefined) {
+            if (updateData.id_contact !== null && updateData.id_contact !== 0) {
+                const contact = await Contacts.findByPk(updateData.id_contact, { transaction });
+                if (!contact) {
+                    await transaction.rollback();
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Contact not found'
+                    });
+                }
+            } else {
+                updateData.id_contact = null;
+            }
+        }
+
+        await deal.update(updateData, { transaction });
+        await transaction.commit();
+
+        // 🔥 KPI AUTO-UPDATE: Jika stage berubah dan melibatkan kategori KPI
+        if (updateData.stage && oldStage !== updateData.stage) {
+            const kpiStages = ['negotiation', 'proposal', 'qualified', 'won'];
+            if (kpiStages.includes(oldStage) || kpiStages.includes(updateData.stage)) {
+                await autoUpdateKPIForDeal(deal.id, deal.created_by);
+                console.log(`🔥 KPI auto-updated for deal ${deal.code}: ${oldStage} → ${updateData.stage}`);
+            }
+        }
+
+        const updatedDeal = await Deals.findOne({
+            where: whereCondition,
+            include: [
+                {
+                    model: Leads,
+                    as: 'lead',
+                    attributes: ['id', 'code', 'company', 'fullname', 'email'],
+                    required: false
+                },
+                {
+                    model: User,
+                    as: 'creator',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: Companies,
+                    as: 'company',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: Contacts,
+                    as: 'contact',
+                    attributes: ['id', 'name', 'email', 'position'],
+                    required: false
+                }
+            ]
+        });
+
+        res.json({
+            success: true,
+            message: 'Deal updated successfully',
+            data: updatedDeal
+        });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error updating deal:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating deal',
+            error: error.message
+        });
+    }
+};
+
+// PUT /api/deals/:id/updateStage - Update deal stage/status with KPI integration
+export const updateDealStage = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    
+    try {
+        const { id } = req.params;
+        const { stage } = req.body;
+
+        const validStages = ['new', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
+        if (!stage || !validStages.includes(stage)) {
+            await transaction.rollback();
+            return res.status(400).json({
+                success: false,
+                message: 'Stage tidak valid. Valid stages: ' + validStages.join(', ')
+            });
+        }
+
+        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
+
+        const deal = await Deals.findOne({ 
+            where: whereCondition,
+            transaction,
+            lock: true
+        });
+        
+        if (!deal) {
+            await transaction.rollback();
+            return res.status(404).json({
+                success: false,
+                message: 'Deal not found'
+            });
+        }
+
+        const oldStage = deal.stage;
+        
+        if (oldStage === stage) {
+            await transaction.rollback();
+            return res.status(200).json({
+                success: true,
+                message: 'No stage change detected',
+                data: {
+                    deal_id: deal.id,
+                    deal_code: deal.code,
+                    stage: stage,
+                    updated_at: deal.updated_at
+                }
+            });
+        }
+
+        await deal.update({
+            stage,
+            updated_at: new Date()
+        }, { transaction });
+
+        await transaction.commit();
+
+        const kpiStages = ['negotiation', 'proposal', 'qualified', 'won'];
+        if (kpiStages.includes(oldStage) || kpiStages.includes(stage)) {
+            await autoUpdateKPIForDeal(deal.id, deal.created_by);
+            console.log(`KPI auto-updated for deal ${deal.code} stage change: ${oldStage} → ${stage}`);
+        }
+
+        console.log(`Deal ${deal.code} (ID: ${deal.id}) stage updated from "${oldStage}" to "${stage}"`);
+
+        res.json({
+            success: true,
+            message: 'Deal stage updated successfully',
+            data: { 
+                id: deal.id, 
+                code: deal.code, 
+                stage: deal.stage,
+                old_stage: oldStage,
+                updated_at: new Date()
+            }
+        });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error updating deal stage:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating deal stage',
+            error: error.message
+        });
+    }
+};
+
+// Sisa fungsi lainnya tetap sama...
+// POST /api/deals/from-lead/:leadId, deleteDeal, getDealComments, addDealComment, etc.
+
 export const createDealFromLead = async (req, res) => {
     const transaction = await sequelize.transaction();
 
@@ -450,7 +669,6 @@ export const createDealFromLead = async (req, res) => {
             stage = 'proposal'
         } = req.body;
 
-        // Cek apakah leadId adalah kode atau ID numerik
         const leadWhereCondition = isNaN(leadId) ? { code: leadId } : { id: parseInt(leadId) };
 
         const lead = await Leads.findOne({
@@ -524,11 +742,11 @@ export const createDealFromLead = async (req, res) => {
             status: true
         }, { transaction });
 
-        // Generate kode deal otomatis
         const dealCode = await generateDealCode(transaction);
+        const createdBy = req.user?.id || 1;
 
         const deal = await Deals.create({
-            code: dealCode, // Tambah kode otomatis
+            code: dealCode,
             lead_id: lead.id,
             title: title || `Deal from Lead - ${lead.fullname || lead.company}`,
             value: parseFloat(value) || 0,
@@ -536,12 +754,16 @@ export const createDealFromLead = async (req, res) => {
             owner: lead.owner || 0,
             id_contact: contactId,
             id_company: companyId,
-            created_by: req.user?.id || 1,
+            created_by: createdBy,
             created_at: new Date(),
             updated_at: new Date()
         }, { transaction });
 
         await transaction.commit();
+        if (['negotiation', 'proposal', 'qualified', 'won'].includes(stage)) {
+            await autoUpdateKPIForDeal(deal.id, createdBy);
+            console.log(`KPI auto-updated for deal from lead conversion ${deal.code} with stage: ${stage}`);
+        }
         
         const completeDeal = await Deals.findByPk(deal.id, {
             include: [
@@ -582,167 +804,11 @@ export const createDealFromLead = async (req, res) => {
     }
 };
 
-// PUT /api/deals/:id - Update deal
-export const updateDeal = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updateData = { ...req.body };
-
-        updateData.updated_at = new Date();
-
-        // Cek apakah id adalah kode atau ID numerik
-        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
-
-        const deal = await Deals.findOne({ where: whereCondition });
-        if (!deal) {
-            return res.status(404).json({
-                success: false,
-                message: 'Deal not found'
-            });
-        }
-
-        if (updateData.lead_id && updateData.lead_id !== deal.lead_id) {
-            // Cek apakah lead_id adalah kode atau ID numerik
-            const leadWhereCondition = isNaN(updateData.lead_id) ? { code: updateData.lead_id } : { id: parseInt(updateData.lead_id) };
-            const lead = await Leads.findOne({ where: leadWhereCondition });
-            if (!lead) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Lead not found'
-                });
-            }
-            updateData.lead_id = lead.id; // Pastikan menggunakan ID numerik
-        }
-
-        if (updateData.id_company !== undefined) {
-            if (updateData.id_company !== null && updateData.id_company !== 0) {
-                const company = await Companies.findByPk(updateData.id_company);
-                if (!company) {
-                    return res.status(404).json({
-                        success: false,
-                        message: 'Company not found'
-                    });
-                }
-            } else {
-                updateData.id_company = null;
-            }
-        }
-
-        if (updateData.id_contact !== undefined) {
-            if (updateData.id_contact !== null && updateData.id_contact !== 0) {
-                const contact = await Contacts.findByPk(updateData.id_contact);
-                if (!contact) {
-                    return res.status(404).json({
-                        success: false,
-                        message: 'Contact not found'
-                    });
-                }
-            } else {
-                updateData.id_contact = null;
-            }
-        }
-
-        await deal.update(updateData);
-
-        const updatedDeal = await Deals.findOne({
-            where: whereCondition,
-            include: [
-                {
-                    model: Leads,
-                    as: 'lead',
-                    attributes: ['id', 'code', 'company', 'fullname', 'email'],
-                    required: false
-                },
-                {
-                    model: User,
-                    as: 'creator',
-                    attributes: ['id', 'name', 'email'],
-                    required: false
-                },
-                {
-                    model: Companies,
-                    as: 'company',
-                    attributes: ['id', 'name', 'email'],
-                    required: false
-                },
-                {
-                    model: Contacts,
-                    as: 'contact',
-                    attributes: ['id', 'name', 'email', 'position'],
-                    required: false
-                }
-            ]
-        });
-
-        res.json({
-            success: true,
-            message: 'Deal updated successfully',
-            data: updatedDeal
-        });
-    } catch (error) {
-        console.error('Error updating deal:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating deal',
-            error: error.message
-        });
-    }
-};
-
-// PUT /api/deals/:id/updateStage - Update deal stage/status
-export const updateDealStage = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { stage } = req.body;
-
-        if (!stage) {
-            return res.status(400).json({
-                success: false,
-                message: 'Stage is required'
-            });
-        }
-
-        // Cek apakah id adalah kode atau ID numerik
-        const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
-
-        const deal = await Deals.findOne({ where: whereCondition });
-        if (!deal) {
-            return res.status(404).json({
-                success: false,
-                message: 'Deal not found'
-            });
-        }
-
-        await deal.update({
-            stage,
-            updated_at: new Date()
-        });
-
-        res.json({
-            success: true,
-            message: 'Deal stage updated successfully',
-            data: { 
-                id: deal.id, 
-                code: deal.code, 
-                stage: deal.stage 
-            }
-        });
-    } catch (error) {
-        console.error('Error updating deal stage:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating deal stage',
-            error: error.message
-        });
-    }
-};
-
 // DELETE /api/deals/:id - Delete deal
 export const deleteDeal = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const deal = await Deals.findOne({ where: whereCondition });
@@ -774,7 +840,6 @@ export const getDealComments = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Cek apakah id adalah kode atau ID numerik
         let dealId;
         if (isNaN(id)) {
             const deal = await Deals.findOne({ where: { code: id } });
@@ -835,7 +900,6 @@ export const addDealComment = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Cek apakah id adalah kode atau ID numerik
         let dealId;
         if (isNaN(id)) {
             const deal = await Deals.findOne({ where: { code: id }, transaction });
@@ -943,7 +1007,6 @@ export const getDealCommentThread = async (req, res) => {
     try {
         const { id, commentId } = req.params;
         
-        // Cek apakah id adalah kode atau ID numerik
         let dealId;
         if (isNaN(id)) {
             const deal = await Deals.findOne({ where: { code: id } });
@@ -1037,7 +1100,6 @@ export const deleteDealComment = async (req, res) => {
     try {
         const { id, commentId } = req.params;
         
-        // Cek apakah id adalah kode atau ID numerik
         let dealId;
         if (isNaN(id)) {
             const deal = await Deals.findOne({ where: { code: id }, transaction });

@@ -1,4 +1,4 @@
-// C:\Users\fazry\Downloads\CRM-Eureka\frontend\src\app\leads\components\ConvertToDealModal.tsx 
+// Fixed ConvertToDealModal.tsx with better error handling
 
 "use client";
 
@@ -29,6 +29,7 @@ interface ConversionResult {
 const dealStages = [
   { value: "proposal", label: "Proposal" },
   { value: "negotiation", label: "Negotiation" },
+  { value: "qualified", label: "Qualified" },
   { value: "won", label: "Won" },
   { value: "lost", label: "Lost" },
 ];
@@ -47,23 +48,29 @@ export default function ConvertToDealModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation
     if (!dealTitle.trim()) {
       Swal.fire({
         icon: 'warning',
+        title: 'Validation Error',
         text: "Please enter a deal title"
-      })
+      });
       return;
     }
 
-    // Convert dealValue to number for validation
-    const numericValue = dealValue === "" ? 0 : parseFloat(dealValue);
-    
-    if (isNaN(numericValue) || numericValue < 0) {
-      Swal.fire({
-        icon: 'warning',
-        text: "Deal value must be a valid positive number"
-      })
-      return;
+    // Convert and validate deal value
+    let numericValue = 0;
+    if (dealValue !== "" && dealValue.trim() !== "") {
+      const parsedValue = parseFloat(dealValue);
+      if (isNaN(parsedValue) || parsedValue < 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Validation Error',
+          text: "Deal value must be a valid positive number"
+        });
+        return;
+      }
+      numericValue = parsedValue;
     }
 
     console.log("[DEBUG] Modal values before submit:", {
@@ -108,8 +115,16 @@ export default function ConvertToDealModal({
             console.error(`❌ Lead ${leadId} conversion failed:`, errorMsg);
           }
         } catch (error) {
-          const errorMsg =
-            error instanceof Error ? error.message : "Unknown error";
+          let errorMsg = "Unknown error";
+          
+          if (error instanceof Error) {
+            errorMsg = error.message;
+          } else if (typeof error === 'string') {
+            errorMsg = error;
+          } else if (error && typeof error === 'object' && 'message' in error) {
+            errorMsg = String(error.message);
+          }
+
           console.error(`❌ Error converting lead ${leadId}:`, error);
           results.push({
             leadId,
@@ -119,48 +134,79 @@ export default function ConvertToDealModal({
         }
       }
 
+      // Process results
       const successCount = results.filter(r => r.success).length;
       const failureCount = results.filter(r => !r.success).length;
 
       console.log(`[DEBUG] Conversion summary: ${successCount} success, ${failureCount} failed`);
 
       if (successCount > 0) {
-        // Show success message WITHOUT dollar sign
+        // Show success message
         if (successCount === selectedCount) {
-          Swal.fire({
+          await Swal.fire({
             icon: 'success',
             title: 'Success',
-            text: `Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`
-          })
+            text: `Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to deal${successCount > 1 ? 's' : ''}!`,
+            timer: 3000,
+            showConfirmButton: true
+          });
         } else {
-          Swal.fire({
-            icon: 'info',
-            title: 'Information',
-            text: `Partially successful: ${successCount} converted, ${failureCount} failed`
-          })
+          // Partial success
+          const failedLeads = results.filter(r => !r.success);
+          const errorMessages = failedLeads.map(r => `Lead ${r.leadId}: ${r.error}`).join('\n');
+          
+          await Swal.fire({
+            icon: 'warning',
+            title: 'Partial Success',
+            html: `
+              <div>
+                <p><strong>Successfully converted:</strong> ${successCount} lead${successCount > 1 ? 's' : ''}</p>
+                <p><strong>Failed conversions:</strong> ${failureCount}</p>
+                ${failureCount > 0 ? `<details><summary>Error details</summary><pre style="text-align: left; font-size: 12px;">${errorMessages}</pre></details>` : ''}
+              </div>
+            `,
+            showConfirmButton: true
+          });
         }
 
-        // Close modal after successful conversion
+        // Close modal after successful conversion(s)
         onClose();
       } else {
-        // If no conversions succeeded, show error message
+        // No conversions succeeded
         const firstError = results.find(r => r.error)?.error || "All conversions failed";
-
-        Swal.fire({
+        
+        await Swal.fire({
           icon: 'error',
-          title: 'Failed',
-          text: `Conversion failed: ${firstError}`
-        })
+          title: 'Conversion Failed',
+          html: `
+            <div>
+              <p>All lead conversions failed.</p>
+              <details>
+                <summary>Error details</summary>
+                <pre style="text-align: left; font-size: 12px;">${results.map(r => `Lead ${r.leadId}: ${r.error}`).join('\n')}</pre>
+              </details>
+            </div>
+          `,
+          showConfirmButton: true
+        });
       }
 
     } catch (error) {
       console.error("Error in conversion process:", error);
 
-      Swal.fire({
+      let errorMsg = "Unknown error occurred during conversion";
+      if (error instanceof Error) {
+        errorMsg = error.message;
+      } else if (typeof error === 'string') {
+        errorMsg = error;
+      }
+
+      await Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: "Error: " + (error instanceof Error ? error.message : "Unknown error")
-      })
+        title: 'Conversion Error',
+        text: errorMsg,
+        showConfirmButton: true
+      });
 
     } finally {
       setIsLoading(false);
@@ -176,7 +222,6 @@ export default function ConvertToDealModal({
     }
   };
 
-  // Simple conversion form - no results screen
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
@@ -241,16 +286,22 @@ export default function ConvertToDealModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Deal Value
+              Deal Value (Optional)
             </label>
-            <input
-              type="text"
-              value={dealValue}
-              onChange={handleDealValueChange}
-              placeholder="0.00"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={dealValue}
+                onChange={handleDealValueChange}
+                placeholder="0.00"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoading}
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <DollarSign className="w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Leave empty for $0.00</p>
           </div>
 
           <div>
@@ -276,7 +327,10 @@ export default function ConvertToDealModal({
               type="button"
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-colors"
-              disabled={isLoading}>Cancel</button>
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

@@ -6,7 +6,7 @@ import Kanban, { DNDType } from "@/components/Kanban/Kanban"
 import { Filter, KanbanIcon, RotateCcw, X, Search } from "lucide-react"
 import { useEffect, useState, useCallback } from 'react'
 import { setStyle } from 'framer-motion'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import Swal from 'sweetalert2'
 
 export default function LeadsKanban() {

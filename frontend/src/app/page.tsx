@@ -1,7 +1,7 @@
 "use client";
 import Sidebar from "@/components/Sidebar";
 
-import { redirect, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useEffect } from "react";
 
 export default function Home() {
@@ -16,5 +16,6 @@ export default function Home() {
       router.replace('/dashboard')
     }
   }, [router])
-  // redirect('/login')
+
+  return null
 }

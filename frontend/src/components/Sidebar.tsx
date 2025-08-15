@@ -37,7 +37,7 @@ const Sidebar = ({ isMinimized, setIsMinimized }: sidebarProps) => {
   const { user, loading } = useUser();
 
   const menuItems = [
-    { icon: Bell, label: "Notifications", link: "#" },
+    // { icon: Bell, label: "Notifications", link: "#" },
     { icon: BarChart3, label: "Dashboard", link: "/dashboard" },
     { icon: Users, label: "Leads", link: "/leads" },
     { icon: Handshake, label: "Deals", link: "/deals" },

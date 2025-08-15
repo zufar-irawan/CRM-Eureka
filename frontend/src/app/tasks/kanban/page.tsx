@@ -6,7 +6,7 @@ import Kanban, { DNDType } from "@/components/Kanban/Kanban"
 import { Filter, KanbanIcon, RotateCcw, Search } from "lucide-react"
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 
 export default function DealsKanban() {

@@ -40,7 +40,6 @@ export default function OrganizationDetails({
           Organization Details
         </h3>
         <button onClick={() => console.log('Edit organization')}>
-          <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
         </button>
       </div>
 

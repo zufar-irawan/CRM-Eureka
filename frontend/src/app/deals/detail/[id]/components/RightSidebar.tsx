@@ -1,7 +1,6 @@
 "use client";
 
 import { Deal, Contact } from '../types';
-import { Mail, Link2, Paperclip } from 'lucide-react';
 import ContactsSidebar from './ContactsSidebar';
 import OrganizationDetails from './OrganizationDetails';
 
@@ -36,30 +35,24 @@ export default function RightSidebar({
 }: RightSidebarProps) {
   return (
     <div className="w-80 bg-white border-l border-gray-200 p-6">
-      <div className="flex items-center space-x-3 mb-8">
-        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-          <span className="text-lg font-semibold text-gray-700">
-            {getFirstChar(deal.title) || 
-             getFirstChar(deal.lead?.company) || 
-             getFirstChar(deal.company?.name) || 'D'}
-          </span>
-        </div>
-        <div className="flex space-x-2">
-          {(deal.lead?.email || deal.contact?.email || deal.company?.email) && (
-            <a href={`mailto:${deal.lead?.email || deal.contact?.email || deal.company?.email}`}>
-              <Mail className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-            </a>
-          )}
-          {(deal.lead?.company || deal.company?.name) && (
-            <a 
-              href={`https://${(deal.lead?.company || deal.company?.name)?.toLowerCase().replace(/\s+/g, '')}.com`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Link2 className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-            </a>
-          )}
-          <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+      {/* Deal Header - Simple Title Display */}
+      <div className="mb-8">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {deal.title || 'Untitled Deal'}
+          </h2>
+          <div className="space-y-1">
+            {(deal.lead?.company || deal.company?.name) && (
+              <p className="text-sm text-gray-600">
+                Company: {deal.lead?.company || deal.company?.name}
+              </p>
+            )}
+            {deal.stage && (
+              <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                {deal.stage}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

@@ -330,7 +330,7 @@ const CompanyDetailPage = () => {
                           </td>
                           <td className="px-3 py-3">
                             <span className="text-xs font-semibold text-gray-900">
-                              ${deal.value.toLocaleString()}
+                              {deal.value.toLocaleString()}
                             </span>
                           </td>
                           <td className="px-3 py-3">

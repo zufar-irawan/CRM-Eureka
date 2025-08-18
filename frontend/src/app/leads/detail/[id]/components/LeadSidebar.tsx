@@ -56,7 +56,6 @@ export default function LeadSidebar({ lead, selectedStatus }: LeadSidebarProps) 
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Details</h3>
           <button onClick={() => console.log('Edit details')}>
-            <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
           </button>
         </div>
         <div className="space-y-4">
@@ -125,7 +124,6 @@ export default function LeadSidebar({ lead, selectedStatus }: LeadSidebarProps) 
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Person</h3>
           <button onClick={() => console.log('Edit person')}>
-            <Edit className="w-4 h-4 text-gray-400 hover:text-gray-600" />
           </button>
         </div>
         <div className="space-y-4">

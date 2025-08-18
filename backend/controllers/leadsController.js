@@ -98,12 +98,10 @@ export const getLeads = async (req, res) => {
         
         if (status !== undefined && status !== '') {
             whereClause.status = status === '1' || status === 'true' || status === true;
-        }
-
+        } 
         if (stage) {
             whereClause.stage = stage;
         }
-
         if (rating) {
             whereClause.rating = rating;
         }
@@ -115,10 +113,9 @@ export const getLeads = async (req, res) => {
                 { company: { [Op.like]: `%${search}%` } },
                 { fullname: { [Op.like]: `%${search}%` } },
                 { email: { [Op.like]: `%${search}%` } },
-                { code: { [Op.like]: `%${search}%` } } // Tambah pencarian berdasarkan kode
+                { code: { [Op.like]: `%${search}%` } }
             ];
         }
-
         const order = []
         if (sortBy) {
             order.push([sortBy, sortOrder?.toUpperCase() === "DESC" ? "DESC" : "ASC"])

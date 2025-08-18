@@ -1,7 +1,7 @@
 "use client";
 
 import { Contact } from '../types';
-import { Plus, ChevronDown, Mail, Phone, MoreHorizontal, ArrowUpRight, Users } from 'lucide-react';
+import { Plus, ChevronDown, ArrowUpRight, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface ContactsSidebarProps {
@@ -28,7 +28,7 @@ export default function ContactsSidebar({
   const handleContactAction = (contactId: number, action: string) => {
     switch (action) {
       case 'view':
-        router.push(`/contacts/${contactId}`);
+        router.push(`/contacts/detail/${contactId}`);
         break;
       case 'edit':
         console.log('Edit contact', contactId);
@@ -59,7 +59,6 @@ export default function ContactsSidebar({
           )}
         </h3>
         <button onClick={handleCreateContact}>
-          <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600" />
         </button>
       </div>
 
@@ -103,28 +102,7 @@ export default function ContactsSidebar({
                     )}
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  {contact.email && (
-                    <a href={`mailto:${contact.email}`} title="Send Email">
-                      <Mail className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                    </a>
-                  )}
-                  {contact.phone && (
-                    <a href={`tel:${contact.phone}`} title="Call">
-                      <Phone className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                    </a>
-                  )}
-                  <div className="relative">
-                    <button 
-                      onClick={() => {
-                        const action = prompt('Choose action: view, edit, delete');
-                        if (action) handleContactAction(contact.id, action);
-                      }}
-                      title="More options"
-                    >
-                      <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                    </button>
-                  </div>
+                <div className="flex items-center">
                   <button 
                     onClick={() => handleContactAction(contact.id, 'view')}
                     title="View contact details"

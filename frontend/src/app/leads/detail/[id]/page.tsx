@@ -14,6 +14,7 @@ import ConvertToDealModal from "../../components/ConvertToDealModal";
 import { makeAuthenticatedRequest } from "./utils/auth";
 import { API_ENDPOINTS } from "./utils/constants";
 import Swal from "sweetalert2";
+import { getToken } from "../../../../../utils/auth";
 
 // Tab Components
 const EmailsTab = ({ lead }: { lead: any }) => (
@@ -60,7 +61,7 @@ export default function LeadDetailPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (!token) {
       Swal.fire({

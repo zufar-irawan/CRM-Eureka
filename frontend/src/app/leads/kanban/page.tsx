@@ -6,14 +6,15 @@ import Kanban, { DNDType } from "@/components/Kanban/Kanban"
 import { Filter, KanbanIcon, RotateCcw, X, Search } from "lucide-react"
 import { useEffect, useState, useCallback } from 'react'
 import { setStyle } from 'framer-motion'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import Swal from 'sweetalert2'
+import { getToken } from '../../../../utils/auth'
 
 export default function LeadsKanban() {
     const router = useRouter();
 
     useEffect(() => {
-        const token = localStorage.getItem('token')
+        const token = getToken()
 
         if (!token) {
             Swal.fire({

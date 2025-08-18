@@ -15,6 +15,7 @@ import EditTasksModal from "./edit/editModal";
 import { useTaskModalStore } from "@/Store/taskModalStore";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import { getToken } from "../../../utils/auth";
 
 const allColumns: Column[] = [
   { key: "title", label: "Title" },
@@ -83,7 +84,7 @@ export default function TasksList() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (!token) {
       Swal.fire({

@@ -13,8 +13,8 @@ interface ConvertToDealModalProps {
 const dealStages = [
   { value: "proposal", label: "Proposal" },
   { value: "negotiation", label: "Negotiation" },
-  { value: "closed_won", label: "Closed Won" },
-  { value: "closed_lost", label: "Closed Lost" }
+  { value: "won", label: "Won" },
+  { value: "lost", label: "Lost" }
 ];
 
 export default function ConvertToDealModal({

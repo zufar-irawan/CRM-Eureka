@@ -27,6 +27,7 @@ import CreateDealsModal from "./add/AddDealsModal";
 import Swal from "sweetalert2";
 import { useDealEditStore } from "@/Store/dealModalStore";
 import axios from "axios";
+import { getToken } from "../../../utils/auth";
 
 interface SortConfig {
   key: string;
@@ -125,7 +126,7 @@ export default function Deals() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (!token) {
       Swal.fire({

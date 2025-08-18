@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import { getToken } from "../../../utils/auth";
 
 interface LoginData {
   email: string;
@@ -15,7 +16,7 @@ export default function Login() {
   const router = useRouter()
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (token) {
       router.replace('/dashboard')
@@ -50,7 +51,8 @@ export default function Login() {
         throw new Error(data.message || "Login gagal");
       }
 
-      localStorage.setItem("token", data.token);
+      // localStorage.setItem("token", data.token)
+      document.cookie = `token=${data.token}; path=/; max-age=3600; secure; samesite=strict`;
 
       router.push("/dashboard");
     } catch (err: any) {

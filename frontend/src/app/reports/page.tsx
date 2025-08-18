@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
+import { getToken } from "../../../utils/auth";
 
 interface SalesData {
   id: string;
@@ -62,7 +63,7 @@ export default function ReportsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (!token) {
       Swal.fire({
@@ -93,7 +94,7 @@ export default function ReportsPage() {
     try {
       setLoading(true);
       console.log('🔄 Fetching KPI data with filters:', filters);
-      
+
       // Build query parameters
       const params: any = {
         view_type: filters.viewType,
@@ -131,7 +132,7 @@ export default function ReportsPage() {
       }
 
       console.log('📊 API Parameters:', params);
-      
+
       const response = await api.get("/kpi/report", { params });
       console.log('✅ API Response:', response.data);
 
@@ -143,7 +144,7 @@ export default function ReportsPage() {
       }
     } catch (error: any) {
       console.error('❌ Error fetching KPI data:', error);
-      
+
       // Show user-friendly error message
       let errorMessage = 'Failed to fetch KPI data';
       if (error.response?.status === 404) {
@@ -761,7 +762,7 @@ export default function ReportsPage() {
             <span className="font-medium">{salesData.length}</span> results
           </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={true}
             >
@@ -770,7 +771,7 @@ export default function ReportsPage() {
             <button className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
               1
             </button>
-            <button 
+            <button
               className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={true}
             >

@@ -6,9 +6,19 @@ export function isLoggedIn(): boolean {
     return !!token;
 }
 
+// export function getToken(): string | null {
+//     return typeof window !== "undefined" ? localStorage.getItem("token") : null;
+// }
+
 export function getToken(): string | null {
-    return typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; token=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(";").shift() || null;
+  }
+  return null;
 }
+
 
 export async function logout() {
     const token = localStorage.getItem('token')

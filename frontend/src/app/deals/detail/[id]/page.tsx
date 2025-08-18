@@ -14,13 +14,14 @@ import { useAuth } from "../[id]/hooks/useAuth";
 import { makeAuthenticatedRequest } from "../[id]/utils/auth";
 import { Deal, Contact, Comment, Company } from "./types";
 import Swal from "sweetalert2";
+import { getToken } from "../../../../../utils/auth";
 
 export default function DealDetailPage() {
   const { id } = useParams();
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (!token) {
       Swal.fire({

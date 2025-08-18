@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import EditLeadModal from "./components/EditLeadModal";
 import Swal from "sweetalert2";
+import { getToken } from "../../../utils/auth";
 
 interface DeleteLeadModalProps {
   selectedCount: number;
@@ -138,7 +139,7 @@ export default function MainLeads() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (!token) {
       Swal.fire({

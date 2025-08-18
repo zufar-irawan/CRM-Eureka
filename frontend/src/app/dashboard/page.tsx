@@ -7,7 +7,7 @@ import useUser from "../../../hooks/useUser"
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { number } from "framer-motion"
-import { isLoggedIn } from "../../../utils/auth"
+import { getToken, isLoggedIn } from "../../../utils/auth"
 import { redirect } from "next/navigation"
 import { useRouter } from "next/navigation"
 import Swal from "sweetalert2"
@@ -16,7 +16,7 @@ export default function Dashboard() {
     const router = useRouter()
 
     useEffect(() => {
-        const token = localStorage.getItem('token')
+        const token = getToken()
         if (!token) {
             Swal.fire({
                 icon: "info",

@@ -26,6 +26,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
+import { getToken } from '../../../../../utils/auth';
 
 interface Company {
   id: number;
@@ -57,7 +58,7 @@ const CompanyDetailPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (!token) {
       Swal.fire({

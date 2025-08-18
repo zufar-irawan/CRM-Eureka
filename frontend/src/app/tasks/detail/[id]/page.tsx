@@ -10,6 +10,7 @@ import TaskCommentsTab from "./components/TaskCommentsTab";
 import TaskResultsTab from "./components/TaskResultsTab";
 import { MessageSquare, FileText, Paperclip } from "lucide-react";
 import Swal from "sweetalert2";
+import { getToken } from "../../../../../utils/auth";
 
 const TASK_TABS = [
   { name: "Comments", icon: MessageSquare },
@@ -21,7 +22,7 @@ export default function TaskDetailPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (!token) {
       Swal.fire({

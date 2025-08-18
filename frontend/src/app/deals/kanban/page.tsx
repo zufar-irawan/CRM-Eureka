@@ -9,12 +9,13 @@ import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import { usePathname, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
+import { getToken } from '../../../../utils/auth';
 
 export default function DealsKanban() {
     const router = useRouter();
 
     useEffect(() => {
-        const token = localStorage.getItem('token')
+        const token = getToken()
 
         if (!token) {
             Swal.fire({

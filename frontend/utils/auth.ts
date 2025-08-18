@@ -19,9 +19,12 @@ export function getToken(): string | null {
   return null;
 }
 
+export function removeCookie(name: string) {
+  document.cookie = `${name}=; path=/; max-age=0; secure; samesite=strict`;
+}
 
 export async function logout() {
-    const token = localStorage.getItem('token')
+    const token = getToken()
     const response = await axios.post("http://localhost:5000/api/auth/logout", {}, {
         headers: {
             Authorization: `Bearer ${token}`
@@ -45,7 +48,7 @@ export async function logout() {
                     text:'you have been logged out',
                 })
 
-                localStorage.removeItem("token")
+                removeCookie('token')
                 window.location.href = "/login"
             }
         })

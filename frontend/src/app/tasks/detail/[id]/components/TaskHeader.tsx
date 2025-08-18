@@ -71,15 +71,32 @@ export default function TaskHeader({
 
       setIsUpdating(true);
       try {
-        await onStatusChange(task.id, newStatus);
+        // Jika status diubah ke "completed", tampilkan modal add result
+        if (newStatus === 'completed') {
+          // Set pending completion dan tampilkan modal
+          setPendingCompletion(true);
+          setShowAddResultModal(true);
+          setIsStatusDropdownOpen(false);
+          
+          Swal.fire({
+            icon: 'info',
+            title: 'Task Completed',
+            text: 'Please add the task result to complete the process.',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        } else {
+          // Untuk status selain completed, update langsung
+          await onStatusChange(task.id, newStatus);
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Success',
-          text: `Task status updated to "${newStatus}" successfully!`,
-          timer: 2000,
-          showConfirmButton: false
-        });
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: `Task status updated to "${newStatus}" successfully!`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
       } catch (error) {
         console.error('Error updating status:', error);
         Swal.fire({

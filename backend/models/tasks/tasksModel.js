@@ -1,4 +1,4 @@
-// models/tasks/tasksModel.js - Updated with code field
+// models/tasks/tasksModel.js - Updated with database structure
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -43,7 +43,7 @@ export const Tasks = sequelize.define('Task', {
     allowNull: true
   },
   category: {
-    type: DataTypes.ENUM('Kanvasing', 'Followup', 'Penawaran', 'Lainnya'),
+    type: DataTypes.ENUM('Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'),
     allowNull: true,
     defaultValue: 'Kanvasing'
   },

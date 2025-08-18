@@ -10,7 +10,7 @@ import { Deals } from "./deals/dealsModel.js";
 import { DealComments } from "./deals/dealsCommentModel.js";
 import { Companies } from "./companies/companiesModel.js";
 import { Contacts } from "./contacts/contactsModel.js";
-import { SalesKpiDaily, SalesKpiMonthly, KpiTargets, TaskKpiLogs } from "../models/kpi/kpiModel.js";
+import { SalesKpiDaily, SalesKpiMonthly, KpiTargets } from "../models/kpi/kpiModel.js";
 
 export const setupAssociations = () => {
     User.belongsToMany(Role, {
@@ -42,7 +42,6 @@ export const setupAssociations = () => {
         as: 'role'
     });
 
-    // Leads associations
     Leads.hasMany(LeadComments, {
         foreignKey: 'lead_id',  
         as: 'comments'
@@ -71,7 +70,18 @@ export const setupAssociations = () => {
         as: 'user'
     });
 
-    // Tasks associations
+    LeadComments.hasMany(LeadComments, {
+        foreignKey: 'parent_id',
+        as: 'leadReplies',
+        onDelete: 'CASCADE'
+    });
+
+    LeadComments.belongsTo(LeadComments, {
+        foreignKey: 'parent_id',
+        as: 'leadParent',
+        onDelete: 'CASCADE'
+    });
+
     Tasks.belongsTo(User, {
         foreignKey: 'assigned_to',
         as: 'assignee'
@@ -117,7 +127,6 @@ export const setupAssociations = () => {
         as: 'taskResults'
     });
 
-    // Deals associations
     Leads.hasMany(Deals, {
         foreignKey: 'lead_id',
         as: 'deals'
@@ -154,6 +163,18 @@ export const setupAssociations = () => {
         foreignKey: 'user_id',
         as: 'user'
     });
+
+    DealComments.hasMany(DealComments, {
+        foreignKey: 'parent_id',
+        as: 'dealReplies',
+        onDelete: 'CASCADE'
+    });
+
+    DealComments.belongsTo(DealComments, {
+        foreignKey: 'parent_id',
+        as: 'dealParent',
+        onDelete: 'CASCADE'
+    });
     
     // Companies and Contacts associations
     Companies.hasMany(Contacts, {
@@ -164,6 +185,7 @@ export const setupAssociations = () => {
         foreignKey: 'company_id',
         as: 'company'
     });
+    
     Companies.hasMany(Deals, {
         foreignKey: 'id_company',
         as: 'deals'
@@ -171,8 +193,10 @@ export const setupAssociations = () => {
     Deals.belongsTo(Companies, {
         foreignKey: 'id_company',
         as: 'company',
-        constraints: false 
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE'
     });
+    
     Contacts.hasMany(Deals, {
         foreignKey: 'id_contact',
         as: 'deals'
@@ -180,10 +204,11 @@ export const setupAssociations = () => {
     Deals.belongsTo(Contacts, {
         foreignKey: 'id_contact',
         as: 'contact',
-        constraints: false 
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE'
     });
 
-    // 🔥 NEW KPI ASSOCIATIONS
+    // 🔥 KPI ASSOCIATIONS
     
     // User to KPI Daily associations
     User.hasMany(SalesKpiDaily, {
@@ -205,26 +230,6 @@ export const setupAssociations = () => {
         as: 'sales_user'
     });
 
-    // Task to KPI Logs associations
-    Tasks.hasMany(TaskKpiLogs, {
-        foreignKey: 'task_id',
-        as: 'kpi_logs',
-        onDelete: 'CASCADE'
-    });
-    TaskKpiLogs.belongsTo(Tasks, {
-        foreignKey: 'task_id',
-        as: 'task'
-    });
-
-    // User to KPI Logs associations
-    User.hasMany(TaskKpiLogs, {
-        foreignKey: 'user_id',
-        as: 'task_kpi_logs'
-    });
-    TaskKpiLogs.belongsTo(User, {
-        foreignKey: 'user_id',
-        as: 'user'
-    });
 
     console.log('All associations including KPI have been set up successfully');
 };
@@ -244,6 +249,5 @@ export {
     Contacts,
     SalesKpiDaily,
     SalesKpiMonthly,
-    KpiTargets,
-    TaskKpiLogs
+    KpiTargets
 };

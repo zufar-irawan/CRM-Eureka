@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Aug 14, 2025 at 07:06 AM
+-- Generation Time: Aug 18, 2025 at 03:25 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.2.28
 
@@ -113,7 +113,10 @@ INSERT INTO `companies` (`id`, `name`, `address`, `phone`, `email`, `created_at`
 (13, 'CV Maju Jaya', 'Jl. Sudirman No.88, Bandung, Jawa Barat, 40212', '0217654321', NULL, '2025-08-02 15:17:22'),
 (14, 'PT Anak Siapa', 'Jl.Bekasi, Bekasi, Jawa, 1790', '021-4444', 'sman1bekasi@gmail.com', '2025-08-02 15:35:58'),
 (15, 'PT Berkah Bunda', 'Jl.Pinang Ranti, Jakarta Timur, Dki Jakarta, 1799', '021-222222', 'berkahbunda@gmail.com', '2025-08-04 07:56:21'),
-(16, 'PT Exatama', 'Jl Hj Liah, Jakarta Timur, DKI Jakarta, 82392', '021-728733', 'Exatama@gmail.com', '2025-08-08 07:03:27');
+(16, 'PT Exatama', 'Jl Hj Liah, Jakarta Timur, DKI Jakarta, 82392', '021-728733', 'Exatama@gmail.com', '2025-08-08 07:03:27'),
+(17, 'PT Insan Abadi', 'Jl.Bambu Petung, Jakarta Timur, DKI Jakarta, 1874', '021-879379', 'InsanAbadi@gmail.com', '2025-08-15 01:31:58'),
+(18, 'PT Irsyad', 'Jl. Bambu Hitam, Jakarta Timur, DKI Jakarta, 1835', '021-55555', 'irsyadjaya@gmail.com', '2025-08-15 03:14:20'),
+(19, 'PT Gaming Irsyad', 'Jl. Prestasi Prima, Jakarta Timur, DKI Jakarta, 18377', '021-22222', 'gamingirsyad@gmail.com', '2025-08-15 07:16:53');
 
 -- --------------------------------------------------------
 
@@ -144,7 +147,10 @@ INSERT INTO `contacts` (`id`, `company_id`, `name`, `email`, `phone`, `position`
 (9, 10, 'Zufar Fazry', 'zeerayzan@gmail.com', '081397193345', 'cto', '2025-08-02 14:35:40'),
 (11, 12, 'Andi Rahman', 'andi@nusantara.com', '081212345678', 'Logistics Manager', '2025-08-02 15:10:43'),
 (12, 13, 'Siti Kartika', 'siti@majujaya.co.id', '082112345678', 'Procurement', '2025-08-02 15:17:22'),
-(13, 15, 'fazry kiedrowsky', 'fazryganteng@gmail.com', '081907048347', 'CEO', '2025-08-04 07:56:21');
+(13, 15, 'fazry kiedrowsky', 'fazryganteng@gmail.com', '081907048347', 'CEO', '2025-08-04 07:56:21'),
+(14, 17, 'Irsyad Gaza', 'Irsyad@gmail.com', '081979317913', 'CMO', '2025-08-15 01:31:58'),
+(15, 18, 'irsyad zufar', 'irsyadzufar@gmail.com', '081374372727', 'Manager', '2025-08-15 03:14:20'),
+(16, 19, 'irsyad gaming', 'gamingirsyad@gmail.com', '081727979127', 'Ceo', '2025-08-15 07:16:53');
 
 -- --------------------------------------------------------
 
@@ -246,9 +252,10 @@ CREATE TABLE `deals` (
 --
 
 INSERT INTO `deals` (`id`, `code`, `lead_id`, `id_contact`, `id_company`, `title`, `value`, `stage`, `owner`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'DL-001', 1, NULL, NULL, 'Deal Pengiriman Reguler', 15000000.00, 'won', 0, 2, '2025-07-19 02:07:35', '2025-07-31 03:06:24'),
-(2, 'DL-002', 2, NULL, NULL, 'Deal Kontrak Jabodetabek', 9000000.00, 'lost', 0, 2, '2025-07-19 02:07:35', '2025-07-30 08:45:38'),
-(29, 'DL-029', 18, 13, 15, 'wish me luck', 60000.00, 'negotiation', 0, 1, '2025-08-04 07:56:21', '2025-08-12 03:14:05');
+(1, 'DL-001', 1, NULL, NULL, 'Deal Pengiriman Reguler', 15000000.00, 'lost', 0, 2, '2025-07-19 02:07:35', '2025-08-15 04:18:28'),
+(2, 'DL-002', 2, NULL, NULL, 'Deal Kontrak Jabodetabek', 9000000.00, 'lost', 0, 2, '2025-07-19 02:07:35', '2025-08-15 04:18:30'),
+(29, 'DL-029', 18, 13, 15, 'wish me luck', 60000.00, 'lost', 0, 1, '2025-08-04 07:56:21', '2025-08-15 04:18:27'),
+(53, 'DL-030', 22, 16, 19, 'deal coy', 10000.00, 'won', 5, 5, '2025-08-15 07:28:44', '2025-08-15 07:29:00');
 
 -- --------------------------------------------------------
 
@@ -301,7 +308,7 @@ CREATE TABLE `kpi_targets` (
 
 INSERT INTO `kpi_targets` (`id`, `type`, `kanvasing_target`, `followup_target`, `penawaran_target`, `kesepakatan_tarif_target`, `deal_do_target`, `is_active`, `created_at`, `updated_at`) VALUES
 (1, 'daily', 5, 5, 1, 1, 1, 1, '2025-08-14 11:58:27', '2025-08-14 11:58:27'),
-(2, 'monthly', 150, 150, 30, 30, 30, 1, '2025-08-14 11:58:27', '2025-08-14 11:58:27');
+(2, 'monthly', 130, 130, 26, 4, 1, 1, '2025-08-14 11:58:27', '2025-08-15 16:03:07');
 
 -- --------------------------------------------------------
 
@@ -346,10 +353,12 @@ CREATE TABLE `leads` (
 --
 
 INSERT INTO `leads` (`id`, `code`, `owner`, `company`, `title`, `first_name`, `last_name`, `fullname`, `job_position`, `email`, `work_email`, `phone`, `mobile`, `fax`, `website`, `industry`, `number_of_employees`, `lead_source`, `stage`, `rating`, `street`, `city`, `state`, `postal_code`, `country`, `description`, `created_at`, `updated_at`, `status`) VALUES
-(1, 'LD-001', 1, 'PT Nusantara Ekspres', 'Mr', 'Andi', 'Rahman', 'Andi Rahman', 'Logistics Manager', 'andi@nusantara.com', NULL, '0211234567', '081212345678', '-', 'www.nusantara.com', 'Transportation', 100, 'Website', 'Converted', 'Warm', 'Jl. Merdeka No.1', 'Jakarta', 'DKI Jakarta', '10110', 'Indonesia', 'Tertarik kirim paket antar kota', '2025-07-20 16:31:01', '2025-08-13 11:20:32', 0),
+(1, 'LD-001', 1, 'PT Nusantara Ekspres', 'Mr', 'Andi', 'Rahman', 'Andi Rahman', 'Logistics Manager', 'andi@nusantara.com', NULL, '0211234567', '081212345678', '-', 'www.nusantara.com', 'Transportation', 100, 'Website', 'Converted', 'Warm', 'Jl. Merdeka No.1', 'Jakarta', 'DKI Jakarta', '10110', 'Indonesia', 'Tertarik kirim paket antar kota', '2025-07-20 16:31:01', '2025-08-15 02:03:01', 1),
 (2, 'LD-002', 2, 'CV Maju Jaya', 'Mr', 'Siti', 'Kartika', 'Siti Kartika', 'Procurement', 'siti@majujaya.co.id', NULL, '0217654321', '082112345678', '-', 'www.majujaya.co.id', 'Retail', 50, 'Referral', 'Converted', 'Hot', 'Jl. Sudirman No.88', 'Bandung', 'Jawa Barat', '40212', 'Indonesia', 'Request penawaran rutin mingguan', '2025-07-20 16:31:01', '2025-08-13 11:20:32', 1),
 (18, 'LD-018', NULL, 'PT Berkah Bunda', 'Mr', 'fazry', 'kiedrowsky', 'fazry kiedrowsky', 'CEO', 'fazryganteng@gmail.com', 'berkahbunda@gmail.com', '021-222222', '081907048347', '-', 'https://sman2bekasi.sch.id/', 'Sports', 10000, 'Email Campaign', 'Converted', 'Hot', 'Jl.Pinang Ranti', 'Jakarta Timur', 'Dki Jakarta', '1799', 'Indonesia', NULL, '2025-08-04 07:55:16', '2025-08-13 11:20:32', 1),
-(20, 'LD-019', NULL, 'PT Insan Abadi', 'Mr', 'Irsyad', 'Gaza', 'Irsyad Gaza', 'CMO', 'Irsyad@gmail.com', 'InsanAbadi@gmail.com', '021-879379', '081979317913', '-', 'https://sman9bekasi.sch.id/', 'Service', 1000, 'Website', 'New', 'Hot', 'Jl.Bambu Petung', 'Jakarta Timur', 'DKI Jakarta', '1874', 'Indonesia', NULL, '2025-08-13 04:43:33', '2025-08-13 04:43:33', 0);
+(20, 'LD-019', 2, 'PT Insan Abadi', 'Mr', 'Irsyad', 'Gaza', 'Irsyad Gaza', 'CMO', 'Irsyad@gmail.com', 'InsanAbadi@gmail.com', '021-879379', '081979317913', '-', 'https://sman9bekasi.sch.id/', 'Service', 1000, 'Website', 'Converted', 'Hot', 'Jl.Bambu Petung', 'Jakarta Timur', 'DKI Jakarta', '1874', 'Indonesia', NULL, '2025-08-13 04:43:33', '2025-08-15 04:19:59', 1),
+(21, 'LD-020', 2, 'PT Irsyad', 'Mr', 'irsyad', 'zufar', 'irsyad zufar', 'Manager', 'irsyadzufar@gmail.com', 'irsyadjaya@gmail.com', '021-55555', '081374372727', '-', 'https://sman9bekasi.sch.id/', 'Soap & Detergent', 1000, 'Website', 'Converted', 'Hot', 'Jl. Bambu Hitam', 'Jakarta Timur', 'DKI Jakarta', '1835', 'Indonesia', NULL, '2025-08-15 03:08:36', '2025-08-15 14:28:09', 0),
+(22, 'LD-021', 5, 'PT Gaming Irsyad', 'Mr', 'irsyad', 'gaming', 'irsyad gaming', 'Ceo', 'gamingirsyad@gmail.com', 'gamingirsyad@gmail.com', '021-22222', '081727979127', '-', 'https://smk19.sch.id/', 'Technology', 40, 'Advertisement', 'Converted', 'Hot', 'Jl. Prestasi Prima', 'Jakarta Timur', 'DKI Jakarta', '18377', 'Indonesia', NULL, '2025-08-15 07:13:49', '2025-08-15 07:28:44', 1);
 
 -- --------------------------------------------------------
 
@@ -523,6 +532,14 @@ CREATE TABLE `sales_kpi_daily` (
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `sales_kpi_daily`
+--
+
+INSERT INTO `sales_kpi_daily` (`id`, `sales_id`, `sales_name`, `date`, `kanvasing_count`, `followup_count`, `penawaran_count`, `kesepakatan_tarif_count`, `deal_do_count`, `status_kpi`, `created_at`, `updated_at`) VALUES
+(60, 5, 'Sales Two', '2025-08-15', 0, 1, 0, 1, 1, 'Tidak Terpenuhi', '2025-08-15 07:28:44', '2025-08-15 07:29:00'),
+(62, 2, 'Sales One', '2025-08-15', 6, 6, 1, 0, 0, 'Terpenuhi', '2025-08-15 08:51:06', '2025-08-15 08:51:06');
+
 -- --------------------------------------------------------
 
 --
@@ -545,6 +562,14 @@ CREATE TABLE `sales_kpi_monthly` (
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `sales_kpi_monthly`
+--
+
+INSERT INTO `sales_kpi_monthly` (`id`, `sales_id`, `sales_name`, `year`, `month`, `kanvasing_count`, `followup_count`, `penawaran_count`, `kesepakatan_tarif_count`, `deal_do_count`, `status_kpi`, `created_at`, `updated_at`) VALUES
+(60, 5, 'Sales Two', 2025, 8, 0, 1, 0, 1, 1, 'Terpenuhi', '2025-08-15 07:28:44', '2025-08-15 07:29:01'),
+(62, 2, 'Sales One', 2025, 8, 6, 6, 1, 0, 0, 'Tidak Terpenuhi', '2025-08-15 08:51:06', '2025-08-15 08:51:06');
+
 -- --------------------------------------------------------
 
 --
@@ -558,7 +583,7 @@ CREATE TABLE `tasks` (
   `assigned_to` int NOT NULL,
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
-  `category` enum('Kanvasing','Followup','Penawaran','Lainnya') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'Kanvasing',
+  `category` enum('Kanvasing','Followup','Penawaran','Kesepakatan Tarif','Deal DO','Lainnya') COLLATE utf8mb4_general_ci DEFAULT 'Kanvasing',
   `due_date` datetime DEFAULT NULL,
   `status` enum('new','pending','completed','overdue','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'new',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
@@ -571,10 +596,21 @@ CREATE TABLE `tasks` (
 --
 
 INSERT INTO `tasks` (`id`, `code`, `lead_id`, `assigned_to`, `title`, `description`, `category`, `due_date`, `status`, `created_at`, `priority`, `updated_at`) VALUES
-(1, 'TK-001', 1, 2, 'Follow up call', 'Call the client to confirm interest.', 'Kanvasing', '2025-07-25 14:00:00', 'completed', '2025-07-22 01:20:50', 'low', '2025-08-13 11:20:32'),
-(2, 'TK-002', 1, 3, 'tolong dong perbaikin tv aing', 'anjayyyy', 'Lainnya', '2025-08-06 08:02:00', 'completed', '2025-08-06 08:02:40', 'high', '2025-08-13 11:20:32'),
-(3, 'TK-003', 1, 2, 'anjay', 'tolong hubungi', 'Followup', '2025-08-12 01:10:00', 'completed', '2025-08-12 01:10:37', 'high', '2025-08-13 11:20:32'),
-(8, 'TK-004', 20, 6, 'tolong dong', 'tolong ya', 'Followup', '2025-08-13 04:49:00', 'completed', '2025-08-13 04:49:28', 'medium', '2025-08-13 07:58:39');
+(13, 'TK-001', 21, 2, 'tolong ya kanvasing', 'tolong ya', 'Kanvasing', '2025-08-16 04:13:00', 'completed', '2025-08-15 04:13:28', 'high', '2025-08-15 05:53:10'),
+(14, 'TK-002', 20, 2, 'tolong pak', 'tolong pak', 'Followup', '2025-08-16 04:19:00', 'completed', '2025-08-15 04:19:19', 'high', '2025-08-15 04:19:24'),
+(15, 'TK-003', 21, 2, 'tolong lagi', 'tolong', 'Kanvasing', '2025-08-16 05:47:00', 'completed', '2025-08-15 05:47:11', 'medium', '2025-08-15 05:53:21'),
+(16, 'TK-004', 21, 2, 'tolong ya plis', 'tolong aku pliss', 'Kanvasing', '2025-08-16 05:47:00', 'completed', '2025-08-15 05:47:48', 'medium', '2025-08-15 05:53:32'),
+(17, 'TK-005', 21, 2, 'tolong ya lgi kanvasing', 'tolong gan', 'Kanvasing', '2025-08-16 05:48:00', 'completed', '2025-08-15 05:48:14', 'medium', '2025-08-15 05:53:46'),
+(18, 'TK-006', 21, 2, 'tolong lagi', 'tolong gan', 'Kanvasing', '2025-08-16 05:50:00', 'completed', '2025-08-15 05:50:11', 'medium', '2025-08-15 05:53:54'),
+(19, 'TK-007', 21, 2, 'tolong ya', 'tolong', 'Followup', '2025-08-16 05:50:00', 'completed', '2025-08-15 05:50:37', 'medium', '2025-08-15 05:54:02'),
+(25, 'TK-013', 21, 2, 'tolong ya', 'tolong', 'Lainnya', '2025-08-16 06:09:00', 'completed', '2025-08-15 06:09:11', 'medium', '2025-08-15 06:09:16'),
+(26, 'TK-014', 21, 2, 'tolong', 'tolong', 'Followup', '2025-08-16 06:25:00', 'completed', '2025-08-15 06:25:48', 'medium', '2025-08-15 06:27:21'),
+(27, 'TK-015', 21, 2, 'tolong ya', 'tolong', 'Followup', '2025-08-16 06:26:00', 'completed', '2025-08-15 06:26:13', 'medium', '2025-08-15 06:27:31'),
+(28, 'TK-016', 21, 2, 'tolong woy', 'tolong', 'Followup', '2025-08-15 06:26:00', 'completed', '2025-08-15 06:26:33', 'medium', '2025-08-15 06:27:40'),
+(29, 'TK-017', 21, 2, 'tolong', 'tolong boy', 'Followup', '2025-08-15 06:27:00', 'completed', '2025-08-15 06:27:12', 'medium', '2025-08-15 06:27:48'),
+(30, 'TK-018', 21, 2, 'tolong oy', 'bos tolongggg', 'Penawaran', '2025-08-16 06:28:00', 'completed', '2025-08-15 06:28:33', 'medium', '2025-08-15 06:28:43'),
+(31, 'TK-019', 22, 5, 'tolong aku dong', 'tolong', 'Followup', '2025-08-15 07:16:00', 'completed', '2025-08-15 07:16:18', 'medium', '2025-08-15 07:16:22'),
+(32, 'TK-020', 21, 2, 'task', 'tolong', 'Kanvasing', '2025-08-15 08:50:00', 'completed', '2025-08-15 08:51:00', 'medium', '2025-08-15 08:51:06');
 
 -- --------------------------------------------------------
 
@@ -600,22 +636,6 @@ INSERT INTO `task_comments` (`id`, `task_id`, `comment_text`, `commented_by`, `c
 -- --------------------------------------------------------
 
 --
--- Table structure for table `task_kpi_logs`
---
-
-CREATE TABLE `task_kpi_logs` (
-  `id` int NOT NULL,
-  `task_id` int NOT NULL,
-  `user_id` int NOT NULL,
-  `category` enum('Kanvasing','Followup','Penawaran','Lainnya') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `kpi_category` enum('kanvasing','followup','penawaran','kesepakatan_tarif','deal_do') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `action_date` date NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `task_results`
 --
 
@@ -634,7 +654,33 @@ CREATE TABLE `task_results` (
 
 INSERT INTO `task_results` (`id`, `task_id`, `result_text`, `result_type`, `result_date`, `created_by`) VALUES
 (1, 1, 'Client is interested and asked for a quotation.', 'call', '2025-07-22 01:20:52', 2),
-(2, 2, 'apa kek', 'call', '2025-08-12 01:06:47', 1);
+(2, 2, 'apa kek', 'call', '2025-08-12 01:06:47', 1),
+(4, 8, 'sudah yah', 'call', '2025-08-15 01:29:18', 1),
+(5, 9, 'sudah pak', 'call', '2025-08-15 01:44:45', 1),
+(6, 10, 'sudah yah', 'visit', '2025-08-15 02:57:18', 1),
+(7, 11, 'sudah ya', 'meeting', '2025-08-15 03:13:06', 1),
+(8, 12, 'sudah pak', 'meeting', '2025-08-15 04:03:12', 1),
+(9, 13, 'sudah pak', 'email', '2025-08-15 04:13:43', 1),
+(10, 14, 'sudah pak laksanakan', 'meeting', '2025-08-15 04:19:31', 1),
+(11, 13, 'tolongin', 'call', '2025-08-15 05:53:16', 1),
+(12, 15, 'boy', 'call', '2025-08-15 05:53:27', 1),
+(13, 16, 'tolong ya', 'note', '2025-08-15 05:53:37', 1),
+(14, 17, 'tolong ya', 'note', '2025-08-15 05:53:49', 1),
+(15, 18, 'boy tolong', 'note', '2025-08-15 05:53:58', 1),
+(16, 19, 'boy tolong', 'note', '2025-08-15 05:54:07', 1),
+(17, 20, 'boy tolong', 'call', '2025-08-15 05:54:19', 1),
+(18, 21, 'boy udah', 'call', '2025-08-15 05:54:36', 1),
+(19, 22, 'udah', 'note', '2025-08-15 05:54:45', 1),
+(20, 23, 'udah', 'note', '2025-08-15 05:54:55', 1),
+(21, 24, 'udah dah', 'call', '2025-08-15 05:55:06', 1),
+(22, 25, 'sudah', 'call', '2025-08-15 06:09:21', 1),
+(23, 26, 'bos tolong', 'note', '2025-08-15 06:27:27', 1),
+(24, 27, 'bos tolong', 'note', '2025-08-15 06:27:36', 1),
+(25, 28, 'bos tolong', 'note', '2025-08-15 06:27:45', 1),
+(26, 29, 'bos sudah', 'note', '2025-08-15 06:27:54', 1),
+(27, 30, 'sudah bos', 'note', '2025-08-15 06:28:48', 1),
+(28, 31, 'sudah mas aman aja', 'note', '2025-08-15 07:16:27', 1),
+(29, 32, 'sudah', 'call', '2025-08-15 08:51:10', 1);
 
 -- --------------------------------------------------------
 
@@ -682,6 +728,7 @@ CREATE TABLE `user_roles` (
 INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (1, 1),
 (2, 2),
+(5, 2),
 (3, 3),
 (4, 4);
 
@@ -855,15 +902,6 @@ ALTER TABLE `task_comments`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `task_kpi_logs`
---
-ALTER TABLE `task_kpi_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_task_kpi_logs_date` (`action_date`),
-  ADD KEY `idx_task_kpi_logs_user` (`user_id`),
-  ADD KEY `idx_task_kpi_logs_task` (`task_id`);
-
---
 -- Indexes for table `task_results`
 --
 ALTER TABLE `task_results`
@@ -897,13 +935,13 @@ ALTER TABLE `approvals`
 -- AUTO_INCREMENT for table `companies`
 --
 ALTER TABLE `companies`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `contacts`
 --
 ALTER TABLE `contacts`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `contracts`
@@ -927,7 +965,7 @@ ALTER TABLE `contract_items`
 -- AUTO_INCREMENT for table `deals`
 --
 ALTER TABLE `deals`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
 
 --
 -- AUTO_INCREMENT for table `deal_comments`
@@ -945,7 +983,7 @@ ALTER TABLE `kpi_targets`
 -- AUTO_INCREMENT for table `leads`
 --
 ALTER TABLE `leads`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `leads_stage`
@@ -987,19 +1025,19 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `sales_kpi_daily`
 --
 ALTER TABLE `sales_kpi_daily`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `sales_kpi_monthly`
 --
 ALTER TABLE `sales_kpi_monthly`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `task_comments`
@@ -1008,16 +1046,10 @@ ALTER TABLE `task_comments`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `task_kpi_logs`
---
-ALTER TABLE `task_kpi_logs`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `task_results`
 --
 ALTER TABLE `task_results`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -1103,13 +1135,6 @@ ALTER TABLE `sales_kpi_daily`
 --
 ALTER TABLE `sales_kpi_monthly`
   ADD CONSTRAINT `sales_kpi_monthly_ibfk_1` FOREIGN KEY (`sales_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `task_kpi_logs`
---
-ALTER TABLE `task_kpi_logs`
-  ADD CONSTRAINT `task_kpi_logs_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `tasks` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `task_kpi_logs_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

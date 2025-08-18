@@ -234,6 +234,8 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                                 { value: "Kanvasing", label: "Kanvasing" },
                                                 { value: "Followup", label: "Followup" },
                                                 { value: "Penawaran", label: "Penawaran" },
+                                                { value: "Kesepakatan Tarif", label: "Kesepakatan Tarif" },
+                                                { value: "Deal DO", label: "Deal DO" },
                                                 { value: "Lainnya", label: "Lainnya" },
                                             ]}
                                             isRequired

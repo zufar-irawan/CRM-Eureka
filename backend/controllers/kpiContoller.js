@@ -1,8 +1,7 @@
-// controllers/kpiController.js
-import { SalesKpiDaily, SalesKpiMonthly, KpiTargets, TaskKpiLogs } from '../models/kpi/kpiModel.js';
+// controllers/kpiController.js - Updated with task-only KPI logic
+import { SalesKpiDaily, SalesKpiMonthly, KpiTargets, } from '../models/kpi/kpiModel.js';
 import { User } from '../models/usersModel.js';
 import { Tasks } from '../models/tasks/tasksModel.js';
-import { Deals } from '../models/deals/dealsModel.js';
 import { Op, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/db.js';
 
@@ -34,38 +33,16 @@ export const calculateDailyKPI = async (userId, date) => {
 
     console.log(`Task counts for ${targetDate}:`, taskCounts);
 
-    const dealDoCount = await Deals.count({
-      where: {
-        created_by: userId,
-        stage: 'won',
-        [Op.and]: [
-          sequelize.where(sequelize.fn('DATE', sequelize.col('updated_at')), targetDate)
-        ]
-      }
-    });
-
-    const kesepakatanTarifCount = await Deals.count({
-      where: {
-        created_by: userId,
-        stage: {
-          [Op.in]: ['negotiation', 'proposal', 'qualified', 'won']
-        },
-        [Op.and]: [
-          sequelize.where(sequelize.fn('DATE', sequelize.col('updated_at')), targetDate)
-        ]
-      }
-    });
-
-    console.log(`Deal DO count: ${dealDoCount}, Kesepakatan Tarif count: ${kesepakatanTarifCount}`);
-
+    // 📝 UPDATED: Inisialisasi semua count dengan 0
     let counts = {
       kanvasing_count: 0,
       followup_count: 0,
       penawaran_count: 0,
-      kesepakatan_tarif_count: kesepakatanTarifCount,
-      deal_do_count: dealDoCount
+      kesepakatan_tarif_count: 0,  // Sekarang dari task category
+      deal_do_count: 0             // Sekarang dari task category
     };
 
+    // 📝 UPDATED: Mapping semua kategori dari tasks
     taskCounts.forEach(task => {
       const count = parseInt(task.count);
       switch (task.category) {
@@ -78,12 +55,19 @@ export const calculateDailyKPI = async (userId, date) => {
         case 'Penawaran':
           counts.penawaran_count = count;
           break;
+        case 'Kesepakatan Tarif':  // 📝 NEW: Kategori baru
+          counts.kesepakatan_tarif_count = count;
+          break;
+        case 'Deal DO':  // 📝 NEW: Kategori baru
+          counts.deal_do_count = count;
+          break;
         default:
+          // Handle kategori 'Lainnya' atau kategori lain jika diperlukan
           break;
       }
     });
 
-    console.log(`📊 Final counts for ${targetDate}:`, counts);
+    console.log(`🔢 Final counts for ${targetDate}:`, counts);
 
     const dailyTarget = await KpiTargets.findOne({
       where: { type: 'daily', is_active: true }
@@ -95,6 +79,8 @@ export const calculateDailyKPI = async (userId, date) => {
         counts.kanvasing_count >= dailyTarget.kanvasing_target,
         counts.followup_count >= dailyTarget.followup_target,
         counts.penawaran_count >= dailyTarget.penawaran_target,
+        counts.kesepakatan_tarif_count >= dailyTarget.kesepakatan_tarif_target,
+        counts.deal_do_count >= dailyTarget.deal_do_target
       ].every(v => v === true);
 
       if (isTargetMet) {
@@ -105,6 +91,8 @@ export const calculateDailyKPI = async (userId, date) => {
         kanvasing: `${counts.kanvasing_count}/${dailyTarget.kanvasing_target}`,
         followup: `${counts.followup_count}/${dailyTarget.followup_target}`,
         penawaran: `${counts.penawaran_count}/${dailyTarget.penawaran_target}`,
+        kesepakatan_tarif: `${counts.kesepakatan_tarif_count}/${dailyTarget.kesepakatan_tarif_target}`,
+        deal_do: `${counts.deal_do_count}/${dailyTarget.deal_do_target}`,
         status: statusKpi
       });
     }
@@ -140,6 +128,7 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
     const endDate = new Date(year, month, 0);
     endDate.setHours(23, 59, 59, 999);
 
+    // 📝 UPDATED: Semua dari tasks saja
     const taskCounts = await Tasks.findAll({
       attributes: [
         'category',
@@ -158,38 +147,16 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
 
     console.log(`Monthly task counts for ${year}-${month}:`, taskCounts);
 
-    const dealDoCount = await Deals.count({
-      where: {
-        created_by: userId,
-        stage: 'won',
-        updated_at: {
-          [Op.between]: [startDate, endDate]
-        }
-      }
-    });
-
-    const kesepakatanTarifCount = await Deals.count({
-      where: {
-        created_by: userId,
-        stage: {
-          [Op.in]: ['negotiation', 'proposal', 'qualified', 'won']
-        },
-        updated_at: {
-          [Op.between]: [startDate, endDate]
-        }
-      }
-    });
-
-    console.log(`Monthly - Deal DO count: ${dealDoCount}, Kesepakatan Tarif count: ${kesepakatanTarifCount}`);
-
+    // 📝 UPDATED: Inisialisasi semua count dengan 0
     let counts = {
       kanvasing_count: 0,
       followup_count: 0,
       penawaran_count: 0,
-      kesepakatan_tarif_count: kesepakatanTarifCount,
-      deal_do_count: dealDoCount
+      kesepakatan_tarif_count: 0,  // Sekarang dari task category
+      deal_do_count: 0             // Sekarang dari task category
     };
 
+    // 📝 UPDATED: Mapping semua kategori dari tasks
     taskCounts.forEach(task => {
       const count = parseInt(task.count);
       switch (task.category) {
@@ -201,6 +168,12 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
           break;
         case 'Penawaran':
           counts.penawaran_count = count;
+          break;
+        case 'Kesepakatan Tarif':  // 📝 NEW: Kategori baru
+          counts.kesepakatan_tarif_count = count;
+          break;
+        case 'Deal DO':  // 📝 NEW: Kategori baru
+          counts.deal_do_count = count;
           break;
         default:
           break;
@@ -214,16 +187,29 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
     });
 
     let statusKpi = 'Tidak Terpenuhi';
-if (monthlyTarget) {
-  const isTargetMet = counts.deal_do_count >= monthlyTarget.deal_do_target;
-  if (isTargetMet) {
-    statusKpi = 'Terpenuhi';
-  }
-  console.log(`Monthly target comparison (deal_do only):`, {
-    deal_do: `${counts.deal_do_count}/${monthlyTarget.deal_do_target}`,
-    status: statusKpi
-  });
-}
+    if (monthlyTarget) {
+      // 📝 UPDATED: Evaluasi semua target
+      const isTargetMet = [
+        counts.kanvasing_count >= monthlyTarget.kanvasing_target,
+        counts.followup_count >= monthlyTarget.followup_target,
+        counts.penawaran_count >= monthlyTarget.penawaran_target,
+        counts.kesepakatan_tarif_count >= monthlyTarget.kesepakatan_tarif_target,
+        counts.deal_do_count >= monthlyTarget.deal_do_target
+      ].every(v => v === true);
+      
+      if (isTargetMet) {
+        statusKpi = 'Terpenuhi';
+      }
+
+      console.log(`Monthly target comparison:`, {
+        kanvasing: `${counts.kanvasing_count}/${monthlyTarget.kanvasing_target}`,
+        followup: `${counts.followup_count}/${monthlyTarget.followup_target}`,
+        penawaran: `${counts.penawaran_count}/${monthlyTarget.penawaran_target}`,
+        kesepakatan_tarif: `${counts.kesepakatan_tarif_count}/${monthlyTarget.kesepakatan_tarif_target}`,
+        deal_do: `${counts.deal_do_count}/${monthlyTarget.deal_do_target}`,
+        status: statusKpi
+      });
+    }
 
     const [kpiMonthly, created] = await SalesKpiMonthly.upsert({
       sales_id: userId,
@@ -244,6 +230,7 @@ if (monthlyTarget) {
   }
 };
 
+// 📝 UPDATED: autoUpdateKPI tetap sama, hanya untuk tasks
 export const autoUpdateKPI = async (taskId, userId) => {
   try {
     const task = await Tasks.findByPk(taskId);
@@ -268,33 +255,9 @@ export const autoUpdateKPI = async (taskId, userId) => {
   }
 };
 
-export const autoUpdateKPIForDeal = async (dealId, userId, transaction) => {
-  const transactionOption = transaction ? { transaction } : {};
+// 📝 REMOVED: autoUpdateKPIForDeal function tidak diperlukan lagi
 
-  try {
-    const deal = await Deals.findByPk(dealId, transactionOption);
-    if (!deal) {
-      console.log(`Deal ${dealId} not found`);
-      return;
-    }
-
-    const updatedDate = new Date(deal.updated_at);
-    const dateStr = updatedDate.toISOString().split('T')[0];
-    const year = updatedDate.getFullYear();
-    const month = updatedDate.getMonth() + 1;
-
-    console.log(`Auto-updating KPI for deal ${deal.code} (stage: ${deal.stage}) by user ${userId}`);
-
-    await calculateDailyKPI(userId, dateStr);
-    await calculateMonthlyKPI(userId, year, month);
-
-    console.log(`KPI auto-updated for deal ${deal.code} on ${dateStr}`);
-  } catch (error) {
-    console.error('Error auto-updating KPI for deal:', error);
-  }
-};
-
-// API ENDPOINTS
+// API ENDPOINTS tetap sama...
 export const getDailyKPI = async (req, res) => {
   try {
     const { date, sales_id, start_date, end_date } = req.query;
@@ -403,158 +366,6 @@ export const getMonthlyKPI = async (req, res) => {
   }
 };
 
-export const getKPIReport = async (req, res) => {
-  try {
-    const {
-      view_type = 'BULANAN',
-      start_date,
-      end_date,
-      sales_name,
-      year,
-      month
-    } = req.query;
-
-    let data = [];
-    let formattedData = [];
-
-    if (view_type === 'HARIAN') {
-      let whereClause = {};
-
-      if (sales_name) {
-        whereClause.sales_name = {
-          [Op.like]: `%${sales_name}%`
-        };
-      }
-
-      if (start_date && end_date) {
-        whereClause.date = {
-          [Op.between]: [start_date, end_date]
-        };
-      } else if (start_date) {
-        whereClause.date = {
-          [Op.gte]: start_date
-        };
-      } else if (end_date) {
-        whereClause.date = {
-          [Op.lte]: end_date
-        };
-      } else {
-        // Default to today if no date specified
-        const today = new Date().toISOString().split('T')[0];
-        whereClause.date = today;
-      }
-
-      data = await SalesKpiDaily.findAll({
-        where: whereClause,
-        include: [
-          {
-            model: User,
-            as: 'sales_user',
-            attributes: ['id', 'name', 'email'],
-            required: false
-          }
-        ],
-        order: [['date', 'DESC'], ['sales_name', 'ASC']]
-      });
-
-      // Format data untuk frontend
-      formattedData = data.map(item => ({
-        id: item.id,
-        nama_sales: item.sales_name,
-        kanvasing_task: item.kanvasing_count,
-        followup_task: item.followup_count,
-        penawaran_task: item.penawaran_count,
-        kesepakatan_tarif_task: item.kesepakatan_tarif_count,
-        deal_do_task: item.deal_do_count,
-        status_kpi: item.status_kpi,
-        tanggal: item.date,
-        bulan: ""
-      }));
-
-    } else {
-      let whereClause = {};
-
-      if (sales_name) {
-        whereClause.sales_name = {
-          [Op.like]: `%${sales_name}%`
-        };
-      }
-
-      if (year) {
-        whereClause.year = parseInt(year);
-      }
-      if (month) {
-        whereClause.month = parseInt(month);
-      }
-
-      if (!year && !month) {
-        const currentDate = new Date();
-        whereClause.year = currentDate.getFullYear();
-        whereClause.month = currentDate.getMonth() + 1;
-      }
-
-      data = await SalesKpiMonthly.findAll({
-        where: whereClause,
-        include: [
-          {
-            model: User,
-            as: 'sales_user',
-            attributes: ['id', 'name', 'email'],
-            required: false
-          }
-        ],
-        order: [['year', 'DESC'], ['month', 'DESC'], ['sales_name', 'ASC']]
-      });
-
-      formattedData = data.map(item => {
-        const monthNames = [
-          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
-
-        return {
-          id: item.id,
-          nama_sales: item.sales_name,
-          kanvasing_task: item.kanvasing_count,
-          followup_task: item.followup_count,
-          penawaran_task: item.penawaran_count,
-          kesepakatan_tarif_task: item.kesepakatan_tarif_count,
-          deal_do_task: item.deal_do_count,
-          status_kpi: item.status_kpi,
-          bulan: `${monthNames[item.month - 1]} ${item.year}`,
-          tanggal: ""
-        };
-      });
-    }
-
-    const totalRecords = formattedData.length;
-    const targetMet = formattedData.filter(record => record.status_kpi === 'Terpenuhi').length;
-    const targetNotMet = totalRecords - targetMet;
-
-    const summary = {
-      total_records: totalRecords,
-      target_met: targetMet,
-      target_not_met: targetNotMet,
-      percentage_met: totalRecords > 0 ? ((targetMet / totalRecords) * 100).toFixed(2) : 0
-    };
-
-    res.status(200).json({
-      success: true,
-      data: formattedData,
-      summary: summary,
-      view_type: view_type,
-      filters: req.query,
-      message: `Found ${totalRecords} KPI records`
-    });
-  } catch (error) {
-    console.error('Error fetching KPI report:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching KPI report',
-      error: error.message
-    });
-  }
-};
 
 export const triggerDailyKPI = async (req, res) => {
   try {

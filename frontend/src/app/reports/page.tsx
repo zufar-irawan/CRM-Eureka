@@ -19,13 +19,16 @@ import { useRouter } from "next/navigation";
 
 interface SalesData {
   id: string;
-  nama_sales: string;
-  kanvasing_task: number;
-  followup_task: number;
-  penawaran_task: number;
-  kesepakatan_tarif_task: number;
-  deal_do_task: number;
+  sales_name: string;
+  kanvasing_count: number;
+  followup_count: number;
+  penawaran_count: number;
+  kesepakatan_tarif_count: number;
+  deal_do_count: number;
   status_kpi: "Terpenuhi" | "Tidak Terpenuhi";
+  date?: string;
+  month?: number;
+  year?: number;
   bulan: string;
   tanggal?: string;
 }
@@ -37,7 +40,6 @@ interface FilterState {
   viewType: "BULANAN" | "HARIAN";
 }
 
-// API configuration with cache busting
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
   headers: {
@@ -49,7 +51,6 @@ const api = axios.create({
   timeout: 15000,
 });
 
-// Add cache busting interceptor
 api.interceptors.request.use(config => {
   if (config.method === 'get') {
     const separator = config.url?.includes('?') ? '&' : '?';
@@ -87,24 +88,21 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReportsData();
-  }, [filters.viewType]); // Trigger when viewType changes
+  }, [filters.viewType]); 
 
   const fetchReportsData = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching KPI data with filters:', filters);
+      console.log('Fetching KPI data with filters:', filters);
       
-      // Build query parameters
       const params: any = {
         view_type: filters.viewType,
       };
 
-      // Add date filters
       if (filters.startDate) {
         if (filters.viewType === "HARIAN") {
           params.start_date = filters.startDate;
         } else {
-          // For monthly, extract year and month from startDate
           const startDate = new Date(filters.startDate);
           params.year = startDate.getFullYear();
           params.month = startDate.getMonth() + 1;
@@ -115,34 +113,38 @@ export default function ReportsPage() {
         params.end_date = filters.endDate;
       }
 
-      // Add sales name filter
       if (filters.salesName) {
         params.sales_name = filters.salesName;
       }
 
-      // If no date filters, set defaults
       if (!filters.startDate && !filters.endDate) {
         const currentDate = new Date();
         if (filters.viewType === "BULANAN") {
           params.year = currentDate.getFullYear();
           params.month = currentDate.getMonth() + 1;
         }
-        // For daily view, let backend default to today if no date is provided
       }
 
-      console.log('📊 API Parameters:', params);
+      console.log('API Parameters:', params);
       
-      const response = await api.get("/kpi/report", { params });
-      console.log('✅ API Response:', response.data);
+      const endpoint = filters.viewType === 'BULANAN' ? '/kpi/monthly' : '/kpi/daily';
+      const response = await api.get(endpoint, { params });
+      console.log('API Response:', response.data);
 
       if (response.data.success) {
-        setSalesData(response.data.data);
-        console.log(`📈 Loaded ${response.data.data.length} KPI records`);
+        const transformedData = response.data.data.map((item: any) => ({
+          ...item,
+          nama_sales: item.sales_name,
+          bulan: item.month && item.year ? `${new Date(item.year, item.month - 1).toLocaleString('default', { month: 'long' })} ${item.year}` : '',
+          tanggal: item.date ? new Date(item.date).toLocaleDateString('id-ID') : '',
+        }));
+        setSalesData(transformedData);
+        console.log(`Loaded ${response.data.data.length} KPI records`);
       } else {
         throw new Error(response.data.message || 'Failed to fetch data');
       }
     } catch (error: any) {
-      console.error('❌ Error fetching KPI data:', error);
+      console.error('Error fetching KPI data:', error);
       
       // Show user-friendly error message
       let errorMessage = 'Failed to fetch KPI data';
@@ -161,8 +163,7 @@ export default function ReportsPage() {
         footer: `<small>API URL: ${api.defaults.baseURL}</small>`
       });
 
-      // Use sample data as fallback for demo purposes
-      console.log('🔄 Using sample data as fallback');
+      console.log('Using sample data as fallback');
       setSalesData(getSampleData());
     } finally {
       setLoading(false);
@@ -174,36 +175,36 @@ export default function ReportsPage() {
       return [
         {
           id: "1",
-          nama_sales: "Budi Santoso",
-          kanvasing_task: 130,
-          followup_task: 125,
-          penawaran_task: 25,
-          kesepakatan_tarif_task: 5,
-          deal_do_task: 2,
+          sales_name: "Budi Santoso",
+          kanvasing_count: 130,
+          followup_count: 125,
+          penawaran_count: 25,
+          kesepakatan_tarif_count: 5,
+          deal_do_count: 2,
           status_kpi: "Terpenuhi",
           bulan: "Agustus 2025",
           tanggal: ""
         },
         {
           id: "2",
-          nama_sales: "Andi Rahman",
-          kanvasing_task: 90,
-          followup_task: 80,
-          penawaran_task: 15,
-          kesepakatan_tarif_task: 2,
-          deal_do_task: 0,
+          sales_name: "Andi Rahman",
+          kanvasing_count: 90,
+          followup_count: 80,
+          penawaran_count: 15,
+          kesepakatan_tarif_count: 2,
+          deal_do_count: 0,
           status_kpi: "Tidak Terpenuhi",
           bulan: "Agustus 2025",
           tanggal: ""
         },
         {
           id: "3",
-          nama_sales: "Sales One",
-          kanvasing_task: 160,
-          followup_task: 140,
-          penawaran_task: 30,
-          kesepakatan_tarif_task: 8,
-          deal_do_task: 3,
+          sales_name: "Sales One",
+          kanvasing_count: 160,
+          followup_count: 140,
+          penawaran_count: 30,
+          kesepakatan_tarif_count: 8,
+          deal_do_count: 3,
           status_kpi: "Terpenuhi",
           bulan: "Agustus 2025",
           tanggal: ""
@@ -213,36 +214,36 @@ export default function ReportsPage() {
       return [
         {
           id: "3",
-          nama_sales: "Sales One",
-          kanvasing_task: 6,
-          followup_task: 5,
-          penawaran_task: 1,
-          kesepakatan_tarif_task: 0,
-          deal_do_task: 0,
+          sales_name: "Sales One",
+          kanvasing_count: 6,
+          followup_count: 5,
+          penawaran_count: 1,
+          kesepakatan_tarif_count: 0,
+          deal_do_count: 0,
           status_kpi: "Terpenuhi",
           bulan: "",
           tanggal: "12/08/2025",
         },
         {
           id: "4",
-          nama_sales: "Andi Rahman",
-          kanvasing_task: 4,
-          followup_task: 3,
-          penawaran_task: 0,
-          kesepakatan_tarif_task: 0,
-          deal_do_task: 0,
+          sales_name: "Andi Rahman",
+          kanvasing_count: 4,
+          followup_count: 3,
+          penawaran_count: 0,
+          kesepakatan_tarif_count: 0,
+          deal_do_count: 0,
           status_kpi: "Tidak Terpenuhi",
           bulan: "",
           tanggal: "12/08/2025",
         },
         {
           id: "5",
-          nama_sales: "Sales Two",
-          kanvasing_task: 8,
-          followup_task: 6,
-          penawaran_task: 2,
-          kesepakatan_tarif_task: 1,
-          deal_do_task: 1,
+          sales_name: "Sales Two",
+          kanvasing_count: 8,
+          followup_count: 6,
+          penawaran_count: 2,
+          kesepakatan_tarif_count: 1,
+          deal_do_count: 1,
           status_kpi: "Terpenuhi",
           bulan: "",
           tanggal: "13/08/2025",
@@ -252,18 +253,18 @@ export default function ReportsPage() {
   };
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered');
+    console.log('Manual refresh triggered');
     await fetchReportsData();
   };
 
   const handleFilterApply = async () => {
-    console.log('🔍 Applying filters:', filters);
+    console.log('Applying filters:', filters);
     setShowFilterDropdown(false);
     await fetchReportsData();
   };
 
   const handleFilterReset = async () => {
-    console.log('🗑️ Resetting filters');
+    console.log('Resetting filters');
     setFilters({
       startDate: "",
       endDate: "",
@@ -271,15 +272,13 @@ export default function ReportsPage() {
       viewType: "BULANAN",
     });
     setShowFilterDropdown(false);
-    // Fetch data will be triggered by useEffect
   };
 
   const handleViewTypeChange = (newViewType: "BULANAN" | "HARIAN") => {
-    console.log(`🔄 Changing view type to: ${newViewType}`);
+    console.log(`Changing view type to: ${newViewType}`);
     setFilters(prev => ({
       ...prev,
       viewType: newViewType,
-      // Reset date filters when changing view type
       startDate: "",
       endDate: ""
     }));
@@ -329,12 +328,12 @@ export default function ReportsPage() {
       ...salesData.map((row) =>
         [
           filters.viewType === "BULANAN" ? `"${row.bulan}"` : `"${row.tanggal}"`,
-          `"${row.nama_sales}"`,
-          row.kanvasing_task,
-          row.followup_task,
-          row.penawaran_task,
-          row.kesepakatan_tarif_task,
-          row.deal_do_task,
+          `"${row.sales_name}"`,
+          row.kanvasing_count,
+          row.followup_count,
+          row.penawaran_count,
+          row.kesepakatan_tarif_count,
+          row.deal_do_count,
           `"${row.status_kpi}"`,
         ].join(",")
       ),
@@ -363,14 +362,13 @@ export default function ReportsPage() {
     return {
       totalSales: salesData.length,
       kpiTerpenuhi: salesData.filter(d => d.status_kpi === "Terpenuhi").length,
-      totalKanvasing: salesData.reduce((sum, d) => sum + d.kanvasing_task, 0),
-      totalDeals: salesData.reduce((sum, d) => sum + d.deal_do_task, 0),
+      totalKanvasing: salesData.reduce((sum, d) => sum + d.kanvasing_count, 0),
+      totalDeals: salesData.reduce((sum, d) => sum + d.deal_do_count, 0),
     };
   };
 
   const stats = calculateSummaryStats();
 
-  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -643,32 +641,32 @@ export default function ReportsPage() {
                         <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                           <Users className="w-3 h-3 text-blue-600" />
                         </div>
-                        <span className="text-sm font-medium text-gray-900">{row.nama_sales}</span>
+                        <span className="text-sm font-medium text-gray-900">{row.sales_name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {row.kanvasing_task}
+                        {row.kanvasing_count}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {row.followup_task}
+                        {row.followup_count}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                        {row.penawaran_task}
+                        {row.penawaran_count}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {row.kesepakatan_tarif_task}
+                        {row.kesepakatan_tarif_count}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                        {row.deal_do_task}
+                        {row.deal_do_count}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -703,7 +701,7 @@ export default function ReportsPage() {
                       <Users className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900">{row.nama_sales}</h3>
+                      <h3 className="text-sm font-medium text-gray-900">{row.sales_name}</h3>
                       <div className="flex items-center text-xs text-gray-500 mt-1">
                         <Calendar className="w-3 h-3 mr-1" />
                         {filters.viewType === "BULANAN" ? row.bulan : row.tanggal}
@@ -718,19 +716,19 @@ export default function ReportsPage() {
                     <div className="flex justify-between">
                       <p className="text-gray-600 text-xs">Kanvasing</p>
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                        {row.kanvasing_task}
+                        {row.kanvasing_count}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <p className="text-gray-600 text-xs">Followup</p>
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                        {row.followup_task}
+                        {row.followup_count}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <p className="text-gray-600 text-xs">Penawaran</p>
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                        {row.penawaran_task}
+                        {row.penawaran_count}
                       </span>
                     </div>
                   </div>
@@ -738,13 +736,13 @@ export default function ReportsPage() {
                     <div className="flex justify-between">
                       <p className="text-gray-600 text-xs">Kesepakatan</p>
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                        {row.kesepakatan_tarif_task}
+                        {row.kesepakatan_tarif_count}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <p className="text-gray-600 text-xs">Deal DO</p>
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
-                        {row.deal_do_task}
+                        {row.deal_do_count}
                       </span>
                     </div>
                   </div>

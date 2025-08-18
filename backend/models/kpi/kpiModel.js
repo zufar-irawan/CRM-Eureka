@@ -55,7 +55,8 @@ export const SalesKpiDaily = sequelize.define('SalesKpiDaily', {
   indexes: [
     {
       unique: true,
-      fields: ['sales_id', 'date']
+      fields: ['sales_id', 'date'],
+      name: 'unique_sales_date'
     }
   ]
 });
@@ -118,7 +119,8 @@ export const SalesKpiMonthly = sequelize.define('SalesKpiMonthly', {
   indexes: [
     {
       unique: true,
-      fields: ['sales_id', 'year', 'month']
+      fields: ['sales_id', 'year', 'month'],
+      name: 'unique_sales_month'
     }
   ]
 });
@@ -164,50 +166,8 @@ export const KpiTargets = sequelize.define('KpiTargets', {
   updatedAt: 'updated_at'
 });
 
-export const TaskKpiLogs = sequelize.define('TaskKpiLogs', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  task_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'tasks',
-      key: 'id'
-    }
-  },
-  user_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
-  },
-  category: {
-    type: DataTypes.ENUM('Kanvasing', 'Followup', 'Penawaran', 'Lainnya'),
-    allowNull: false
-  },
-  kpi_category: {
-    type: DataTypes.ENUM('kanvasing', 'followup', 'penawaran', 'kesepakatan_tarif', 'deal_do'),
-    allowNull: true
-  },
-  action_date: {
-    type: DataTypes.DATEONLY,
-    allowNull: false
-  }
-}, {
-  tableName: 'task_kpi_logs',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: false
-});
-
 export default {
   SalesKpiDaily,
   SalesKpiMonthly,
-  KpiTargets,
-  TaskKpiLogs
+  KpiTargets
 };

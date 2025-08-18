@@ -1,7 +1,6 @@
 import { Deals, DealComments, Leads, User, Companies, Contacts } from '../models/associations.js';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js';
-import { autoUpdateKPIForDeal } from './kpiContoller.js';
 
 const generateDealCode = async (transaction) => {
     const lastDeal = await Deals.findOne({
@@ -384,10 +383,6 @@ export const createDeal = async (req, res) => {
 
         await transaction.commit();
 
-        if (['negotiation', 'proposal', 'qualified', 'won'].includes(stage)) {
-            await autoUpdateKPIForDeal(deal.id, finalCreatedBy);
-            console.log(`KPI auto-updated for new deal ${deal.code} with stage: ${stage}`);
-        }
 
         const createdDeal = await Deals.findByPk(deal.id, {
             include: [
@@ -514,14 +509,6 @@ export const updateDeal = async (req, res) => {
         await deal.update(updateData, { transaction });
         await transaction.commit();
 
-        // 🔥 KPI AUTO-UPDATE: Jika stage berubah dan melibatkan kategori KPI
-        if (updateData.stage && oldStage !== updateData.stage) {
-            const kpiStages = ['negotiation', 'proposal', 'qualified', 'won'];
-            if (kpiStages.includes(oldStage) || kpiStages.includes(updateData.stage)) {
-                await autoUpdateKPIForDeal(deal.id, deal.created_by);
-                console.log(`🔥 KPI auto-updated for deal ${deal.code}: ${oldStage} → ${updateData.stage}`);
-            }
-        }
 
         const updatedDeal = await Deals.findOne({
             where: whereCondition,
@@ -625,11 +612,6 @@ export const updateDealStage = async (req, res) => {
 
         await transaction.commit();
 
-        const kpiStages = ['negotiation', 'proposal', 'qualified', 'won'];
-        if (kpiStages.includes(oldStage) || kpiStages.includes(stage)) {
-            await autoUpdateKPIForDeal(deal.id, deal.created_by);
-            console.log(`KPI auto-updated for deal ${deal.code} stage change: ${oldStage} → ${stage}`);
-        }
 
         console.log(`Deal ${deal.code} (ID: ${deal.id}) stage updated from "${oldStage}" to "${stage}"`);
 
@@ -760,10 +742,6 @@ export const createDealFromLead = async (req, res) => {
         }, { transaction });
 
         await transaction.commit();
-        if (['negotiation', 'proposal', 'qualified', 'won'].includes(stage)) {
-            await autoUpdateKPIForDeal(deal.id, createdBy);
-            console.log(`KPI auto-updated for deal from lead conversion ${deal.code} with stage: ${stage}`);
-        }
         
         const completeDeal = await Deals.findByPk(deal.id, {
             include: [

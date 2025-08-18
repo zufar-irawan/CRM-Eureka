@@ -4,7 +4,6 @@ import { Tasks } from "../models/tasks/tasksModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
 import { Companies } from "../models/companies/companiesModel.js";
 import { Contacts } from "../models/contacts/contactsModel.js";
-import { autoUpdateKPIForDeal } from './kpiContoller.js';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js'; 
 
@@ -586,15 +585,6 @@ export const convertLead = async (req, res) => {
 
         await transaction.commit();
 
-        // Auto-update KPI if needed
-        // Always trigger KPI update on conversion
-        try {
-            await autoUpdateKPIForDeal(newDeal.id, lead.owner);
-            console.log(`[KPI] Auto-updated for deal conversion ${newDeal.code} with stage: ${dealStage}`);
-        } catch (kpiError) {
-            console.error('[KPI] Error updating KPI:', kpiError);
-            // Don't fail the whole conversion if KPI update fails
-        }
 
         console.log('[DEBUG] Conversion completed successfully:', {
             dealId: newDeal.id,

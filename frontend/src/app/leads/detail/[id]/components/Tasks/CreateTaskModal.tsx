@@ -108,7 +108,6 @@ export default function CreateTaskModal({
         priority: form.priority,
       };
 
-      // Menggunakan backend API yang benar
       const response = await makeAuthenticatedRequest(
         "http://localhost:5000/api/tasks",
         {
@@ -236,6 +235,8 @@ export default function CreateTaskModal({
                       <option value="Kanvasing">Kanvasing</option>
                       <option value="Followup">Followup</option>
                       <option value="Penawaran">Penawaran</option>
+                      <option value="Kesepakatan Tarif">Kesepakatan Tarif</option>
+                      <option value="Deal DO">Deal DO</option>
                       <option value="Lainnya">Lainnya</option>
                     </select>
                   </div>

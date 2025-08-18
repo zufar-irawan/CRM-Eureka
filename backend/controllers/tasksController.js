@@ -1,4 +1,4 @@
-// controllers/tasksController.js - Updated dengan integrasi KPI
+// controllers/tasksController.js - Updated to support new task categories
 import { Tasks } from "../models/tasks/tasksModel.js";
 import { TaskComments } from "../models/tasks/tasksCommentModel.js";
 import { TaskResults } from "../models/tasks/tasksResultModel.js";
@@ -162,6 +162,16 @@ export const createTask = async (req, res) => {
       });
     }
 
+    // 📝 UPDATED: Validasi kategori yang diizinkan
+    const validCategories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
+    if (category && !validCategories.includes(category)) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Category tidak valid. Valid categories: ${validCategories.join(', ')}`
+      });
+    }
+
     let finalLeadId;
     if (isNaN(lead_id)) {
       const lead = await Leads.findOne({ where: { code: lead_id }, transaction });
@@ -244,6 +254,17 @@ export const updateTask = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
+    // 📝 UPDATED: Validasi kategori jika diupdate
+    if (updateData.category) {
+      const validCategories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
+      if (!validCategories.includes(updateData.category)) {
+        return res.status(400).json({
+          success: false,
+          message: `Category tidak valid. Valid categories: ${validCategories.join(', ')}`
+        });
+      }
+    }
+
     // Cek apakah id adalah kode atau ID numerik
     const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
@@ -325,6 +346,33 @@ export const updateTask = async (req, res) => {
   }
 };
 
+// 📝 GET /api/tasks/categories - Mendapatkan daftar kategori yang valid
+export const getTaskCategories = async (req, res) => {
+  try {
+    const categories = [
+      { value: 'Kanvasing', label: 'Kanvasing' },
+      { value: 'Followup', label: 'Follow Up' },
+      { value: 'Penawaran', label: 'Penawaran' },
+      { value: 'Kesepakatan Tarif', label: 'Kesepakatan Tarif' },
+      { value: 'Deal DO', label: 'Deal DO' },
+      { value: 'Lainnya', label: 'Lainnya' }
+    ];
+
+    res.status(200).json({
+      success: true,
+      data: categories,
+      message: `Found ${categories.length} task categories`
+    });
+  } catch (error) {
+    console.error('Error fetching task categories:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching task categories",
+      error: error.message
+    });
+  }
+};
+
 // GET /api/tasks/:id - Detail task
 export const getTaskById = async (req, res) => {
   try {
@@ -398,8 +446,6 @@ export const updateTaskStatus = async (req, res) => {
         message: "Status tidak valid. Valid statuses: " + validStatuses.join(', ')
       });
     }
-
-    // Cek apakah id adalah kode atau ID numerik
     const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
     const task = await Tasks.findOne({ where: whereCondition });
@@ -411,17 +457,13 @@ export const updateTaskStatus = async (req, res) => {
     }
 
     const oldStatus = task.status;
-
-    // Update status
     await task.update({ status });
 
-    // 🔥 INTEGRASI KPI: Auto-update KPI jika task status berubah menjadi completed
     if (oldStatus !== 'completed' && status === 'completed') {
       await autoUpdateKPI(task.id, task.assigned_to);
       console.log(`📊 KPI auto-updated for task ${task.code} status change to completed`);
     }
 
-    // Ambil data terbaru
     const updatedTask = await Tasks.findOne({
       where: whereCondition,
       include: [
@@ -799,7 +841,6 @@ export const updateTaskResult = async (req, res) => {
       });
     }
 
-    // Validasi result_type jika diberikan
     const validResultTypes = ['meeting', 'call', 'email', 'visit', 'note'];
     if (result_type && !validResultTypes.includes(result_type)) {
       return res.status(400).json({

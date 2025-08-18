@@ -32,7 +32,6 @@ const allColumns: Column[] = [
   },
   { key: "status", label: "Status" },
   { key: "priority", label: "Priority" },
-  // { key: "assigned_to", label: "Assigned To" },
   {
     key: "updated_at",
     label: "Last Modified",
@@ -109,7 +108,7 @@ export default function TasksList() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const status = ["new", "pending", "completed", "overdue", "cancelled"];
-  const categories = ['Kanvasing', 'Followup', 'Penawaran', 'Lainnya'];
+  const categories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
   const priorities = ['low', 'medium', 'high'];
 
   const openModal = useTaskModalStore((state) => state.openModal)

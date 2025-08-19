@@ -15,7 +15,7 @@ import EditTasksModal from "./edit/editModal";
 import { useTaskModalStore } from "@/Store/taskModalStore";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import { getToken } from "../../../utils/auth";
+import { checkAuthStatus } from "../../../utils/auth";
 
 const allColumns: Column[] = [
   { key: "title", label: "Title" },
@@ -84,18 +84,25 @@ export default function TasksList() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = getToken()
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await checkAuthStatus();
+        if (!isAuthenticated) {
+          Swal.fire({
+            icon: "info",
+            title: "You're not logged in",
+            text: "Make sure to login first!"
+          });
+          router.replace('/login');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+      }
+    };
 
-    if (!token) {
-      Swal.fire({
-        icon: "info",
-        title: "You're not logged in",
-        text: "Make sure to login first!"
-      })
-
-      router.replace('/login')
-    }
-  }, [router])
+    checkAuth();
+  }, [router]);
 
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

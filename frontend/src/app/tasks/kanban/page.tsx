@@ -8,24 +8,31 @@ import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
-import { getToken } from '../../../../utils/auth';
+import { checkAuthStatus } from '../../../../utils/auth';
 
 export default function DealsKanban() {
     const router = useRouter();
 
     useEffect(() => {
-        const token = getToken()
-
-        if (!token) {
-            Swal.fire({
-                icon: "info",
-                title: "You're not logged in",
-                text: "Make sure to login first!"
-            })
-
-            router.replace('/login')
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await checkAuthStatus();
+        if (!isAuthenticated) {
+          Swal.fire({
+            icon: "info",
+            title: "You're not logged in",
+            text: "Make sure to login first!"
+          });
+          router.replace('/login');
         }
-    }, [router])
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
     const [data, setData] = useState<any[]>([])
     const [containers, setContainers] = useState<DNDType[]>([

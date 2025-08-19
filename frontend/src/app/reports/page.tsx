@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
-import { getToken } from "../../../utils/auth";
+import { checkAuthStatus } from "../../../utils/auth";
 
 interface SalesData {
   id: string;
@@ -49,6 +49,7 @@ const api = axios.create({
     "Pragma": "no-cache",
     "Expires": "0"
   },
+  withCredentials: true,
   timeout: 15000,
 });
 
@@ -60,22 +61,39 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default function ReportsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = getToken()
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await checkAuthStatus();
+        if (!isAuthenticated) {
+          Swal.fire({
+            icon: "info",
+            title: "You're not logged in",
+            text: "Make sure to login first!"
+          });
+          router.replace('/login');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+      }
+    };
 
-    if (!token) {
-      Swal.fire({
-        icon: "info",
-        title: "You're not logged in",
-        text: "Make sure to login first!"
-      })
-
-      router.replace('/login')
-    }
-  }, [router])
+    checkAuth();
+  }, [router]);
 
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [loading, setLoading] = useState(true);

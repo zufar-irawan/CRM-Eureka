@@ -27,7 +27,7 @@ import CreateDealsModal from "./add/AddDealsModal";
 import Swal from "sweetalert2";
 import { useDealEditStore } from "@/Store/dealModalStore";
 import axios from "axios";
-import { getToken } from "../../../utils/auth";
+import { checkAuthStatus } from "../../../utils/auth";
 
 interface SortConfig {
   key: string;
@@ -73,6 +73,7 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 10000,
+  withCredentials: true,
 });
 
 // Helper function to get stage colors (matching leads style)
@@ -126,18 +127,25 @@ export default function Deals() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = getToken()
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await checkAuthStatus();
+        if (!isAuthenticated) {
+          Swal.fire({
+            icon: "info",
+            title: "You're not logged in",
+            text: "Make sure to login first!"
+          });
+          router.replace('/login');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+      }
+    };
 
-    if (!token) {
-      Swal.fire({
-        icon: "info",
-        title: "You're not logged in",
-        text: "Make sure to login first!"
-      })
-
-      router.replace('/login')
-    }
-  }, [router])
+    checkAuth();
+  }, [router]);
 
   const pathname = usePathname();
   const [deals, setDeals] = useState<any[]>([]);

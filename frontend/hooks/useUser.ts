@@ -2,37 +2,50 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getToken } from "../utils/auth";
 import axios from "axios";
 
 interface User {
   id: number;
   name: string;
   email: string;
+  roles?: any[];
+  roleNames?: string[];
+  primaryRole?: string;
+  isAdmin?: boolean;
+  isSales?: boolean;
+  isPartnership?: boolean;
+  isAkunting?: boolean;
 }
 
 export default function useUser() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = getToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       try {
         const response = await axios.get("http://localhost:5000/api/auth/me", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+          withCredentials: true,
+        });
         
-        setUser(response.data.data);
-      } catch (error) {
+        if (response.status === 200 && response.data.data) {
+          setUser(response.data.data);
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch (error: any) {
         console.error("Gagal mengambil data user:", error);
+        setUser(null);
+        setIsAuthenticated(false);
+        
+        if (error.response?.status === 401) {
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -41,5 +54,5 @@ export default function useUser() {
     fetchUser();
   }, []);
 
-  return { user, loading };
+  return { user, loading, isAuthenticated };
 }

@@ -39,6 +39,14 @@ export default function ActivityTable() {
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(now.getDate() - 7);
 
+            const tasks = response.data.data
+            const leadsMap: Record<string, string> = {}; // { lead_id: lead_name }
+
+            for (const task of tasks) {
+                const response2 = await axios.get(`http://localhost:3000/api/leads/${task.lead_id}`);
+                leadsMap[task.lead_id] = response2.data.fullname; // simpan name ke map
+            }
+
             const filtered = response.data.data
                 .filter((task) => task.status === "completed") // ambil task done
                 .flatMap((task) =>
@@ -49,7 +57,7 @@ export default function ActivityTable() {
                         })
                         .map((r) => ({
                             activity: task.title,
-                            lead: task.lead_id,
+                            lead: leadsMap[task.lead_id],
                             date: new Date(r.result_date).toLocaleDateString("en-GB", {
                                 day: "2-digit",
                                 month: "short",

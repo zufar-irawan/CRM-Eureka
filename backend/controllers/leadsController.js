@@ -4,8 +4,8 @@ import { Tasks } from "../models/tasks/tasksModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
 import { Companies } from "../models/companies/companiesModel.js";
 import { Contacts } from "../models/contacts/contactsModel.js";
-import { Op } from 'sequelize';
-import { sequelize } from '../config/db.js'; 
+import { Op, where } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
 const generateDealCode = async (transaction) => {
     const lastDeal = await Deals.findOne({
@@ -49,34 +49,34 @@ const generateLeadCode = async (transaction) => {
 };
 
 const buildCommentTree = (comments) => {
-  const commentMap = {};
-  const rootComments = [];
-  comments.forEach(comment => {
-    commentMap[comment.id] = {
-      ...comment.toJSON(),
-      replies: []
-    };
-  });
-
-  comments.forEach(comment => {
-    if (comment.parent_id === null) {
-      rootComments.push(commentMap[comment.id]);
-    } else if (commentMap[comment.parent_id]) {
-      commentMap[comment.parent_id].replies.push(commentMap[comment.id]);
-    }
-  });
-
-  const sortReplies = (comments) => {
+    const commentMap = {};
+    const rootComments = [];
     comments.forEach(comment => {
-      if (comment.replies && comment.replies.length > 0) {
-        comment.replies.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        sortReplies(comment.replies);
-      }
+        commentMap[comment.id] = {
+            ...comment.toJSON(),
+            replies: []
+        };
     });
-  };
 
-  sortReplies(rootComments);
-  return rootComments;
+    comments.forEach(comment => {
+        if (comment.parent_id === null) {
+            rootComments.push(commentMap[comment.id]);
+        } else if (commentMap[comment.parent_id]) {
+            commentMap[comment.parent_id].replies.push(commentMap[comment.id]);
+        }
+    });
+
+    const sortReplies = (comments) => {
+        comments.forEach(comment => {
+            if (comment.replies && comment.replies.length > 0) {
+                comment.replies.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                sortReplies(comment.replies);
+            }
+        });
+    };
+
+    sortReplies(rootComments);
+    return rootComments;
 };
 
 export const getLeads = async (req, res) => {
@@ -85,6 +85,7 @@ export const getLeads = async (req, res) => {
             page = 1,
             limit = 10,
             stage,
+            id,
             rating,
             owner,
             search,
@@ -95,10 +96,13 @@ export const getLeads = async (req, res) => {
 
         const offset = (page - 1) * limit;
         let whereClause = {};
-        
+
+        if (id) {
+            whereClause.id = id
+        }
         if (status !== undefined && status !== '') {
             whereClause.status = status === '1' || status === 'true' || status === true;
-        } 
+        }
         if (stage) {
             whereClause.stage = stage;
         }
@@ -146,14 +150,14 @@ export const getLeads = async (req, res) => {
 export const getLeadById = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const response = await Leads.findOne({
             where: whereCondition
         });
-        
+
         if (!response) {
             return res.status(404).json({ message: "Lead not found" });
         }
@@ -166,7 +170,7 @@ export const getLeadById = async (req, res) => {
 
 export const createLead = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const {
             owner,
@@ -176,7 +180,7 @@ export const createLead = async (req, res) => {
             last_name,
             job_position,
             email,
-            work_email, 
+            work_email,
             phone,
             mobile,
             fax,
@@ -213,7 +217,7 @@ export const createLead = async (req, res) => {
             last_name,
             job_position,
             email,
-            work_email, 
+            work_email,
             phone,
             mobile,
             fax,
@@ -231,19 +235,19 @@ export const createLead = async (req, res) => {
             description,
             status: false
         }, { transaction });
-        
+
         await transaction.commit();
-        
+
         res.status(201).json({
             message: "Lead created successfully",
             lead: newLead
         });
     } catch (error) {
         await transaction.rollback();
-        
+
         console.error('Error creating lead:', error);
-        
-        if (error.name === 'SequelizeValidationError'){
+
+        if (error.name === 'SequelizeValidationError') {
             const validationErrors = error.errors.map(err => ({
                 field: err.path,
                 message: err.message
@@ -259,18 +263,18 @@ export const createLead = async (req, res) => {
 
 export const updateLead = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { id } = req.params;
-        
+
         // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
-        const lead = await Leads.findOne({ 
+        const lead = await Leads.findOne({
             where: whereCondition,
-            transaction 
+            transaction
         });
-        
+
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
@@ -284,7 +288,7 @@ export const updateLead = async (req, res) => {
             last_name,
             job_position,
             email,
-            work_email, 
+            work_email,
             phone,
             mobile,
             fax,
@@ -310,7 +314,7 @@ export const updateLead = async (req, res) => {
             last_name: last_name !== undefined ? last_name : lead.last_name,
             job_position: job_position !== undefined ? job_position : lead.job_position,
             email: email !== undefined ? email : lead.email,
-            work_email: work_email !== undefined ? work_email : lead.work_email, 
+            work_email: work_email !== undefined ? work_email : lead.work_email,
             phone: phone !== undefined ? phone : lead.phone,
             mobile: mobile !== undefined ? mobile : lead.mobile,
             fax: fax !== undefined ? fax : lead.fax,
@@ -337,9 +341,9 @@ export const updateLead = async (req, res) => {
         });
     } catch (error) {
         await transaction.rollback();
-        
+
         console.error('Error updating lead:', error);
-        
+
         if (error.name === 'SequelizeValidationError') {
             const validationErrors = error.errors.map(err => ({
                 field: err.path,
@@ -357,26 +361,26 @@ export const updateLead = async (req, res) => {
 
 export const deleteLead = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { id } = req.params;
-        
+
         // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
-        const lead = await Leads.findOne({ 
+        const lead = await Leads.findOne({
             where: whereCondition,
-            transaction 
+            transaction
         });
-        
+
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
         }
-        
+
         await lead.destroy({ transaction });
         await transaction.commit();
-        
+
         res.status(200).json({
             message: "Lead deleted successfully"
         });
@@ -391,12 +395,12 @@ export const convertLead = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
         const { id } = req.params;
-        
+
         // Check if id is code or numeric ID
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const { dealTitle, dealValue, dealStage } = req.body;
-        
+
         console.log('[DEBUG] Received convert request:', {
             id,
             dealTitle,
@@ -405,25 +409,25 @@ export const convertLead = async (req, res) => {
             valueType: typeof dealValue
         });
 
-        const lead = await Leads.findOne({ 
+        const lead = await Leads.findOne({
             where: whereCondition,
             transaction,
             lock: true
         });
-        
+
         if (!lead) {
             await transaction.rollback();
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: "Lead not found" 
+                message: "Lead not found"
             });
         }
 
         if (lead.status === true) {
             await transaction.rollback();
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: "Lead has already been converted to deal" 
+                message: "Lead has already been converted to deal"
             });
         }
 
@@ -442,19 +446,19 @@ export const convertLead = async (req, res) => {
             if (existingCompany) {
                 companyId = existingCompany.id;
                 console.log('[DEBUG] Using existing company:', companyId);
-                
+
                 // Update existing company with lead data if needed
                 const updateData = {};
                 if (lead.phone && !existingCompany.phone) updateData.phone = lead.phone;
                 if (lead.work_email && !existingCompany.email) updateData.email = lead.work_email;
-                
+
                 if (lead.street || lead.city || lead.state || lead.postal_code) {
                     const addressParts = [lead.street, lead.city, lead.state, lead.postal_code].filter(Boolean);
                     if (addressParts.length > 0 && !existingCompany.address) {
                         updateData.address = addressParts.join(', ');
                     }
                 }
-                
+
                 if (Object.keys(updateData).length > 0) {
                     await existingCompany.update(updateData, { transaction });
                 }
@@ -467,7 +471,7 @@ export const convertLead = async (req, res) => {
                     name: lead.company.trim(),
                     address: companyAddress,
                     phone: lead.phone,
-                    email: lead.work_email || null, 
+                    email: lead.work_email || null,
                     created_at: new Date()
                 }, { transaction });
 
@@ -479,19 +483,19 @@ export const convertLead = async (req, res) => {
         // Create contact if exists
         if (lead.fullname || lead.first_name || lead.last_name || lead.email) {
             const contactName = lead.fullname || `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
-            
+
             if (contactName) {
                 let existingContact = null;
-                
+
                 // Check for existing contact by email or name+company
                 if (lead.email) {
                     existingContact = await Contacts.findOne({
                         where: {
                             [Op.or]: [
                                 { email: lead.email },
-                                { 
+                                {
                                     name: contactName,
-                                    company_id: companyId 
+                                    company_id: companyId
                                 }
                             ]
                         },
@@ -510,23 +514,23 @@ export const convertLead = async (req, res) => {
                 if (existingContact) {
                     contactId = existingContact.id;
                     console.log('[DEBUG] Using existing contact:', contactId);
-                    
+
                     // Update existing contact with lead data if needed
                     const updateData = {};
                     if (lead.email && !existingContact.email) updateData.email = lead.email;
                     if (lead.mobile && !existingContact.phone) updateData.phone = lead.mobile;
                     if (lead.job_position && !existingContact.position) updateData.position = lead.job_position;
                     if (companyId && !existingContact.company_id) updateData.company_id = companyId;
-                    
+
                     if (Object.keys(updateData).length > 0) {
                         await existingContact.update(updateData, { transaction });
                     }
                 } else {
                     // Create new contact
                     const newContact = await Contacts.create({
-                        company_id: companyId, 
+                        company_id: companyId,
                         name: contactName,
-                        email: lead.email, 
+                        email: lead.email,
                         phone: lead.mobile || lead.phone,
                         position: lead.job_position,
                         created_at: new Date()
@@ -539,7 +543,7 @@ export const convertLead = async (req, res) => {
         }
 
         // Update lead status
-        await lead.update({ 
+        await lead.update({
             stage: 'Converted',
             status: true,
             updated_at: new Date()
@@ -553,7 +557,7 @@ export const convertLead = async (req, res) => {
                 numericValue = parsedValue;
             }
         }
-        
+
         console.log('[DEBUG] Creating deal with:', {
             originalValue: dealValue,
             numericValue,
@@ -573,8 +577,8 @@ export const convertLead = async (req, res) => {
             value: numericValue,
             stage: dealStage || 'proposal',
             owner: lead.owner || 0,
-            id_contact: contactId, 
-            id_company: companyId, 
+            id_contact: contactId,
+            id_company: companyId,
             created_by: lead.owner || req.user?.id || 1,
             created_at: new Date(),
             updated_at: new Date()
@@ -590,7 +594,7 @@ export const convertLead = async (req, res) => {
             contactId,
             value: newDeal.value
         });
-        
+
         // Fetch created entities for response
         const createdCompany = companyId ? await Companies.findByPk(companyId) : null;
         const createdContact = contactId ? await Contacts.findByPk(contactId, {
@@ -601,7 +605,7 @@ export const convertLead = async (req, res) => {
                 required: false
             }]
         }) : null;
-        
+
         res.status(200).json({
             success: true,
             message: "Lead converted successfully",
@@ -648,8 +652,8 @@ export const convertLead = async (req, res) => {
             error: error.message,
             stack: error.stack
         });
-        
-        res.status(500).json({ 
+
+        res.status(500).json({
             success: false,
             message: `Failed to convert lead: ${error.message}`,
             error: process.env.NODE_ENV === 'development' ? error.stack : undefined
@@ -659,10 +663,10 @@ export const convertLead = async (req, res) => {
 
 export const updateLeadStage = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { id } = req.params;
-        
+
         // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
@@ -670,17 +674,17 @@ export const updateLeadStage = async (req, res) => {
         const validStages = ['New', 'Contacted', 'Qualification', 'Converted', 'Unqualified'];
         if (!stage || !validStages.includes(stage)) {
             await transaction.rollback();
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: "Invalid stage. Valid stages are: " + validStages.join(', ')
             });
         }
-        
-        const lead = await Leads.findOne({ 
+
+        const lead = await Leads.findOne({
             where: whereCondition,
             transaction,
             lock: true
         });
-        
+
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
@@ -688,20 +692,20 @@ export const updateLeadStage = async (req, res) => {
 
         if (stage === 'Converted') {
             await transaction.rollback();
-            return res.status(400).json({ 
-                message: "Cannot update stage to 'Converted' directly. Use convert endpoint instead." 
+            return res.status(400).json({
+                message: "Cannot update stage to 'Converted' directly. Use convert endpoint instead."
             });
         }
 
         if (lead.status === true) {
             await transaction.rollback();
-            return res.status(400).json({ 
-                message: "Cannot update stage of converted lead" 
+            return res.status(400).json({
+                message: "Cannot update stage of converted lead"
             });
         }
 
         const oldStage = lead.stage;
-        
+
         if (oldStage === stage) {
             await transaction.rollback();
             return res.status(200).json({
@@ -719,7 +723,7 @@ export const updateLeadStage = async (req, res) => {
         await transaction.commit();
 
         console.log(`Lead ${lead.code} (ID: ${lead.id}) stage updated from "${oldStage}" to "${stage}"`);
-        
+
         res.status(200).json({
             success: true,
             message: "Lead stage updated successfully",
@@ -741,7 +745,7 @@ export const updateLeadStage = async (req, res) => {
 export const getLeadComments = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
@@ -752,7 +756,7 @@ export const getLeadComments = async (req, res) => {
 
         const comments = await LeadComments.findAll({
             where: { lead_id: lead.id },
-            order: [['created_at', 'DESC']] 
+            order: [['created_at', 'DESC']]
         });
 
         const nestedComments = buildCommentTree(comments);
@@ -775,25 +779,25 @@ export const getLeadComments = async (req, res) => {
 
 export const addLeadComment = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { id } = req.params;
-        
+
         // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
         const { message, user_id, user_name, parent_id } = req.body;
-        
+
         if (!message || !message.trim()) {
             await transaction.rollback();
             return res.status(400).json({ message: "Comment message is required" });
         }
 
-        const lead = await Leads.findOne({ 
+        const lead = await Leads.findOne({
             where: whereCondition,
-            transaction 
+            transaction
         });
-        
+
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
@@ -804,9 +808,9 @@ export const addLeadComment = async (req, res) => {
 
         if (parent_id) {
             parentComment = await LeadComments.findOne({
-                where: { 
+                where: {
                     id: parent_id,
-                    lead_id: lead.id 
+                    lead_id: lead.id
                 },
                 transaction
             });
@@ -820,8 +824,8 @@ export const addLeadComment = async (req, res) => {
 
             if (reply_level > 3) {
                 await transaction.rollback();
-                return res.status(400).json({ 
-                    message: "Maximum reply depth exceeded. Please reply to a higher level comment." 
+                return res.status(400).json({
+                    message: "Maximum reply depth exceeded. Please reply to a higher level comment."
                 });
             }
         }
@@ -834,9 +838,9 @@ export const addLeadComment = async (req, res) => {
             user_name,
             message: message.trim()
         }, { transaction });
-        
+
         await transaction.commit();
-        
+
         res.status(201).json({
             message: parent_id ? "Reply added successfully" : "Comment added successfully",
             comment: {
@@ -856,7 +860,7 @@ export const addLeadComment = async (req, res) => {
 export const getCommentThread = async (req, res) => {
     try {
         const commentId = parseInt(req.params.commentId);
-        
+
         if (isNaN(commentId)) {
             return res.status(400).json({ message: "Invalid comment ID" });
         }
@@ -869,10 +873,10 @@ export const getCommentThread = async (req, res) => {
         let rootComment = comment;
         if (comment.parent_id) {
             rootComment = await LeadComments.findOne({
-                where: { 
+                where: {
                     id: comment.parent_id,
                     lead_id: comment.lead_id,
-                    parent_id: null 
+                    parent_id: null
                 }
             });
         }
@@ -881,8 +885,8 @@ export const getCommentThread = async (req, res) => {
             where: {
                 lead_id: comment.lead_id,
                 [Op.or]: [
-                    { id: rootComment.id }, 
-                    { parent_id: rootComment.id } 
+                    { id: rootComment.id },
+                    { parent_id: rootComment.id }
                 ]
             },
             order: [['created_at', 'ASC']]
@@ -905,10 +909,10 @@ export const getCommentThread = async (req, res) => {
 
 export const deleteLeadComment = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const commentId = parseInt(req.params.commentId);
-        
+
         if (isNaN(commentId)) {
             await transaction.rollback();
             return res.status(400).json({ message: "Invalid comment ID" });
@@ -919,10 +923,10 @@ export const deleteLeadComment = async (req, res) => {
             await transaction.rollback();
             return res.status(404).json({ message: "Comment not found" });
         }
-        
+
         await comment.destroy({ transaction });
         await transaction.commit();
-        
+
         res.status(200).json({
             message: "Comment deleted successfully"
         });
@@ -938,7 +942,7 @@ export const getUnconvertedLeads = async (req, res) => {
         const { page = 1, limit = 10, stage, rating, owner, search } = req.query;
         const offset = (page - 1) * limit;
         let whereClause = {
-            status: false 
+            status: false
         };
 
         if (stage) {
@@ -1005,7 +1009,7 @@ export const getConvertedLeads = async (req, res) => {
                 { company: { [Op.like]: `%${search}%` } },
                 { fullname: { [Op.like]: `%${search}%` } },
                 { email: { [Op.like]: `%${search}%` } },
-                { code: { [Op.like]: `%${search}%` } } 
+                { code: { [Op.like]: `%${search}%` } }
             ];
         }
 

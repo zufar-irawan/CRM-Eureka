@@ -107,13 +107,13 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReportsData();
-  }, [filters.viewType]); 
+  }, [filters.viewType]);
 
   const fetchReportsData = async () => {
     try {
       setLoading(true);
       console.log('Fetching KPI data with filters:', filters);
-      
+
       const params: any = {
         view_type: filters.viewType,
       };
@@ -145,7 +145,7 @@ export default function ReportsPage() {
       }
 
       console.log('API Parameters:', params);
-      
+
       const endpoint = filters.viewType === 'BULANAN' ? '/kpi/monthly' : '/kpi/daily';
       const response = await api.get(endpoint, { params });
       console.log('API Response:', response.data);
@@ -164,7 +164,7 @@ export default function ReportsPage() {
       }
     } catch (error: any) {
       console.error('Error fetching KPI data:', error);
-      
+
       // Show user-friendly error message
       let errorMessage = 'Failed to fetch KPI data';
       if (error.response?.status === 404) {
@@ -181,95 +181,12 @@ export default function ReportsPage() {
         text: errorMessage,
         footer: `<small>API URL: ${api.defaults.baseURL}</small>`
       });
-
-      console.log('Using sample data as fallback');
-      setSalesData(getSampleData());
     } finally {
       setLoading(false);
     }
   };
 
-  const getSampleData = (): SalesData[] => {
-    if (filters.viewType === "BULANAN") {
-      return [
-        {
-          id: "1",
-          sales_name: "Budi Santoso",
-          kanvasing_count: 130,
-          followup_count: 125,
-          penawaran_count: 25,
-          kesepakatan_tarif_count: 5,
-          deal_do_count: 2,
-          status_kpi: "Terpenuhi",
-          bulan: "Agustus 2025",
-          tanggal: ""
-        },
-        {
-          id: "2",
-          sales_name: "Andi Rahman",
-          kanvasing_count: 90,
-          followup_count: 80,
-          penawaran_count: 15,
-          kesepakatan_tarif_count: 2,
-          deal_do_count: 0,
-          status_kpi: "Tidak Terpenuhi",
-          bulan: "Agustus 2025",
-          tanggal: ""
-        },
-        {
-          id: "3",
-          sales_name: "Sales One",
-          kanvasing_count: 160,
-          followup_count: 140,
-          penawaran_count: 30,
-          kesepakatan_tarif_count: 8,
-          deal_do_count: 3,
-          status_kpi: "Terpenuhi",
-          bulan: "Agustus 2025",
-          tanggal: ""
-        }
-      ];
-    } else {
-      return [
-        {
-          id: "3",
-          sales_name: "Sales One",
-          kanvasing_count: 6,
-          followup_count: 5,
-          penawaran_count: 1,
-          kesepakatan_tarif_count: 0,
-          deal_do_count: 0,
-          status_kpi: "Terpenuhi",
-          bulan: "",
-          tanggal: "12/08/2025",
-        },
-        {
-          id: "4",
-          sales_name: "Andi Rahman",
-          kanvasing_count: 4,
-          followup_count: 3,
-          penawaran_count: 0,
-          kesepakatan_tarif_count: 0,
-          deal_do_count: 0,
-          status_kpi: "Tidak Terpenuhi",
-          bulan: "",
-          tanggal: "12/08/2025",
-        },
-        {
-          id: "5",
-          sales_name: "Sales Two",
-          kanvasing_count: 8,
-          followup_count: 6,
-          penawaran_count: 2,
-          kesepakatan_tarif_count: 1,
-          deal_do_count: 1,
-          status_kpi: "Terpenuhi",
-          bulan: "",
-          tanggal: "13/08/2025",
-        }
-      ];
-    }
-  };
+
 
   const handleRefresh = async () => {
     console.log('Manual refresh triggered');

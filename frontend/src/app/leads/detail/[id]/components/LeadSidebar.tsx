@@ -4,6 +4,8 @@ import { Mail, Link2, Paperclip, Edit } from 'lucide-react';
 import type { Lead } from '../types';
 import { STATUS_OPTIONS } from '../utils/constants';
 import { displayValue, getFirstChar, safeString } from '../utils/formatting';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface LeadSidebarProps {
   lead: Lead | null;
@@ -25,6 +27,24 @@ export default function LeadSidebar({ lead, selectedStatus }: LeadSidebarProps) 
       </div>
     );
   }
+
+  const [owner, setOwner] = useState("")
+
+  useEffect(() => {
+    const ownerName = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/api/users/${lead.owner}`)
+
+        setOwner(response.data.data.name)
+      } catch (err) {
+        console.log(err)
+      }
+    }
+
+    if (lead?.owner) {
+      ownerName()
+    }
+  }, [lead?.owner])
 
   return (
     <div className="w-80 bg-white border-l border-gray-200 p-6">
@@ -69,8 +89,8 @@ export default function LeadSidebar({ lead, selectedStatus }: LeadSidebarProps) 
             <span className="text-sm text-gray-600">Website</span>
             {lead.website ? (
               <a
-                href={safeString(lead.website).startsWith('http') 
-                  ? safeString(lead.website) 
+                href={safeString(lead.website).startsWith('http')
+                  ? safeString(lead.website)
                   : `https://${safeString(lead.website)}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -99,11 +119,8 @@ export default function LeadSidebar({ lead, selectedStatus }: LeadSidebarProps) 
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Lead Owner</span>
             <div className="flex items-center space-x-2">
-              <span className="w-6 h-6 bg-gray-300 text-gray-700 rounded-sm flex items-center justify-center text-xs font-medium">
-                {getFirstChar(lead.owner, '?')}
-              </span>
               <span className="text-sm text-gray-900 font-medium">
-                {displayValue(lead.owner)}
+                {owner}
               </span>
             </div>
           </div>

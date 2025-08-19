@@ -4,6 +4,8 @@ import { Calendar, User, Tag, AlertTriangle, Clock, Edit } from 'lucide-react';
 import type { Task, CurrentUser } from '../types';
 import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS, TASK_CATEGORIES } from '../utils/constants';
 import { displayValue, getFirstChar, formatDate } from '../utils/formatting';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 interface TaskSidebarProps {
   task: Task | null;
@@ -20,32 +22,32 @@ const formatDateWithTime = (dateString: string, isDueDate: boolean = false) => {
       isOverdue: false
     };
   }
-  
+
   const date = new Date(dateString);
   const now = new Date();
-  
+
   // Format date
   const dateOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
   };
-  
+
   // Format time
   const timeOptions: Intl.DateTimeFormatOptions = {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false
   };
-  
+
   const formattedDate = date.toLocaleDateString('en-US', dateOptions);
   const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
-  
+
   // Calculate time difference for relative time display
   const diffInMs = date.getTime() - now.getTime();
   const diffInHours = Math.round(diffInMs / (1000 * 60 * 60));
   const diffInDays = Math.round(diffInMs / (1000 * 60 * 60 * 24));
-  
+
   let relativeTime = '';
   if (isDueDate) {
     // Due date logic
@@ -82,7 +84,7 @@ const formatDateWithTime = (dateString: string, isDueDate: boolean = false) => {
       relativeTime = `${Math.abs(diffInDays)} day${Math.abs(diffInDays) !== 1 ? 's' : ''} ago`;
     }
   }
-  
+
   return {
     date: formattedDate,
     time: formattedTime,
@@ -126,6 +128,24 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
   const dueDateInfo = formatDateWithTime(task.due_date, true);
   const createdInfo = formatDateWithTime(task.created_at, false);
 
+  const [leadName, setLeadName] = useState("")
+
+  useEffect(() => {
+    const fetchLeadName = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/api/leads/${task.lead_id}`)
+
+        setLeadName(response.data.fullname)
+      } catch (e) {
+        console.log(e)
+      }
+    }
+
+    if (task?.lead_id) {
+      fetchLeadName();
+    }
+  }, [task?.lead_id])
+
   return (
     <div className="w-80 bg-white border-l border-gray-200 p-6">
       {/* Header with task icon */}
@@ -136,7 +156,7 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
 
         {/* Action icons */}
         <div className="flex items-center space-x-4">
-          <button 
+          <button
             className="p-2 text-gray-400 hover:text-gray-600"
             onClick={() => console.log('Edit task')}
           >
@@ -178,9 +198,9 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Lead ID</span>
+            <span className="text-sm text-gray-600">Lead</span>
             <span className="text-sm text-gray-900 font-medium">
-              #{task.lead_id}
+              {leadName}
             </span>
           </div>
 
@@ -203,22 +223,19 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
               <span>Due Date</span>
             </span>
             <div className="text-right">
-              <div className={`text-sm font-medium ${
-                dueDateInfo.isOverdue ? 'text-red-600' : 'text-gray-900'
-              }`}>
+              <div className={`text-sm font-medium ${dueDateInfo.isOverdue ? 'text-red-600' : 'text-gray-900'
+                }`}>
                 {dueDateInfo.date}
               </div>
               {dueDateInfo.time && (
-                <div className={`text-xs font-medium ${
-                  dueDateInfo.isOverdue ? 'text-red-500' : 'text-gray-500'
-                } mt-1`}>
+                <div className={`text-xs font-medium ${dueDateInfo.isOverdue ? 'text-red-500' : 'text-gray-500'
+                  } mt-1`}>
                   {dueDateInfo.time}
                 </div>
               )}
               {dueDateInfo.relative && (
-                <div className={`text-xs ${
-                  dueDateInfo.isOverdue ? 'text-red-500' : 'text-blue-600'
-                } mt-1`}>
+                <div className={`text-xs ${dueDateInfo.isOverdue ? 'text-red-500' : 'text-blue-600'
+                  } mt-1`}>
                   {dueDateInfo.relative}
                 </div>
               )}
@@ -302,16 +319,15 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
               {task.status === 'completed' ? '100%' : task.status === 'pending' ? '0%' : '50%'}
             </span>
           </div>
-          
+
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className={`h-2 rounded-full transition-all duration-300 ${
-                task.status === 'completed' ? 'bg-green-500' : 
+            <div
+              className={`h-2 rounded-full transition-all duration-300 ${task.status === 'completed' ? 'bg-green-500' :
                 task.status === 'pending' ? 'bg-gray-400' : 'bg-yellow-500'
-              }`}
-              style={{ 
-                width: task.status === 'completed' ? '100%' : 
-                       task.status === 'pending' ? '0%' : '50%' 
+                }`}
+              style={{
+                width: task.status === 'completed' ? '100%' :
+                  task.status === 'pending' ? '0%' : '50%'
               }}
             ></div>
           </div>

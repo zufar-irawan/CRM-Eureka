@@ -1,9 +1,13 @@
 "use client";
 
-import { Calendar, User, Tag, AlertTriangle, Clock, Edit } from 'lucide-react';
-import type { Task, CurrentUser } from '../types';
-import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS, TASK_CATEGORIES } from '../utils/constants';
-import { displayValue, getFirstChar, formatDate } from '../utils/formatting';
+import { Calendar, User, Tag, AlertTriangle, Clock, Edit } from "lucide-react";
+import type { Task, CurrentUser } from "../types";
+import {
+  TASK_STATUS_OPTIONS,
+  TASK_PRIORITY_OPTIONS,
+  TASK_CATEGORIES,
+} from "../utils/constants";
+import { displayValue, getFirstChar, formatDate } from "../utils/formatting";
 
 interface TaskSidebarProps {
   task: Task | null;
@@ -14,80 +18,88 @@ interface TaskSidebarProps {
 const formatDateWithTime = (dateString: string, isDueDate: boolean = false) => {
   if (!dateString) {
     return {
-      date: 'Not set',
-      time: '',
-      relative: '',
-      isOverdue: false
+      date: "Not set",
+      time: "",
+      relative: "",
+      isOverdue: false,
     };
   }
-  
+
   const date = new Date(dateString);
   const now = new Date();
-  
+
   // Format date
   const dateOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   };
-  
+
   // Format time
   const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   };
-  
-  const formattedDate = date.toLocaleDateString('en-US', dateOptions);
-  const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
-  
+
+  const formattedDate = date.toLocaleDateString("en-US", dateOptions);
+  const formattedTime = date.toLocaleTimeString("en-US", timeOptions);
+
   // Calculate time difference for relative time display
   const diffInMs = date.getTime() - now.getTime();
   const diffInHours = Math.round(diffInMs / (1000 * 60 * 60));
   const diffInDays = Math.round(diffInMs / (1000 * 60 * 60 * 24));
-  
-  let relativeTime = '';
+
+  let relativeTime = "";
   if (isDueDate) {
     // Due date logic
     if (diffInDays < 0) {
-      relativeTime = `${Math.abs(diffInDays)} day${Math.abs(diffInDays) !== 1 ? 's' : ''} ago`;
+      relativeTime = `${Math.abs(diffInDays)} day${
+        Math.abs(diffInDays) !== 1 ? "s" : ""
+      } ago`;
     } else if (diffInDays === 0) {
       if (diffInHours < 0) {
-        relativeTime = `${Math.abs(diffInHours)} hour${Math.abs(diffInHours) !== 1 ? 's' : ''} ago`;
+        relativeTime = `${Math.abs(diffInHours)} hour${
+          Math.abs(diffInHours) !== 1 ? "s" : ""
+        } ago`;
       } else if (diffInHours === 0) {
-        relativeTime = 'Due now';
+        relativeTime = "Due now";
       } else {
-        relativeTime = `In ${diffInHours} hour${diffInHours !== 1 ? 's' : ''}`;
+        relativeTime = `In ${diffInHours} hour${diffInHours !== 1 ? "s" : ""}`;
       }
     } else if (diffInDays === 1) {
-      relativeTime = 'Tomorrow';
+      relativeTime = "Tomorrow";
     } else if (diffInDays > 1) {
       relativeTime = `In ${diffInDays} days`;
     }
   } else {
     // Created date logic (past tense)
     if (diffInDays > 0) {
-      relativeTime = `In ${diffInDays} day${diffInDays !== 1 ? 's' : ''}`;
+      relativeTime = `In ${diffInDays} day${diffInDays !== 1 ? "s" : ""}`;
     } else if (diffInDays === 0) {
       if (diffInHours > 0) {
-        relativeTime = `In ${diffInHours} hour${diffInHours !== 1 ? 's' : ''}`;
+        relativeTime = `In ${diffInHours} hour${diffInHours !== 1 ? "s" : ""}`;
       } else if (diffInHours === 0) {
-        relativeTime = 'Just now';
+        relativeTime = "Just now";
       } else {
-        relativeTime = `${Math.abs(diffInHours)} hour${Math.abs(diffInHours) !== 1 ? 's' : ''} ago`;
+        relativeTime = `${Math.abs(diffInHours)} hour${
+          Math.abs(diffInHours) !== 1 ? "s" : ""
+        } ago`;
       }
     } else if (diffInDays === -1) {
-      relativeTime = 'Yesterday';
+      relativeTime = "Yesterday";
     } else if (diffInDays < -1) {
-      relativeTime = `${Math.abs(diffInDays)} day${Math.abs(diffInDays) !== 1 ? 's' : ''} ago`;
+      relativeTime = `${Math.abs(diffInDays)} day${
+        Math.abs(diffInDays) !== 1 ? "s" : ""
+      } ago`;
     }
   }
-  
+
   return {
     date: formattedDate,
     time: formattedTime,
     relative: relativeTime,
-    isOverdue: isDueDate && diffInMs < 0
+    isOverdue: isDueDate && diffInMs < 0,
   };
 };
 
@@ -108,21 +120,24 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
   }
 
   const getStatusColor = (status: string) => {
-    const statusOption = TASK_STATUS_OPTIONS.find(s => s.value === status);
-    return statusOption?.color || 'bg-gray-500';
+    const statusOption = TASK_STATUS_OPTIONS.find((s) => s.value === status);
+    return statusOption?.color || "bg-gray-500";
   };
 
   const getPriorityColor = (priority: string) => {
-    const priorityOption = TASK_PRIORITY_OPTIONS.find(p => p.value === priority);
-    return priorityOption?.color || 'bg-gray-100 text-gray-800';
+    const priorityOption = TASK_PRIORITY_OPTIONS.find(
+      (p) => p.value === priority
+    );
+    return priorityOption?.color || "bg-gray-100 text-gray-800";
   };
 
   const getCategoryLabel = (category: string) => {
-    const categoryOption = TASK_CATEGORIES.find(c => c.value === category);
+    const categoryOption = TASK_CATEGORIES.find((c) => c.value === category);
     return categoryOption?.label || category;
   };
 
-  const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'completed';
+  const isOverdue =
+    new Date(task.due_date) < new Date() && task.status !== "completed";
   const dueDateInfo = formatDateWithTime(task.due_date, true);
   const createdInfo = formatDateWithTime(task.created_at, false);
 
@@ -136,9 +151,9 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
 
         {/* Action icons */}
         <div className="flex items-center space-x-4">
-          <button 
+          <button
             className="p-2 text-gray-400 hover:text-gray-600"
-            onClick={() => console.log('Edit task')}
+            onClick={() => console.log("Edit task")}
           >
             <Edit className="w-5 h-5" />
           </button>
@@ -154,7 +169,11 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Status</span>
             <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
+              <div
+                className={`w-2 h-2 rounded-full ${getStatusColor(
+                  task.status
+                )}`}
+              ></div>
               <span className="text-sm text-gray-900 font-medium capitalize">
                 {task.status}
               </span>
@@ -163,13 +182,19 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
 
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Priority</span>
-            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
+            <span
+              className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(
+                task.priority
+              )}`}
+            >
               {task.priority?.toUpperCase()}
             </span>
           </div>
 
           <div className="flex justify-between items-start">
-            <span className="text-sm text-gray-600 flex-shrink-0">Category</span>
+            <span className="text-sm text-gray-600 flex-shrink-0">
+              Category
+            </span>
             <div className="text-right max-w-48">
               <span className="text-sm text-gray-900 font-medium break-words">
                 {getCategoryLabel(task.category)}
@@ -188,10 +213,10 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
             <span className="text-sm text-gray-600">Assigned To</span>
             <div className="flex items-center space-x-2">
               <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-sm flex items-center justify-center text-xs font-medium">
-                {getFirstChar(task.assigned_user_name, '?')}
+                {getFirstChar(task.assigned_user_name, "?")}
               </span>
               <span className="text-sm text-gray-900 font-medium">
-                {displayValue(task.assigned_user_name, 'Unassigned')}
+                {displayValue(task.assigned_user_name, "Unassigned")}
               </span>
             </div>
           </div>
@@ -203,26 +228,32 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
               <span>Due Date</span>
             </span>
             <div className="text-right">
-              <div className={`text-sm font-medium ${
-                dueDateInfo.isOverdue ? 'text-red-600' : 'text-gray-900'
-              }`}>
+              <div
+                className={`text-sm font-medium ${
+                  dueDateInfo.isOverdue ? "text-red-600" : "text-gray-900"
+                }`}
+              >
                 {dueDateInfo.date}
               </div>
               {dueDateInfo.time && (
-                <div className={`text-xs font-medium ${
-                  dueDateInfo.isOverdue ? 'text-red-500' : 'text-gray-500'
-                } mt-1`}>
+                <div
+                  className={`text-xs font-medium ${
+                    dueDateInfo.isOverdue ? "text-red-500" : "text-gray-500"
+                  } mt-1`}
+                >
                   {dueDateInfo.time}
                 </div>
               )}
               {dueDateInfo.relative && (
-                <div className={`text-xs ${
-                  dueDateInfo.isOverdue ? 'text-red-500' : 'text-blue-600'
-                } mt-1`}>
+                <div
+                  className={`text-xs ${
+                    dueDateInfo.isOverdue ? "text-red-500" : "text-blue-600"
+                  } mt-1`}
+                >
                   {dueDateInfo.relative}
                 </div>
               )}
-              {dueDateInfo.isOverdue && task.status !== 'completed' && (
+              {dueDateInfo.isOverdue && task.status !== "completed" && (
                 <div className="flex items-center justify-end space-x-1 text-red-600 text-xs mt-2">
                   <AlertTriangle className="w-3 h-3" />
                   <span>Overdue</span>
@@ -255,7 +286,9 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
 
           {task.updated_at && task.updated_at !== task.created_at && (
             <div className="flex justify-between items-start">
-              <span className="text-sm text-gray-600 flex-shrink-0">Last Updated</span>
+              <span className="text-sm text-gray-600 flex-shrink-0">
+                Last Updated
+              </span>
               <div className="text-right">
                 <div className="text-sm text-gray-900 font-medium">
                   {formatDateWithTime(task.updated_at, false).date}
@@ -299,33 +332,54 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Completion</span>
             <span className="text-sm text-gray-900 font-medium">
-              {task.status === 'completed' ? '100%' : task.status === 'pending' ? '0%' : '50%'}
+              {task.status === "completed"
+                ? "100%"
+                : task.status === "cancelled"
+                ? "0%"
+                : task.status === "pending"
+                ? "50%"
+                : "50%"}
             </span>
           </div>
-          
+
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
+            <div
               className={`h-2 rounded-full transition-all duration-300 ${
-                task.status === 'completed' ? 'bg-green-500' : 
-                task.status === 'pending' ? 'bg-gray-400' : 'bg-yellow-500'
+                task.status === "completed"
+                  ? "bg-green-500"
+                  : task.status === "pending"
+                  ? "bg-yellow-500"
+                  : task.status === "cancelled"
+                  ? "bg-gray-300"
+                  : "bg-gray-400"
               }`}
-              style={{ 
-                width: task.status === 'completed' ? '100%' : 
-                       task.status === 'pending' ? '0%' : '50%' 
+              style={{
+                width:
+                  task.status === "completed"
+                    ? "100%"
+                    : task.status === "pending"
+                    ? "50%"
+                    : task.status === "cancelled"
+                    ? "0%"
+                    : "50%",
               }}
             ></div>
           </div>
 
-          {task.status === 'completed' && (
+          {task.status === "completed" && (
             <div className="flex items-center space-x-2 text-green-600 text-sm">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
               </svg>
               <span>Task completed</span>
             </div>
           )}
 
-          {dueDateInfo.isOverdue && task.status !== 'completed' && (
+          {dueDateInfo.isOverdue && task.status !== "completed" && (
             <div className="flex items-center space-x-2 text-red-600 text-sm">
               <AlertTriangle className="w-4 h-4" />
               <span>Task is overdue</span>

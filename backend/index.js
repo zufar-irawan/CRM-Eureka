@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import { sequelize } from './config/db.js';
+import cookieParser from 'cookie-parser';
 import leadsRouter from './routes/leadsRoutes.js';
 import tasksRouter from './routes/tasksRoutes.js';
 import authRouter from './routes/authRoutes.js';
@@ -29,6 +30,8 @@ app.use(cors({
     credentials: true,
     origin: 'http://localhost:3000'
 }))
+
+app.use(cookieParser());
 app.use(express.json());
 setupAssociations();
 app.use("/api/auth", authRouter);

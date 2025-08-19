@@ -25,8 +25,7 @@ export default function AddTaskResult({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Normalize taskId
-  const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
+   const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

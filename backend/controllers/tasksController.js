@@ -989,28 +989,22 @@ export const addTaskResultWithAttachments = async (req, res) => {
         const fileType = getFileType(file.mimetype);
         const originalSize = file.size;
         
-        // Fix: Ensure file size is positive and handle compression ratio properly
         if (originalSize <= 0) {
           console.warn(`Invalid file size for ${file.originalname}: ${originalSize}`);
-          continue; // Skip files with invalid size
+          continue; 
         }
         
-        // For now, assume no compression happened if sizes are the same
-        const compressedSize = originalSize; // Since compression happens on client-side
+        const compressedSize = originalSize; 
         
-        // Fix: Calculate compression ratio properly, ensure it's never 0
         let compressionRatio;
         if (compressedSize >= originalSize) {
-          // No compression or file got larger
           compressionRatio = 1.0;
         } else {
-          // File was compressed
           compressionRatio = compressedSize / originalSize;
         }
         
-        // Ensure minimum values to pass validation
         const finalCompressedSize = Math.max(compressedSize, 1);
-        const finalCompressionRatio = Math.max(compressionRatio, 0.01); // Minimum 0.01 to pass validation
+        const finalCompressionRatio = Math.max(compressionRatio, 0.01); 
         
         console.log(`Processing file: ${file.originalname}`);
         console.log(`Original size: ${originalSize}, Compressed size: ${finalCompressedSize}, Ratio: ${finalCompressionRatio}`);
@@ -1024,7 +1018,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
           file_type: fileType,
           mime_type: file.mimetype,
           compressed_size: finalCompressedSize,
-          compression_ratio: finalCompressionRatio.toFixed(2), // Store as string with 2 decimal places
+          compression_ratio: finalCompressionRatio.toFixed(2), 
           upload_by: created_by || null
         }, { transaction });
         
@@ -1060,7 +1054,6 @@ export const addTaskResultWithAttachments = async (req, res) => {
     await transaction.rollback();
     console.error('Error adding task result with attachments:', error);
     
-    // Clean up uploaded files if transaction fails
     if (req.files) {
       req.files.forEach(file => {
         if (fs.existsSync(file.path)) {

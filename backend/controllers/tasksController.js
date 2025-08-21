@@ -932,8 +932,9 @@ export const addTaskResultWithAttachments = async (req, res) => {
   
   try {
     const { id } = req.params;
-    const { result_text, result_type, created_by } = req.body;
+    const { result_text, result_type } = req.body;
     const files = req.files;
+    const created_by = req.userId;
 
     // ✅ DEBUG: Log received data
     console.log('📥 Received request:', {
@@ -1051,7 +1052,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
           mime_type: file.mimetype,
           compressed_size: finalCompressedSize,
           compression_ratio: finalCompressionRatio.toFixed(2), 
-          upload_by: created_by || null
+          upload_by: created_by
         }, { transaction });
         
         attachments.push(attachment);

@@ -4,11 +4,10 @@ import { CurrentUser } from '../types';
 
 interface TaskResultWithAttachmentProps {
   taskId: string;
-  currentUser: CurrentUser | null;
   onSuccess: () => void;
 }
 
-const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ taskId, currentUser, onSuccess }) => {
+const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ taskId, onSuccess }) => {
   const [resultText, setResultText] = useState('');
   const [resultType, setResultType] = useState('note');
   const [files, setFiles] = useState<File[]>([]);
@@ -77,7 +76,6 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       const formData = new FormData();
       formData.append('result_text', resultText);
       formData.append('result_type', resultType);
-      formData.append('created_by', String(currentUser?.id || '')); 
 
       // ✅ FIXED: Add files with proper names
       files.forEach((file, index) => {
@@ -98,10 +96,7 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/results/with-attachments`, {
         method: 'POST',
         body: formData,
-        headers: {
-          // Note: Don't set Content-Type for FormData, let browser set it with boundary
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
+        credentials: 'include',
       });
 
       const result = await response.json();

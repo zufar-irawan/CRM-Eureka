@@ -258,9 +258,6 @@ export default function TaskHeader({
                     "Unknown User"
                   )}
                 </h1>
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                  LEAD-{task.lead_id}
-                </span>
               </div>
             )}
           </div>

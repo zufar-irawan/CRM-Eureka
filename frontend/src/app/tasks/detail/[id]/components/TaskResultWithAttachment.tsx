@@ -10,7 +10,7 @@ interface TaskResultWithAttachmentProps {
 const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ taskId, onSuccess }) => {
   const [resultText, setResultText] = useState('');
   const [resultType, setResultType] = useState('note');
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>([]); 
   const [isCompressing, setIsCompressing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 

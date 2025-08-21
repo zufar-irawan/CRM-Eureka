@@ -15,12 +15,8 @@ interface TabNavigationProps {
 
 const tabs: Tab[] = [
   { name: "Activity", icon: BarChart3 },
-  { name: "Emails", icon: Mail, disabled: true },
   { name: "Comments", icon: MessageSquare, },
-  { name: "Data", icon: Database, disabled: true },
-  { name: "Calls", icon: Phone, disabled: true },
-  { name: "Tasks", icon: CheckSquare },
-  { name: "Notes", icon: StickyNote, disabled: true },  
+  //{ name: "Tasks", icon: CheckSquare },
 ];
 
 export default function TabNavigation({ activeTab, setActiveTab }: TabNavigationProps) {

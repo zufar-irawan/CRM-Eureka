@@ -2,11 +2,22 @@
 import { Tasks } from "../models/tasks/tasksModel.js";
 import { TaskComments } from "../models/tasks/tasksCommentModel.js";
 import { TaskResults } from "../models/tasks/tasksResultModel.js";
+import { TaskAttachments } from "../models/tasks/tasksAttachmentModel.js";
 import { User } from "../models/usersModel.js";
 import { Leads } from "../models/leads/leadsModel.js";
 import { Op } from "sequelize";
 import { sequelize } from '../config/db.js';
 import { autoUpdateKPI } from "./kpiContoller.js";
+import path from 'path';
+import fs from 'fs';
+import { 
+  upload, 
+  handleUploadError, 
+  getFileType, 
+  calculateCompressionRatio, 
+  deleteFile,
+  UPLOAD_CONFIG 
+} from '../utils/uploadUtils.js';
 
 const generateTaskCode = async (transaction) => {
     const lastTask = await Tasks.findOne({
@@ -734,6 +745,21 @@ export const getTaskResults = async (req, res) => {
 
     const results = await TaskResults.findAll({
       where: { task_id: taskId },
+      include: [
+        {
+          model: TaskAttachments,
+          as: 'attachments',
+          required: false,
+          include: [
+            {
+              model: User,
+              as: 'uploader',
+              attributes: ['id', 'name', 'email'],
+              required: false
+            }
+          ]
+        }
+      ],
       order: [['result_date', 'DESC']]
     });
 
@@ -900,3 +926,399 @@ export const deleteTaskResult = async (req, res) => {
     });
   }
 };
+
+export const addTaskResultWithAttachments = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  
+  try {
+    const { id } = req.params;
+    const { result_text, result_type, created_by } = req.body;
+    const files = req.files;
+
+    if (!result_text) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "result_text wajib diisi"
+      });
+    }
+
+    let taskId;
+    if (isNaN(id)) {
+      const task = await Tasks.findOne({ where: { code: id }, transaction });
+      if (!task) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+      taskId = task.id;
+    } else {
+      taskId = parseInt(id);
+      const task = await Tasks.findByPk(taskId, { transaction });
+      if (!task) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+    }
+
+    const validResultTypes = ['meeting', 'call', 'email', 'visit', 'note'];
+    if (result_type && !validResultTypes.includes(result_type)) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `result_type tidak valid. Valid types: ${validResultTypes.join(', ')}`
+      });
+    }
+
+    const newResult = await TaskResults.create({
+      task_id: taskId,
+      result_text,
+      result_type: result_type || 'note',
+      created_by: created_by || null,
+      result_date: new Date()
+    }, { transaction });
+
+    const attachments = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const fileType = getFileType(file.mimetype);
+        const originalSize = file.size;
+        
+        // Fix: Ensure file size is positive and handle compression ratio properly
+        if (originalSize <= 0) {
+          console.warn(`Invalid file size for ${file.originalname}: ${originalSize}`);
+          continue; // Skip files with invalid size
+        }
+        
+        // For now, assume no compression happened if sizes are the same
+        const compressedSize = originalSize; // Since compression happens on client-side
+        
+        // Fix: Calculate compression ratio properly, ensure it's never 0
+        let compressionRatio;
+        if (compressedSize >= originalSize) {
+          // No compression or file got larger
+          compressionRatio = 1.0;
+        } else {
+          // File was compressed
+          compressionRatio = compressedSize / originalSize;
+        }
+        
+        // Ensure minimum values to pass validation
+        const finalCompressedSize = Math.max(compressedSize, 1);
+        const finalCompressionRatio = Math.max(compressionRatio, 0.01); // Minimum 0.01 to pass validation
+        
+        console.log(`Processing file: ${file.originalname}`);
+        console.log(`Original size: ${originalSize}, Compressed size: ${finalCompressedSize}, Ratio: ${finalCompressionRatio}`);
+        
+        const attachment = await TaskAttachments.create({
+          task_result_id: newResult.id,
+          original_filename: file.originalname,
+          stored_filename: file.filename,
+          file_path: file.path,
+          file_size: originalSize,
+          file_type: fileType,
+          mime_type: file.mimetype,
+          compressed_size: finalCompressedSize,
+          compression_ratio: finalCompressionRatio.toFixed(2), // Store as string with 2 decimal places
+          upload_by: created_by || null
+        }, { transaction });
+        
+        attachments.push(attachment);
+      }
+    }
+
+    await transaction.commit();
+
+    const resultWithAttachments = await TaskResults.findByPk(newResult.id, {
+      include: [
+        {
+          model: TaskAttachments,
+          as: 'attachments',
+          include: [
+            {
+              model: User,
+              as: 'uploader',
+              attributes: ['id', 'name', 'email'],
+              required: false
+            }
+          ]
+        }
+      ]
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `Task result berhasil ditambahkan${attachments.length > 0 ? ` dengan ${attachments.length} attachment(s)` : ''}`,
+      data: resultWithAttachments
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error adding task result with attachments:', error);
+    
+    // Clean up uploaded files if transaction fails
+    if (req.files) {
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: "Error adding task result with attachments",
+      error: error.message
+    });
+  }
+};
+
+export const downloadAttachment = async (req, res) => {
+  try {
+    const { attachmentId } = req.params;
+
+    const attachment = await TaskAttachments.findByPk(attachmentId, {
+      include: [
+        {
+          model: TaskResults,
+          as: 'task_result',
+          include: [
+            {
+              model: Tasks,
+              as: 'task',
+              include: [
+                {
+                  model: Leads,
+                  as: 'lead',
+                  attributes: ['code', 'company']
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!attachment) {
+      return res.status(404).json({
+        success: false,
+        message: "Attachment tidak ditemukan"
+      });
+    }
+
+    const filePath = path.resolve(attachment.file_path);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: "File tidak ditemukan di server"
+      });
+    }
+
+    // Set proper headers for download
+    res.setHeader('Content-Disposition', `attachment; filename="${attachment.original_filename}"`);
+    res.setHeader('Content-Type', attachment.mime_type);
+    res.setHeader('Content-Length', attachment.file_size);
+
+    // Create read stream and pipe to response
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+    fileStream.on('error', (error) => {
+      console.error('Error reading file:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: "Error reading file"
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('Error downloading attachment:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: "Error downloading attachment",
+        error: error.message
+      });
+    }
+  }
+};
+
+// ===== NEW: GET /api/tasks/attachments/:attachmentId/view - View attachment (for images) =====
+export const viewAttachment = async (req, res) => {
+  try {
+    const { attachmentId } = req.params;
+
+    const attachment = await TaskAttachments.findByPk(attachmentId);
+
+    if (!attachment) {
+      return res.status(404).json({
+        success: false,
+        message: "Attachment tidak ditemukan"
+      });
+    }
+
+    const filePath = path.resolve(attachment.file_path);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: "File tidak ditemukan di server"
+      });
+    }
+
+    // Set proper headers for viewing
+    res.setHeader('Content-Type', attachment.mime_type);
+    res.setHeader('Content-Length', attachment.file_size);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+
+    // Create read stream and pipe to response
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+    fileStream.on('error', (error) => {
+      console.error('Error reading file:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: "Error reading file"
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('Error viewing attachment:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: "Error viewing attachment",
+        error: error.message
+      });
+    }
+  }
+};
+
+// ===== NEW: DELETE /api/tasks/attachments/:attachmentId - Delete attachment =====
+export const deleteAttachment = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  
+  try {
+    const { attachmentId } = req.params;
+
+    const attachment = await TaskAttachments.findByPk(attachmentId, { transaction });
+
+    if (!attachment) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Attachment tidak ditemukan"
+      });
+    }
+
+    const filePath = attachment.file_path;
+    
+    // Delete from database
+    await attachment.destroy({ transaction });
+    
+    await transaction.commit();
+    
+    // Delete physical file
+    await deleteFile(filePath);
+
+    res.status(200).json({
+      success: true,
+      message: "Attachment berhasil dihapus"
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error deleting attachment:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting attachment",
+      error: error.message
+    });
+  }
+};
+
+// ===== NEW: GET /api/tasks/:id/attachments - Get all attachments for a task =====
+export const getTaskAttachments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Cek apakah id adalah kode atau ID numerik
+    let taskId;
+    if (isNaN(id)) {
+      const task = await Tasks.findOne({ where: { code: id } });
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+      taskId = task.id;
+    } else {
+      taskId = parseInt(id);
+      const task = await Tasks.findByPk(taskId);
+      if (!task) {
+        return res.status(404).json({
+          success: false,
+          message: "Task tidak ditemukan"
+        });
+      }
+    }
+
+    // Get all attachments for this task through task_results
+    const attachments = await TaskAttachments.findAll({
+      include: [
+        {
+          model: TaskResults,
+          as: 'task_result',
+          where: { task_id: taskId },
+          attributes: ['id', 'result_text', 'result_type', 'result_date'],
+          required: true
+        },
+        {
+          model: User,
+          as: 'uploader',
+          attributes: ['id', 'name', 'email'],
+          required: false
+        }
+      ],
+      order: [['uploaded_at', 'DESC']]
+    });
+
+    // Add download and view URLs
+    const attachmentsWithUrls = attachments.map(attachment => {
+      const attachmentData = attachment.toJSON();
+      return {
+        ...attachmentData,
+        download_url: `/api/tasks/attachments/${attachment.id}/download`,
+        view_url: attachment.file_type === 'image' ? `/api/tasks/attachments/${attachment.id}/view` : null
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: attachmentsWithUrls,
+      message: `Found ${attachments.length} attachments for this task`
+    });
+  } catch (error) {
+    console.error('Error fetching task attachments:', error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching task attachments",
+      error: error.message
+    });
+  }
+};
+
+export const uploadMiddleware = upload.array('attachments', 5);
+export { handleUploadError };

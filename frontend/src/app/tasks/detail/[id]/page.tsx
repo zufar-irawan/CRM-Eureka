@@ -8,6 +8,7 @@ import TaskHeader from "./components/TaskHeader";
 import TaskSidebar from "./components/TaskSidebar";
 import TaskCommentsTab from "./components/TaskCommentsTab";
 import TaskResultsTab from "./components/TaskResultsTab";
+import TaskAttachmentsList from "./components/TaskAttachmentsList";
 import { MessageSquare, FileText, Paperclip } from "lucide-react";
 import Swal from "sweetalert2";
 import { checkAuthStatus } from "../../../../../utils/auth";
@@ -15,7 +16,7 @@ import { checkAuthStatus } from "../../../../../utils/auth";
 const TASK_TABS = [
   { name: "Comments", icon: MessageSquare },
   { name: "Results", icon: FileText },
-  { name: "Attachments", icon: Paperclip, disabled: true },
+  { name: "Attachments", icon: Paperclip, disabled: false },
 ];
 
 export default function TaskDetailPage() {
@@ -70,7 +71,9 @@ export default function TaskDetailPage() {
       case "Comments":
         return <TaskCommentsTab taskId={id} currentUser={currentUser} />;
       case "Results":
-        return <TaskResultsTab taskId={id} currentUser={currentUser} />;
+        return <TaskResultsTab taskId={id as string} currentUser={currentUser} />;
+      case "Attachments":
+        return <TaskAttachmentsList taskId={id as string} />;
       default:
         return (
           <div className="p-6">

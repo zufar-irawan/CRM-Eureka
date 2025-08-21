@@ -1,3 +1,4 @@
+
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -13,9 +14,14 @@ import companiesRouter from './routes/companiesRoutes.js'
 import { setupAssociations } from './models/associations.js';
 import kpiRouter from './routes/kpiRoutes.js'
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url'; 
+import { ensureUploadDir } from './utils/uploadUtils.js';
 dotenv.config();
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(session({
     secret: process.env.SESS_SECRET,
@@ -30,9 +36,11 @@ app.use(cors({
     credentials: true,
     origin: 'http://localhost:3000'
 }))
-
 app.use(cookieParser());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+await ensureUploadDir();
+
 setupAssociations();
 app.use("/api/auth", authRouter);
 app.use("/api/leads", leadsRouter);

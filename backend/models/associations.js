@@ -10,6 +10,7 @@ import { Deals } from "./deals/dealsModel.js";
 import { DealComments } from "./deals/dealsCommentModel.js";
 import { Companies } from "./companies/companiesModel.js";
 import { Contacts } from "./contacts/contactsModel.js";
+import { TaskAttachments } from "./tasks/tasksAttachmentModel.js"; 
 import { SalesKpiDaily, SalesKpiMonthly, KpiTargets } from "../models/kpi/kpiModel.js";
 
 export const setupAssociations = () => {
@@ -127,6 +128,26 @@ export const setupAssociations = () => {
         as: 'taskResults'
     });
 
+    TaskResults.hasMany(TaskAttachments, {
+        foreignKey: 'task_result_id',
+        as: 'attachments',
+        onDelete: 'CASCADE'
+    });
+    TaskAttachments.belongsTo(TaskResults, {
+        foreignKey: 'task_result_id',
+        as: 'task_result'
+    });
+    
+    TaskAttachments.belongsTo(User, {
+        foreignKey: 'upload_by',
+        as: 'uploader',
+        constraints: false
+    });
+    User.hasMany(TaskAttachments, {
+        foreignKey: 'upload_by',
+        as: 'uploaded_attachments'
+    });
+
     Leads.hasMany(Deals, {
         foreignKey: 'lead_id',
         as: 'deals'
@@ -238,6 +259,7 @@ export {
     Tasks, 
     TaskComments, 
     TaskResults, 
+    TaskAttachments,
     Leads, 
     LeadComments, 
     User, 

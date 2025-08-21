@@ -83,6 +83,11 @@ export const TASK_API_ENDPOINTS = {
   UPDATE_STATUS: (taskId: string) => `http://localhost:5000/api/tasks/${taskId}/updateStatus`,
   COMMENT_UPDATE: (commentId: string) => `http://localhost:5000/api/tasks/task-comments/${commentId}`,
   RESULT_UPDATE: (resultId: string) => `http://localhost:5000/api/tasks/task-results/${resultId}`,
+  TASK_ATTACHMENTS: (taskId: string) => `http://localhost:5000/api/tasks/${taskId}/attachments`,
+  ATTACHMENT_DOWNLOAD: (attachmentId: string) => `http://localhost:5000/api/tasks/attachments/${attachmentId}/download`,
+  ATTACHMENT_VIEW: (attachmentId: string) => `http://localhost:5000/api/tasks/attachments/${attachmentId}/view`,
+  ATTACHMENT_DELETE: (attachmentId: string) => `http://localhost:5000/api/tasks/attachments/${attachmentId}`,
+  ADD_RESULT_WITH_ATTACHMENTS: (taskId: string) => `http://localhost:5000/api/tasks/${taskId}/results/with-attachments`,
 } as const;
 
 export const TASK_STATUS_COLORS = {

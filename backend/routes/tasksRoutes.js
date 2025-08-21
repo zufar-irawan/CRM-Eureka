@@ -13,7 +13,14 @@ import {
   getTaskResults,
   addTaskResult,
   updateTaskResult,
-  deleteTaskResult
+  deleteTaskResult,
+  addTaskResultWithAttachments,
+  downloadAttachment,
+  viewAttachment,
+  deleteAttachment,
+  getTaskAttachments,
+  uploadMiddleware,
+  handleUploadError
 } from "../controllers/tasksController.js";
 
 const router = Router();
@@ -28,8 +35,18 @@ router.post("/:id/comments", addTaskComment);        // POST /api/tasks/:id/comm
 router.put("/task-comments/:commentId", updateTaskComment);    // PUT /api/tasks/task-comments/:commentId - Edit komentar tertentu
 router.delete("/task-comments/:commentId", deleteTaskComment); // DELETE /api/tasks/task-comments/:commentId - Hapus komentar tertentu
 router.get("/:id/results", getTaskResults);          // GET /api/tasks/:id/results - Ambil semua hasil pada task tertentu
-router.post("/:id/results", addTaskResult);          // POST /api/tasks/:id/results - Tambahkan hasil ke task
-router.put("/task-results/:resultId", updateTaskResult);      // PUT /api/tasks/task-results/:resultId - Edit hasil tertentu
-router.delete("/task-results/:resultId", deleteTaskResult);   // DELETE /api/tasks/task-results/:resultId - Hapus hasil tertentu
+router.post("/:id/results", addTaskResult);         
+router.put("/task-results/:resultId", updateTaskResult);      
+router.delete("/task-results/:resultId", deleteTaskResult);   
+router.post(
+  "/:id/results/with-attachments", 
+  uploadMiddleware, 
+  handleUploadError,
+  addTaskResultWithAttachments
+);
+router.get("/:id/attachments", getTaskAttachments);
+router.get("/attachments/:attachmentId/download", downloadAttachment);
+router.get("/attachments/:attachmentId/view", viewAttachment); 
+router.delete("/attachments/:attachmentId", deleteAttachment);
 
 export default router;

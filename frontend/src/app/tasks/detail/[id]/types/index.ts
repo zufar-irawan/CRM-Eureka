@@ -42,6 +42,25 @@ export interface TaskResult {
   created_at: string;
   updated_at: string;
 }
+export interface TaskAttachment {
+  id: number;
+  task_result_id: number;
+  original_filename: string;
+  stored_filename: string;
+  file_path: string;
+  file_size: number;
+  file_type: 'image' | 'document' | 'video' | 'audio' | 'other';
+  mime_type: string;
+  compressed_size?: number;
+  compression_ratio?: number;
+  upload_by: number | null;
+  uploader?: {
+    name: string;
+  };
+  uploaded_at: string;
+  view_url?: string;
+  download_url?: string;
+}
 
 export interface CurrentUser {
   id: number;

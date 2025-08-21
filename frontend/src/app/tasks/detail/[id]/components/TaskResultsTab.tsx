@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import type { CurrentUser, TaskResult } from '../types';
 import { useTaskResults } from '../hooks/useTaskResults';
 import TaskResultItem from './TaskResultItem';
-import AddTaskResult from './AddTaskResult';
+import TaskResultWithAttachment from './TaskResultWithAttachment';
 
 interface TaskResultsTabProps {
   taskId: string | string[] | undefined;
@@ -72,11 +72,10 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
       {/* Add Result Form */}
       {showAddResult && (
         <div className="mb-6">
-          <AddTaskResult
-            taskId={taskId}
+          <TaskResultWithAttachment
+            taskId={taskId as string}
             currentUser={currentUser}
-            onResultAdded={handleResultAdded}
-            onCancel={() => setShowAddResult(false)}
+            onSuccess={handleResultAdded}
           />
         </div>
       )}

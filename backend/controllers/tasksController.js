@@ -935,6 +935,29 @@ export const addTaskResultWithAttachments = async (req, res) => {
     const { result_text, result_type, created_by } = req.body;
     const files = req.files;
 
+    // ✅ DEBUG: Log received data
+    console.log('📥 Received request:', {
+      taskId: id,
+      result_text,
+      result_type,
+      created_by,
+      filesCount: files ? files.length : 0
+    });
+
+    if (files && files.length > 0) {
+      console.log('📎 Received files:');
+      files.forEach((file, index) => {
+        console.log(`  File ${index + 1}:`, {
+          fieldname: file.fieldname,
+          originalname: file.originalname, // ✅ This should show the real filename
+          filename: file.filename,
+          mimetype: file.mimetype,
+          size: file.size,
+          path: file.path
+        });
+      });
+    }
+
     if (!result_text) {
       await transaction.rollback();
       return res.status(400).json({
@@ -990,7 +1013,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
         const originalSize = file.size;
         
         if (originalSize <= 0) {
-          console.warn(`Invalid file size for ${file.originalname}: ${originalSize}`);
+          console.warn(`⚠️ Invalid file size for ${file.originalname}: ${originalSize}`);
           continue; 
         }
         
@@ -1006,12 +1029,21 @@ export const addTaskResultWithAttachments = async (req, res) => {
         const finalCompressedSize = Math.max(compressedSize, 1);
         const finalCompressionRatio = Math.max(compressionRatio, 0.01); 
         
-        console.log(`Processing file: ${file.originalname}`);
-        console.log(`Original size: ${originalSize}, Compressed size: ${finalCompressedSize}, Ratio: ${finalCompressionRatio}`);
+        // ✅ DEBUG: Log what we're storing
+        console.log(`💾 Storing attachment:`, {
+          original_filename: file.originalname,
+          stored_filename: file.filename,
+          file_path: file.path,
+          file_size: originalSize,
+          file_type: fileType,
+          mime_type: file.mimetype,
+          compressed_size: finalCompressedSize,
+          compression_ratio: finalCompressionRatio.toFixed(2)
+        });
         
         const attachment = await TaskAttachments.create({
           task_result_id: newResult.id,
-          original_filename: file.originalname,
+          original_filename: file.originalname, // ✅ This should contain the real filename
           stored_filename: file.filename,
           file_path: file.path,
           file_size: originalSize,
@@ -1045,6 +1077,12 @@ export const addTaskResultWithAttachments = async (req, res) => {
       ]
     });
 
+    console.log('✅ Task result created with attachments:', {
+      resultId: newResult.id,
+      attachmentsCount: attachments.length,
+      attachmentNames: attachments.map(a => a.original_filename)
+    });
+
     res.status(201).json({
       success: true,
       message: `Task result berhasil ditambahkan${attachments.length > 0 ? ` dengan ${attachments.length} attachment(s)` : ''}`,
@@ -1052,7 +1090,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('Error adding task result with attachments:', error);
+    console.error('❌ Error adding task result with attachments:', error);
     
     if (req.files) {
       req.files.forEach(file => {

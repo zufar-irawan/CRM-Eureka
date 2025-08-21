@@ -23,13 +23,31 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       const processedFiles = await Promise.all(
         selectedFiles.map(async (file) => {
           if (file.type.startsWith('image/')) {
-            // Compress image files
+            // Compress image files while preserving filename
             const compressed = await compressImage(file, {
               maxSizeMB: 1,
               maxWidthOrHeight: 1920,
               useWebWorker: true
             });
-            return compressed;
+            
+            // ✅ FIXED: Preserve original filename after compression
+            const preservedFile = new File(
+              [compressed], 
+              file.name, // Use original filename
+              { 
+                type: compressed.type || file.type,
+                lastModified: Date.now()
+              }
+            );
+            
+            console.log('✅ Image compressed:', {
+              original: file.name,
+              preserved: preservedFile.name,
+              originalSize: file.size,
+              compressedSize: preservedFile.size
+            });
+            
+            return preservedFile;
           }
           // Return non-image files as-is
           return file;
@@ -37,7 +55,7 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       );
 
       setFiles(processedFiles);
-      console.log('✅ Files processed:', processedFiles.length);
+      console.log('✅ Files processed:', processedFiles.map(f => ({ name: f.name, size: f.size })));
     } catch (error) {
       console.error('Error processing files:', error);
       alert('Error processing files');
@@ -61,16 +79,27 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       formData.append('result_type', resultType);
       formData.append('created_by', String(currentUser?.id || '')); 
 
-      // Add all files to FormData
-      files.forEach((file) => {
-        formData.append('attachments', file);
+      // ✅ FIXED: Add files with proper names
+      files.forEach((file, index) => {
+        console.log(`Adding file ${index + 1}: ${file.name} (${file.size} bytes)`);
+        formData.append('attachments', file, file.name); // Explicitly pass filename
       });
+
+      // Debug FormData
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}:`, { name: value.name, size: value.size, type: value.type });
+        } else {
+          console.log(`${key}:`, value);
+        }
+      }
 
       const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/results/with-attachments`, {
         method: 'POST',
         body: formData,
         headers: {
-          // Note: 'Content-Type' is not set here, browser will set it to 'multipart/form-data' with boundary
+          // Note: Don't set Content-Type for FormData, let browser set it with boundary
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
@@ -149,8 +178,9 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
             <p className="text-sm text-gray-600">Selected files:</p>
             <ul className="text-sm text-gray-500">
               {files.map((file, index) => (
-                <li key={index}>
-                  📎 {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                <li key={index} className="flex justify-between">
+                  <span>📎 {file.name}</span>
+                  <span>({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                 </li>
               ))}
             </ul>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { compressImage } from '../utils/imageCompression';
 import { CurrentUser } from '../types';
+import Swal from 'sweetalert2';
 
 interface TaskResultWithAttachmentProps {
   taskId: string;
@@ -57,7 +58,12 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       console.log('✅ Files processed:', processedFiles.map(f => ({ name: f.name, size: f.size })));
     } catch (error) {
       console.error('Error processing files:', error);
-      alert('Error processing files');
+      Swal.fire({
+        icon: 'error',
+        title: 'File Processing Error',
+        text: 'Error processing files. Please try again.',
+        confirmButtonColor: '#3b82f6',
+      });
     } finally {
       setIsCompressing(false);
     }
@@ -65,10 +71,28 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
     if (!resultText.trim()) {
-      alert('Result text is required');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Information',
+        text: 'Result text is required',
+        confirmButtonColor: '#3b82f6',
+      });
       return;
     }
+
+    // Show loading alert
+    Swal.fire({
+      title: 'Uploading Result...',
+      text: 'Please wait while we save your result and attachments',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     setIsUploading(true);
 
@@ -102,16 +126,37 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       const result = await response.json();
 
       if (result.success) {
-        alert('Task result added successfully!');
+        // Show success message
+        await Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Task result added successfully!',
+          timer: 2000,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        });
+        
+        // Reset form and notify parent
         setResultText('');
         setFiles([]);
         if (onSuccess) onSuccess();
       } else {
-        alert(result.message || 'Error adding task result');
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to Add Result',
+          text: result.message || 'Error adding task result',
+          confirmButtonColor: '#3b82f6',
+        });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error adding task result');
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: 'Error adding task result. Please check your connection and try again.',
+        confirmButtonColor: '#3b82f6',
+        footer: '<small>If the problem persists, please contact support</small>'
+      });
     } finally {
       setIsUploading(false);
     }
@@ -126,9 +171,10 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
         <textarea
           value={resultText}
           onChange={(e) => setResultText(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           rows={3}
           required
+          disabled={isUploading}
         />
       </div>
 
@@ -139,7 +185,8 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
         <select
           value={resultType}
           onChange={(e) => setResultType(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          disabled={isUploading}
         >
           <option value="note">Note</option>
           <option value="call">Call</option>
@@ -163,8 +210,9 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
         />
         
         {isCompressing && (
-          <p className="text-sm text-blue-600 mt-1">
-            🔄 Compressing images...
+          <p className="text-sm text-blue-600 mt-1 flex items-center">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+            Compressing images...
           </p>
         )}
 
@@ -173,9 +221,14 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
             <p className="text-sm text-gray-600">Selected files:</p>
             <ul className="text-sm text-gray-500">
               {files.map((file, index) => (
-                <li key={index} className="flex justify-between">
-                  <span>📎 {file.name}</span>
-                  <span>({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                <li key={index} className="flex justify-between items-center py-1">
+                  <span className="flex items-center">
+                    <span className="mr-2">📎</span>
+                    {file.name}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
                 </li>
               ))}
             </ul>
@@ -186,9 +239,19 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       <button
         type="submit"
         disabled={isCompressing || isUploading || !resultText.trim()}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+        className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isUploading ? '📤 Uploading...' : '➕ Add Result with Attachments'}
+        {isUploading ? (
+          <>
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+            Uploading...
+          </>
+        ) : (
+          <>
+            <span className="mr-2">➕</span>
+            Add Result with Attachments
+          </>
+        )}
       </button>
     </form>
   );

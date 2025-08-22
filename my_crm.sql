@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Aug 21, 2025 at 01:42 AM
+-- Generation Time: Aug 22, 2025 at 03:04 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.2.28
 
@@ -587,6 +587,7 @@ CREATE TABLE `tasks` (
   `status` enum('new','pending','completed','overdue','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'new',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `priority` enum('low','medium','high') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'low',
+  `created_by` int DEFAULT NULL,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -594,25 +595,25 @@ CREATE TABLE `tasks` (
 -- Dumping data for table `tasks`
 --
 
-INSERT INTO `tasks` (`id`, `code`, `lead_id`, `assigned_to`, `title`, `description`, `category`, `due_date`, `status`, `created_at`, `priority`, `updated_at`) VALUES
-(13, 'TK-001', 21, 2, 'tolong ya kanvasing', 'tolong ya', 'Kanvasing', '2025-08-16 04:13:00', 'completed', '2025-08-15 04:13:28', 'high', '2025-08-15 05:53:10'),
-(14, 'TK-002', 20, 2, 'tolong pak', 'tolong pak', 'Followup', '2025-08-16 04:19:00', 'completed', '2025-08-15 04:19:19', 'high', '2025-08-15 04:19:24'),
-(15, 'TK-003', 21, 2, 'tolong lagi', 'tolong', 'Kanvasing', '2025-08-16 05:47:00', 'completed', '2025-08-15 05:47:11', 'medium', '2025-08-15 05:53:21'),
-(16, 'TK-004', 21, 2, 'tolong ya plis', 'tolong aku pliss', 'Kanvasing', '2025-08-16 05:47:00', 'completed', '2025-08-15 05:47:48', 'medium', '2025-08-15 05:53:32'),
-(17, 'TK-005', 21, 2, 'tolong ya lgi kanvasing', 'tolong gan', 'Kanvasing', '2025-08-16 05:48:00', 'completed', '2025-08-15 05:48:14', 'medium', '2025-08-15 05:53:46'),
-(18, 'TK-006', 21, 2, 'tolong lagi', 'tolong gan', 'Kanvasing', '2025-08-16 05:50:00', 'completed', '2025-08-15 05:50:11', 'medium', '2025-08-15 05:53:54'),
-(19, 'TK-007', 21, 2, 'tolong ya', 'tolong', 'Followup', '2025-08-16 05:50:00', 'completed', '2025-08-15 05:50:37', 'medium', '2025-08-15 05:54:02'),
-(25, 'TK-013', 21, 2, 'tolong ya', 'tolong', 'Lainnya', '2025-08-16 06:09:00', 'completed', '2025-08-15 06:09:11', 'medium', '2025-08-15 06:09:16'),
-(26, 'TK-014', 21, 2, 'tolong', 'tolong', 'Followup', '2025-08-16 06:25:00', 'completed', '2025-08-15 06:25:48', 'medium', '2025-08-15 06:27:21'),
-(27, 'TK-015', 21, 2, 'tolong ya', 'tolong', 'Followup', '2025-08-16 06:26:00', 'completed', '2025-08-15 06:26:13', 'medium', '2025-08-15 06:27:31'),
-(28, 'TK-016', 21, 2, 'tolong woy', 'tolong', 'Followup', '2025-08-15 06:26:00', 'completed', '2025-08-15 06:26:33', 'medium', '2025-08-15 06:27:40'),
-(29, 'TK-017', 21, 2, 'tolong', 'tolong boy', 'Followup', '2025-08-15 06:27:00', 'completed', '2025-08-15 06:27:12', 'medium', '2025-08-15 06:27:48'),
-(30, 'TK-018', 21, 2, 'tolong oy', 'bos tolongggg', 'Penawaran', '2025-08-16 06:28:00', 'completed', '2025-08-15 06:28:33', 'medium', '2025-08-15 06:28:43'),
-(31, 'TK-019', 22, 5, 'tolong aku dong', 'tolong', 'Followup', '2025-08-15 07:16:00', 'completed', '2025-08-15 07:16:18', 'medium', '2025-08-15 07:16:22'),
-(32, 'TK-020', 21, 2, 'task', 'tolong', 'Kanvasing', '2025-08-15 08:50:00', 'completed', '2025-08-15 08:51:00', 'medium', '2025-08-15 08:51:06'),
-(33, 'TK-021', 21, 2, 'tolong deal ya', 'tolong bos', 'Deal DO', '2025-08-19 04:05:00', 'completed', '2025-08-18 04:05:24', 'high', '2025-08-18 04:05:40'),
-(34, 'TK-022', 21, 2, 'tolong kesepakatan', 'tolong gan', 'Kesepakatan Tarif', '2025-08-19 06:23:00', 'completed', '2025-08-18 06:23:54', 'medium', '2025-08-18 06:24:00'),
-(35, 'TK-023', 21, 2, 'tolong gan', 'tolong gan', 'Kanvasing', '2025-08-23 08:00:00', 'cancelled', '2025-08-18 08:00:22', 'medium', '2025-08-19 07:26:08');
+INSERT INTO `tasks` (`id`, `code`, `lead_id`, `assigned_to`, `title`, `description`, `category`, `due_date`, `status`, `created_at`, `priority`, `created_by`, `updated_at`) VALUES
+(13, 'TK-001', 21, 2, 'tolong ya kanvasing', 'tolong ya', 'Kanvasing', '2025-08-16 04:13:00', 'completed', '2025-08-15 04:13:28', 'high', NULL, '2025-08-15 05:53:10'),
+(14, 'TK-002', 20, 2, 'tolong pak', 'tolong pak', 'Followup', '2025-08-16 04:19:00', 'completed', '2025-08-15 04:19:19', 'high', NULL, '2025-08-15 04:19:24'),
+(15, 'TK-003', 21, 2, 'tolong lagi', 'tolong', 'Kanvasing', '2025-08-16 05:47:00', 'completed', '2025-08-15 05:47:11', 'medium', NULL, '2025-08-15 05:53:21'),
+(16, 'TK-004', 21, 2, 'tolong ya plis', 'tolong aku pliss', 'Kanvasing', '2025-08-16 05:47:00', 'completed', '2025-08-15 05:47:48', 'medium', NULL, '2025-08-15 05:53:32'),
+(17, 'TK-005', 21, 2, 'tolong ya lgi kanvasing', 'tolong gan', 'Kanvasing', '2025-08-16 05:48:00', 'completed', '2025-08-15 05:48:14', 'medium', NULL, '2025-08-15 05:53:46'),
+(18, 'TK-006', 21, 2, 'tolong lagi', 'tolong gan', 'Kanvasing', '2025-08-16 05:50:00', 'completed', '2025-08-15 05:50:11', 'medium', NULL, '2025-08-15 05:53:54'),
+(19, 'TK-007', 21, 2, 'tolong ya', 'tolong', 'Followup', '2025-08-16 05:50:00', 'completed', '2025-08-15 05:50:37', 'medium', NULL, '2025-08-15 05:54:02'),
+(25, 'TK-013', 21, 2, 'tolong ya', 'tolong', 'Lainnya', '2025-08-16 06:09:00', 'completed', '2025-08-15 06:09:11', 'medium', NULL, '2025-08-15 06:09:16'),
+(26, 'TK-014', 21, 2, 'tolong', 'tolong', 'Followup', '2025-08-16 06:25:00', 'completed', '2025-08-15 06:25:48', 'medium', NULL, '2025-08-15 06:27:21'),
+(27, 'TK-015', 21, 2, 'tolong ya', 'tolong', 'Followup', '2025-08-16 06:26:00', 'completed', '2025-08-15 06:26:13', 'medium', NULL, '2025-08-15 06:27:31'),
+(28, 'TK-016', 21, 2, 'tolong woy', 'tolong', 'Followup', '2025-08-15 06:26:00', 'completed', '2025-08-15 06:26:33', 'medium', NULL, '2025-08-15 06:27:40'),
+(29, 'TK-017', 21, 2, 'tolong', 'tolong boy', 'Followup', '2025-08-15 06:27:00', 'completed', '2025-08-15 06:27:12', 'medium', NULL, '2025-08-15 06:27:48'),
+(30, 'TK-018', 21, 2, 'tolong oy', 'bos tolongggg', 'Penawaran', '2025-08-16 06:28:00', 'completed', '2025-08-15 06:28:33', 'medium', NULL, '2025-08-15 06:28:43'),
+(31, 'TK-019', 22, 5, 'tolong aku dong', 'tolong', 'Followup', '2025-08-15 07:16:00', 'completed', '2025-08-15 07:16:18', 'medium', NULL, '2025-08-15 07:16:22'),
+(32, 'TK-020', 21, 2, 'task', 'tolong', 'Kanvasing', '2025-08-15 08:50:00', 'completed', '2025-08-15 08:51:00', 'medium', NULL, '2025-08-15 08:51:06'),
+(33, 'TK-021', 21, 2, 'tolong deal ya', 'tolong bos', 'Deal DO', '2025-08-19 04:05:00', 'completed', '2025-08-18 04:05:24', 'high', NULL, '2025-08-18 04:05:40'),
+(34, 'TK-022', 21, 2, 'tolong kesepakatan', 'tolong gan', 'Kesepakatan Tarif', '2025-08-19 06:23:00', 'completed', '2025-08-18 06:23:54', 'medium', NULL, '2025-08-18 06:24:00'),
+(35, 'TK-023', 21, 2, 'tolong gan', 'tolong gan', 'Kanvasing', '2025-08-23 08:00:00', 'cancelled', '2025-08-18 08:00:22', 'medium', NULL, '2025-08-19 07:26:08');
 
 -- --------------------------------------------------------
 
@@ -634,6 +635,14 @@ CREATE TABLE `task_attachments` (
   `upload_by` int DEFAULT NULL,
   `uploaded_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `task_attachments`
+--
+
+INSERT INTO `task_attachments` (`id`, `task_result_id`, `original_filename`, `stored_filename`, `file_path`, `file_size`, `file_type`, `mime_type`, `compressed_size`, `compression_ratio`, `upload_by`, `uploaded_at`) VALUES
+(9, 42, '100_7303.JPG', '100_7303_1755747727225_ab904af1c671d9da.JPG', 'uploads\\task-attachments\\100_7303_1755747727225_ab904af1c671d9da.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, NULL, '2025-08-21 03:42:07'),
+(11, 44, '100_7303.JPG', '100_7303_1755755582349_77f473aa50ba5daa.JPG', 'uploads\\task-attachments\\100_7303_1755755582349_77f473aa50ba5daa.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, 2, '2025-08-21 05:53:02');
 
 -- --------------------------------------------------------
 
@@ -706,7 +715,8 @@ INSERT INTO `task_results` (`id`, `task_id`, `result_text`, `result_type`, `resu
 (29, 32, 'sudah', 'call', '2025-08-15 08:51:10', 1),
 (30, 33, 'sudah mas', 'note', '2025-08-18 04:05:46', 1),
 (31, 34, 'sudah mas', 'call', '2025-08-18 06:24:07', 1),
-(33, 35, 'oke sudah', 'note', '2025-08-19 03:46:57', 1);
+(42, 35, 'nyoh', 'call', '2025-08-21 03:42:07', NULL),
+(44, 35, 'sayang', 'meeting', '2025-08-21 05:53:02', 2);
 
 -- --------------------------------------------------------
 
@@ -919,7 +929,8 @@ ALTER TABLE `sales_kpi_monthly`
 ALTER TABLE `tasks`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `code` (`code`),
-  ADD KEY `idx_tasks_code` (`code`);
+  ADD KEY `idx_tasks_code` (`code`),
+  ADD KEY `idx_tasks_created_by` (`created_by`);
 
 --
 -- Indexes for table `task_attachments`
@@ -1072,13 +1083,13 @@ ALTER TABLE `sales_kpi_monthly`
 -- AUTO_INCREMENT for table `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `task_attachments`
 --
 ALTER TABLE `task_attachments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `task_comments`
@@ -1090,7 +1101,7 @@ ALTER TABLE `task_comments`
 -- AUTO_INCREMENT for table `task_results`
 --
 ALTER TABLE `task_results`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -1176,6 +1187,12 @@ ALTER TABLE `sales_kpi_daily`
 --
 ALTER TABLE `sales_kpi_monthly`
   ADD CONSTRAINT `sales_kpi_monthly_ibfk_1` FOREIGN KEY (`sales_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tasks`
+--
+ALTER TABLE `tasks`
+  ADD CONSTRAINT `tasks_created_by_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `task_attachments`

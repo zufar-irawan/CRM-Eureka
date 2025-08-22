@@ -17,9 +17,9 @@ export default function TasksLayout(
     const { isOpens, editData, closeModal } = useTaskModalStore();
 
     const PathName = usePathname()
-    
+
     // Cek apakah ini halaman task detail
-    const isTaskDetailPage = PathName.includes('/tasks/') && PathName !== '/tasks'
+    const isTaskDetailPage = PathName.includes('/tasks/') && PathName !== '/tasks' && PathName !== '/tasks/kanban'
 
     return (
         <div className="flex h-screen">

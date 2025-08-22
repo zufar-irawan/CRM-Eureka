@@ -25,7 +25,7 @@ export const TABS: TabConfig[] = [
   { name: "Activity", icon: BarChart3 },
   { name: "Comments", icon: MessageSquare },
   { name: "Tasks", icon: CheckSquare },
-  { name: "Attachments", icon: Paperclip, disabled: true },
+  //{ name: "Attachments", icon: Paperclip, disabled: true },
 ];
 
 // Endpoint API yang digunakan di seluruh aplikasi

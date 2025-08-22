@@ -173,7 +173,6 @@ export const createTask = async (req, res) => {
       });
     }
 
-    // 📝 UPDATED: Validasi kategori yang diizinkan
     const validCategories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
     if (category && !validCategories.includes(category)) {
       await transaction.rollback();
@@ -223,7 +222,6 @@ export const createTask = async (req, res) => {
 
     await transaction.commit();
 
-    // Ambil data task dengan include user untuk response
     const taskWithUser = await Tasks.findOne({
       where: { id: newTask.id },
       include: [
@@ -265,7 +263,6 @@ export const updateTask = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    // 📝 UPDATED: Validasi kategori jika diupdate
     if (updateData.category) {
       const validCategories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
       if (!validCategories.includes(updateData.category)) {
@@ -276,9 +273,7 @@ export const updateTask = async (req, res) => {
       }
     }
 
-    // Cek apakah id adalah kode atau ID numerik
     const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
-
     const task = await Tasks.findOne({ where: whereCondition });
 
     if (!task) {
@@ -288,10 +283,8 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    // Simpan status lama untuk pengecekan perubahan
     const oldStatus = task.status;
 
-    // Jika ada lead_id yang akan diupdate, validasi dulu
     if (updateData.lead_id) {
       if (isNaN(updateData.lead_id)) {
         const lead = await Leads.findOne({ where: { code: updateData.lead_id } });
@@ -316,13 +309,11 @@ export const updateTask = async (req, res) => {
 
     await task.update(updateData);
 
-    // 🔥 INTEGRASI KPI: Auto-update KPI jika task status berubah menjadi completed
     if (oldStatus !== 'completed' && updateData.status === 'completed') {
       await autoUpdateKPI(task.id, task.assigned_to);
       console.log(`📊 KPI auto-updated for task ${task.code} completion`);
     }
 
-    // Ambil data terbaru dengan include
     const updatedTask = await Tasks.findOne({
       where: whereCondition,
       include: [
@@ -357,7 +348,7 @@ export const updateTask = async (req, res) => {
   }
 };
 
-// 📝 GET /api/tasks/categories - Mendapatkan daftar kategori yang valid
+// GET /api/tasks/categories 
 export const getTaskCategories = async (req, res) => {
   try {
     const categories = [
@@ -388,10 +379,7 @@ export const getTaskCategories = async (req, res) => {
 export const getTaskById = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Cek apakah id adalah kode atau ID numerik
     const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
-
     const task = await Tasks.findOne({
       where: whereCondition,
       include: [
@@ -515,10 +503,7 @@ export const updateTaskStatus = async (req, res) => {
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Cek apakah id adalah kode atau ID numerik
     const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
-
     const task = await Tasks.findOne({ where: whereCondition });
     if (!task) {
       return res.status(404).json({
@@ -548,7 +533,6 @@ export const getTaskComments = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Cek apakah id adalah kode atau ID numerik
     let taskId;
     if (isNaN(id)) {
       const task = await Tasks.findOne({ where: { code: id } });
@@ -602,7 +586,6 @@ export const addTaskComment = async (req, res) => {
       });
     }
 
-    // Cek apakah id adalah kode atau ID numerik
     let taskId;
     if (isNaN(id)) {
       const task = await Tasks.findOne({ where: { code: id } });
@@ -791,7 +774,6 @@ export const addTaskResult = async (req, res) => {
       });
     }
 
-    // Cek apakah id adalah kode atau ID numerik
     let taskId;
     if (isNaN(id)) {
       const task = await Tasks.findOne({ where: { code: id } });

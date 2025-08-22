@@ -1,4 +1,4 @@
-// models/tasks/tasksModel.js - Updated with database structure
+// models/tasks/tasksModel.js - Updated with created_by field
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../../config/db.js';
 
@@ -60,6 +60,14 @@ export const Tasks = sequelize.define('Task', {
     type: DataTypes.ENUM('low', 'medium', 'high'),
     allowNull: false,
     defaultValue: 'low'
+  },
+  created_by: {
+    type: DataTypes.INTEGER,
+    allowNull: true, 
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   }
 }, {
   tableName: 'tasks',

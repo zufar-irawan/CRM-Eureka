@@ -241,6 +241,18 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
             </div>
           </div>
 
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">Created By</span>
+            <div className="flex items-center space-x-2">
+              <span className="w-6 h-6 bg-gray-100 text-gray-700 rounded-sm flex items-center justify-center text-xs font-medium">
+                {getFirstChar(task.created_by_name, "?")}
+              </span>
+              <span className="text-sm text-gray-900 font-medium">
+                {displayValue(task.created_by_name, "Unknown")}
+              </span>
+            </div>
+          </div>
+
           {/* Enhanced Due Date with Time */}
           <div className="flex justify-between items-start">
             <span className="text-sm text-gray-600 flex items-center space-x-1 flex-shrink-0">

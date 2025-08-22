@@ -1,4 +1,4 @@
-// models/associations.js - Updated dengan KPI models
+// models/associations.js - Updated dengan task created_by association
 import { Leads } from "./leads/leadsModel.js";
 import { LeadComments } from "./leads/leadsCommentModel.js";
 import { Tasks } from "./tasks/tasksModel.js";
@@ -86,6 +86,16 @@ export const setupAssociations = () => {
     Tasks.belongsTo(User, {
         foreignKey: 'assigned_to',
         as: 'assignee'
+    });
+
+    Tasks.belongsTo(User, {
+        foreignKey: 'created_by',
+        as: 'creator',
+        constraints: false
+    });
+    User.hasMany(Tasks, {
+        foreignKey: 'created_by',
+        as: 'created_tasks'
     });
     
     Tasks.hasMany(TaskComments, {
@@ -228,8 +238,6 @@ export const setupAssociations = () => {
         onDelete: 'SET NULL',
         onUpdate: 'CASCADE'
     });
-
-    // 🔥 KPI ASSOCIATIONS
     
     // User to KPI Daily associations
     User.hasMany(SalesKpiDaily, {
@@ -251,8 +259,7 @@ export const setupAssociations = () => {
         as: 'sales_user'
     });
 
-
-    console.log('All associations including KPI have been set up successfully');
+    console.log('All associations including KPI and Tasks created_by have been set up successfully');
 };
 
 export { 

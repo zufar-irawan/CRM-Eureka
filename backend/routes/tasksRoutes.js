@@ -26,7 +26,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = Router();
 router.get("/", getTasks);                           // GET /api/tasks - List tasks (dengan filter lead_id, assigned_to, dll)
-router.post("/", createTask);                        // POST /api/tasks - Tambah task
+router.post("/", authMiddleware, createTask);                        // POST /api/tasks - Tambah task
 router.get("/:id", getTaskById);                     // GET /api/tasks/:id - Detail task
 router.put("/:id", updateTask);                      // PUT /api/tasks/:id - Update task
 router.delete("/:id", deleteTask);                   // DELETE /api/tasks/:id - Delete task

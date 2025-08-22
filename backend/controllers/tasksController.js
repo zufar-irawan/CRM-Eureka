@@ -41,7 +41,7 @@ const generateTaskCode = async (transaction) => {
 
 export const getTasks = async (req, res) => {
   try {
-    const { status, priority, category, assigned_to, lead_id, search, } = req.query;
+    const { status, priority, category, assigned_to, lead_id, search } = req.query;
     let whereClause = {};
 
     // Filter berdasarkan lead_id (PENTING untuk detail lead)
@@ -107,6 +107,12 @@ export const getTasks = async (req, res) => {
           required: false
         },
         {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'name', 'email'],
+          required: false
+        },
+        {
           model: Leads,
           as: 'lead',
           attributes: ['id', 'code', 'company', 'fullname'],
@@ -131,7 +137,8 @@ export const getTasks = async (req, res) => {
       const taskData = task.toJSON();
       return {
         ...taskData,
-        assigned_user_name: taskData.assignee ? taskData.assignee.name : 'Unassigned'
+        assigned_user_name: taskData.assignee ? taskData.assignee.name : 'Unassigned',
+        created_by_name: taskData.creator ? taskData.creator.name : 'Uknown',
       };
     });
 
@@ -149,6 +156,7 @@ export const getTasks = async (req, res) => {
     });
   }
 };
+
 
 // POST /api/tasks - Create task
 export const createTask = async (req, res) => {
@@ -172,6 +180,8 @@ export const createTask = async (req, res) => {
         message: "lead_id, assigned_to, dan title wajib diisi"
       });
     }
+
+    const created_by = req.userId || req.body.created_by;
 
     const validCategories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
     if (category && !validCategories.includes(category)) {
@@ -217,7 +227,8 @@ export const createTask = async (req, res) => {
       category: category || 'Lainnya',
       due_date,
       priority: priority || 'medium',
-      status: 'new'
+      status: 'new',
+      created_by: created_by || null
     }, { transaction });
 
     await transaction.commit();
@@ -231,6 +242,11 @@ export const createTask = async (req, res) => {
           attributes: ['id', 'name', 'email']
         },
         {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'name', 'email']
+        },
+        {
           model: Leads,
           as: 'lead',
           attributes: ['id', 'code', 'company', 'fullname']
@@ -240,6 +256,7 @@ export const createTask = async (req, res) => {
 
     const responseData = taskWithUser.toJSON();
     responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
+    responseData.created_by_name = responseData.creator ? responseData.creator.name : 'Unknown';
 
     res.status(201).json({
       success: true,
@@ -389,6 +406,11 @@ export const getTaskById = async (req, res) => {
           attributes: ['id', 'name', 'email']
         },
         {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'name', 'email']
+        },
+        {
           model: Leads,
           as: 'lead',
           attributes: ['id', 'code', 'company', 'fullname']
@@ -417,6 +439,7 @@ export const getTaskById = async (req, res) => {
 
     const responseData = task.toJSON();
     responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
+    responseData.created_by_name = responseData.creator ? responseData.creator.name : 'Unknown';
 
     res.status(200).json({
       success: true,

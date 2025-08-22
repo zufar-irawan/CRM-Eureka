@@ -33,6 +33,7 @@ const allColumns: Column[] = [
   },
   { key: "status", label: "Status" },
   { key: "priority", label: "Priority" },
+  { key: "created_by_name", label: "Created By" },
   {
     key: "updated_at",
     label: "Last Modified",
@@ -57,6 +58,7 @@ const allFields: Field[] = [
       day: 'numeric',
     }),
   },
+  { key: "created_by_name", label: "Created By" },
   // { key: "status", label: "Status" },
   // { key: "priority", label: "Priority" },
   // { key: "assigned_to", label: "Assigned To" },

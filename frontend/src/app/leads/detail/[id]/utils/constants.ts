@@ -11,7 +11,6 @@ import {
 
 import type { StatusOption, TabConfig } from "../types";
 
-// Status yang digunakan di form dan tampilan leads
 export const STATUS_OPTIONS: StatusOption[] = [
   { name: "New", color: "bg-gray-500", backendStage: "New" },
   { name: "Contacted", color: "bg-orange-500", backendStage: "Contacted" },
@@ -28,7 +27,6 @@ export const TABS: TabConfig[] = [
   //{ name: "Attachments", icon: Paperclip, disabled: true },
 ];
 
-// Endpoint API yang digunakan di seluruh aplikasi
 export const API_ENDPOINTS = {
   LEADS: 'http://localhost:5000/api/leads',
   AUTH_ME: 'http://localhost:5000/api/auth/me',
@@ -37,7 +35,6 @@ export const API_ENDPOINTS = {
   TASKS: 'http://localhost:5000/api/tasks',
 } as const;
 
-// Data fallback user sesuai dengan SQL database (7 users dari id 1-7)
 export const FALLBACK_USERS = [
   { id: 1, name: 'Admin User', email: 'admin@eureka.com', role: 'admin', roleNames: ['admin'] },
   { id: 2, name: 'Sales One', email: 'sales1@eureka.com', role: 'sales', roleNames: ['sales'] },
@@ -48,7 +45,6 @@ export const FALLBACK_USERS = [
   { id: 7, name: 'ASM One', email: 'asm1@eureka.com', role: 'user', roleNames: [] },
 ];
 
-// Role mapping sesuai dengan database
 export const ROLE_MAPPING = {
   1: 'admin',
   2: 'sales', 
@@ -56,7 +52,6 @@ export const ROLE_MAPPING = {
   4: 'akunting'
 };
 
-// User role assignments sesuai dengan user_roles table
 export const USER_ROLE_ASSIGNMENTS = {
   1: [1], // Admin User -> admin role
   2: [2], // Sales One -> sales role  
@@ -74,5 +69,4 @@ export const STAGE_MAPPING: { [key: string]: string } = {
   'Converted': 'Converted',
 };
 
-// Maksimum level reply untuk komentar (threaded)
 export const MAX_REPLY_DEPTH = 5;

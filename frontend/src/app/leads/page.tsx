@@ -771,7 +771,7 @@ export default function MainLeads() {
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden z-40 lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+        <div className="hidden z-40 lg:block bg-white rounded-lg shadow-sm border border-gray-200">
           <table className="w-full relative">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>

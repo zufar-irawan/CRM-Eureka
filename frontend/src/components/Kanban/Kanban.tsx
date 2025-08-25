@@ -1,3 +1,4 @@
+// Kanban.tsx - Updated with rollback functionality
 "use client"
 
 import { closestCenter, closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, UniqueIdentifier } from "@dnd-kit/core"
@@ -5,13 +6,16 @@ import Sensors from "./Functions/Sensors"
 import { JSX, useEffect, useState } from "react"
 import handleDragStart from "./Functions/HandleDragStart"
 import handleDragMove from "./Functions/HandleDragMove"
-import handleDragEnd from "./Functions/HandleDragEnd"
+import handleDragEnd, { rollbackDrag } from "./Functions/HandleDragEnd"
 import { SortableContext } from "@dnd-kit/sortable"
 import Container from "./Container/Container"
 import Items from "./Item/Item"
 import ConvertToDealModal from "./ConvertToDealModal"
 import handleConvertToDeal from "./Functions/HandleConvertToDeal"
 import fetchKanbanData from "./Functions/FetchKanbanData"
+import TaskResultModal from "./TaskResultModal";
+import updateStage from "./Functions/UpdateStage";
+import path from "path"
 
 export type DNDType = {
     id: UniqueIdentifier
@@ -42,7 +46,11 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
     const [showConvertModal, setShowConvertModal] = useState(false)
     const [convertingLeadId, setConvertingLeadId] = useState<number | null>(null)
     const [isConverting, setIsConverting] = useState(false);
+    const [onConfirmTask, setOnConfirmTask] = useState<((title: string, value: number, stage: string) => Promise<void>) | null>(null)
     const [onConfirm, setOnConfirm] = useState<((title: string, value: number, stage: string) => Promise<void>) | null>(null);
+    const [showTaskResultModal, setShowTaskResultModal] = useState(false);
+    const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+    const [pendingDrag, setPendingDrag] = useState<DragEndEvent | null>(null);
 
     // Handle convert modal untuk leads
     const handleOpenConvertModal = (leadId: number) => {
@@ -64,23 +72,52 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
 
     // Fungsi untuk refresh data setelah modal ditutup
     const refreshKanbanData = () => {
-        const apiUrl = pathname === "Deals" ? "http://localhost:5000/api/deals" : "http://localhost:3000/api/leads";
-        const groupByField = "stage"; // atau sesuai kebutuhan
-        
-        fetchKanbanData({
-            url: apiUrl,
-            setData: setData,
-            setContainers: setContainers,
-            groupBy: groupByField,
-            mapItem: (item) => ({
-                id: `item-${item.id}`,
-                itemId: item.id,
-                fullname: item.lead?.fullname || item.fullname || "Unknown",
-                organization: item.lead?.company || item.company || "-",
-                email: item.lead?.email || item.email || "-",
-                mobileno: item.lead?.phone || item.phone || "-",
-            }),
-        });
+        if (pathname === "Leads") {
+            fetchKanbanData({
+                url: "http://localhost:5000/api/leads",
+                setData: setData,
+                setContainers: setContainers,
+                groupBy: "stage",
+                mapItem: (item) => ({
+                    id: `item-${item.id}`,
+                    itemId: item.id,
+                    fullname: item.lead?.fullname || item.fullname || "Unknown",
+                    organization: item.lead?.company || item.company || "-",
+                    email: item.lead?.email || item.email || "-",
+                    mobileno: item.lead?.phone || item.phone || "-",
+                }),
+            });
+        } else if (pathname === "Deals") {
+            fetchKanbanData({
+                url: "http://localhost:5000/api/deals",
+                setData: setData,
+                setContainers: setContainers,
+                groupBy: "stage",
+                mapItem: (deal) => ({
+                    id: `item-${deal.id}`,
+                    itemId: deal.id,
+                    fullname: deal.lead?.fullname || "Unknown",
+                    organization: deal.lead?.company || "-",
+                    email: deal.lead?.email || "-",
+                    mobileno: deal.lead?.phone || "-",
+                }),
+            })
+        } else {
+            fetchKanbanData({
+                url: "http://localhost:5000/api/tasks",
+                setData: setData,
+                setContainers: setContainers,
+                groupBy: "status", // bisa diganti "status", "type", dll tergantung API
+                mapItem: (task) => ({
+                    id: `item-${task.id}`,
+                    itemId: task.id,
+                    fullname: task.title || "Unknown",
+                    organization: task.category || "-",
+                    email: task.description || "-",
+                    mobileno: task.priority || "-",
+                }),
+            })
+        }
     };
 
     return (
@@ -92,17 +129,23 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                         collisionDetection={closestCorners}
                         onDragStart={(event: DragStartEvent) => handleDragStart({ event, setActiveId, setDraggedItem, containers })}
                         onDragMove={(event: DragMoveEvent) => handleDragMove({ event, containers, setContainers })}
-                        onDragEnd={(event: DragEndEvent) => handleDragEnd({ 
-                            event, 
-                            containers, 
-                            setShowConvertModal, 
-                            setActiveId, 
-                            draggedItem, 
-                            setDraggedItem, 
-                            setConvertingLeadId, 
-                            onConvertRequest: handleOpenConvertModal, 
-                            pathname 
-                        })}
+                        onDragEnd={(event: DragEndEvent) =>
+                            handleDragEnd({
+                                event,
+                                containers,
+                                setContainers, // Add this prop
+                                setShowConvertModal,
+                                setActiveId,
+                                draggedItem,
+                                setDraggedItem,
+                                setConvertingLeadId,
+                                onConvertRequest: handleOpenConvertModal,
+                                pathname,
+                                setShowTaskResultModal,
+                                setSelectedTaskId,
+                                setPendingDrag,
+                            })
+                        }
                     >
                         <SortableContext items={containers.map((i) => i.id)}>
                             {containers.map((container) => (
@@ -151,6 +194,51 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                     onConfirm={onConfirm}
                     selectedCount={1}
                     selectedIds={[String(convertingLeadId)]}
+                />
+            )}
+
+            {showTaskResultModal && selectedTaskId && pathname === "Tasks" && (
+                <TaskResultModal
+                    taskId={String(selectedTaskId)}
+                    onSuccess={async () => {
+                        // Modal confirmed → proceed with the update
+                        if (pendingDrag) {
+                            try {
+                                await updateStage({
+                                    itemId: selectedTaskId,
+                                    newStage: "Completed",
+                                    pathname: pathname
+                                });
+                                console.log("Task status updated to Completed");
+                            } catch (error) {
+                                console.error("Failed to update task status:", error);
+                                // On error, rollback the visual change
+                                rollbackDrag(pendingDrag, containers, setContainers);
+                            }
+                        }
+
+                        // Reset modal state
+                        setShowTaskResultModal(false);
+                        setSelectedTaskId(null);
+                        setPendingDrag(null);
+                        setDraggedItem(null);
+                    }}
+                    onClose={() => {
+                        // Modal canceled → rollback the drag
+                        console.log("Task result modal canceled - rolling back drag");
+
+                        if (pendingDrag) {
+                            rollbackDrag(pendingDrag, containers, setContainers);
+                        }
+
+                        // Reset modal state
+                        setShowTaskResultModal(false);
+                        setSelectedTaskId(null);
+                        setPendingDrag(null);
+                        setDraggedItem(null);
+
+                        refreshKanbanData()
+                    }}
                 />
             )}
         </>

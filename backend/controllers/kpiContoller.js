@@ -1,9 +1,10 @@
-// controllers/kpiController.js - Updated with task-only KPI logic
-import { SalesKpiDaily, SalesKpiMonthly, KpiTargets, } from '../models/kpi/kpiModel.js';
+// controllers/kpiController.js 
 import { User } from '../models/usersModel.js';
 import { Tasks } from '../models/tasks/tasksModel.js';
 import { Op, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/db.js';
+import KPIModels from "../models/kpi/kpiModel.js";
+const { SalesKpiDaily, SalesKpiMonthly, KpiTargets } = KPIModels;
 
 export const calculateDailyKPI = async (userId, date) => {
   try {
@@ -33,16 +34,14 @@ export const calculateDailyKPI = async (userId, date) => {
 
     console.log(`Task counts for ${targetDate}:`, taskCounts);
 
-    // 📝 UPDATED: Inisialisasi semua count dengan 0
     let counts = {
       kanvasing_count: 0,
       followup_count: 0,
       penawaran_count: 0,
-      kesepakatan_tarif_count: 0,  // Sekarang dari task category
-      deal_do_count: 0             // Sekarang dari task category
+      kesepakatan_tarif_count: 0,  
+      deal_do_count: 0           
     };
 
-    // 📝 UPDATED: Mapping semua kategori dari tasks
     taskCounts.forEach(task => {
       const count = parseInt(task.count);
       switch (task.category) {

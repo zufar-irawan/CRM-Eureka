@@ -1,10 +1,7 @@
 "use client";
 
 import { Deal, Comment } from '../types';
-import ActivityTab from './ActivityTab';
-import EmailsTab from './EmailsTab';
 import CommentsTab from './CommentsTab';
-import DataTab from './DataTab';
 
 interface TabContentProps {
   activeTab: string;
@@ -34,24 +31,6 @@ export default function TabContent({
   addComment
 }: TabContentProps) {
   switch (activeTab) {
-    case "Activity":
-      return (
-        <ActivityTab
-          deal={deal}
-          displayValue={displayValue}
-          formatTimeAgo={formatTimeAgo}
-          formatCurrency={formatCurrency}
-        />
-      );
-
-    case "Emails":
-      return (
-        <EmailsTab
-          deal={deal}
-          displayValue={displayValue}
-        />
-      );
-
     case "Comments":
       return (
         <CommentsTab
@@ -62,17 +41,6 @@ export default function TabContent({
           formatTimeAgo={formatTimeAgo}
           getFirstChar={getFirstChar}
           addComment={addComment}
-        />
-      );
-
-    case "Data":
-      return (
-        <DataTab
-          deal={deal}
-          displayValue={displayValue}
-          formatCurrency={formatCurrency}
-          formatPercentage={formatPercentage}
-          formatDate={formatDate}
         />
       );
 

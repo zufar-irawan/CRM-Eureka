@@ -42,7 +42,7 @@ export default function DealDetailPage() {
   const { currentUser, userLoading } = useAuth();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Activity");
+  const [activeTab, setActiveTab] = useState("Comments");
   const [deal, setDeal] = useState<Deal | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);

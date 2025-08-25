@@ -506,7 +506,31 @@ export const updateDeal = async (req, res) => {
             }
         }
 
+        const changes = [];
+        for (const key in updateData) {
+            if (deal[key] !== updateData[key] && key !== 'stage') {
+                changes.push(`- ${key} from "${deal[key]}" to "${updateData[key]}"`);
+            }
+        }
+
+        if (updateData.stage && deal.stage !== updateData.stage) {
+            changes.push(`- Stage changed from "${deal.stage}" to "${updateData.stage}"`);
+        }
+
         await deal.update(updateData, { transaction });
+
+        const user = await User.findByPk(req.userId || 1);
+        const userName = user ? user.name : 'System';
+
+        if (changes.length > 0) {
+            await DealComments.create({
+                deal_id: deal.id,
+                user_id: req.userId || 1,
+                user_name: userName,
+                message: `Deal details updated:\n${changes.join('\n')}`,
+            }, { transaction });
+        }
+        
         await transaction.commit();
 
 

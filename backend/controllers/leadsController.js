@@ -307,7 +307,8 @@ export const updateLead = async (req, res) => {
             description
         } = req.body;
 
-        await lead.update({
+        const changes = [];
+        const updatedFields = {
             owner: owner !== undefined ? owner : lead.owner,
             company: company !== undefined ? company : lead.company,
             title: title !== undefined ? title : lead.title,
@@ -331,7 +332,31 @@ export const updateLead = async (req, res) => {
             postal_code: postal_code !== undefined ? postal_code : lead.postal_code,
             country: country !== undefined ? country : lead.country,
             description: description !== undefined ? description : lead.description
-        }, { transaction });
+        };
+
+        for (const key in updatedFields) {
+            if (lead[key] !== updatedFields[key] && key !== 'stage') {
+                changes.push(`- ${key} from "${lead[key]}" to "${updatedFields[key]}"`);
+            }
+        }
+
+        if (lead.stage !== updatedFields.stage) {
+            changes.push(`${lead.stage} to ${updatedFields.stage}`);
+        }
+
+        await lead.update(updatedFields, { transaction });
+        
+        const user = await User.findByPk(req.userId || 1);
+        const userName = user ? user.name : 'System';
+
+        if (changes.length > 0) {
+            await LeadComments.create({
+                lead_id: lead.id,
+                user_id: req.userId || 1,
+                user_name: userName,
+                message: `Stage changed from ${changes.join('\n')}`,
+            }, { transaction });
+        }
 
         await transaction.commit();
 

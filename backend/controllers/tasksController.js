@@ -138,7 +138,7 @@ export const getTasks = async (req, res) => {
       return {
         ...taskData,
         assigned_user_name: taskData.assignee ? taskData.assignee.name : 'Unassigned',
-        created_by_name: taskData.creator ? taskData.creator.name : 'Uknown',
+        created_by_name: taskData.creator ? taskData.creator.name : 'Unknown',
       };
     });
 
@@ -328,7 +328,7 @@ export const updateTask = async (req, res) => {
 
     if (oldStatus !== 'completed' && updateData.status === 'completed') {
       await autoUpdateKPI(task.id, task.assigned_to);
-      console.log(`📊 KPI auto-updated for task ${task.code} completion`);
+      console.log(`KPI auto-updated for task ${task.code} completion`);
     }
 
     const updatedTask = await Tasks.findOne({

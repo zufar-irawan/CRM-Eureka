@@ -16,26 +16,26 @@ export default function Dashboard() {
     const router = useRouter()
 
     useEffect(() => {
-    // Cek auth status menggunakan server-side check
-    const checkAuth = async () => {
-      try {
-        const isAuthenticated = await checkAuthStatus();
-        if (!isAuthenticated) {
-          Swal.fire({
-            icon: "info",
-            title: "You're not logged in",
-            text: "Make sure to login first!"
-          });
-          router.replace('/login');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        router.replace('/login');
-      }
-    };
+        // Cek auth status menggunakan server-side check
+        const checkAuth = async () => {
+            try {
+                const isAuthenticated = await checkAuthStatus();
+                if (!isAuthenticated) {
+                    Swal.fire({
+                        icon: "info",
+                        title: "You're not logged in",
+                        text: "Make sure to login first!"
+                    });
+                    router.replace('/login');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                router.replace('/login');
+            }
+        };
 
-    checkAuth();
-  }, [router]);
+        checkAuth();
+    }, [router]);
 
     const { user, loading } = useUser()
     const [isMinimized, setIsMinimized] = useState(false)
@@ -56,12 +56,12 @@ export default function Dashboard() {
         {
             id: 3,
             number: "0",
-            title: "Active Deals"
+            title: "Unconverted Leads"
         },
         {
             id: 4,
             number: "0",
-            title: "Unconverted Leads"
+            title: "Active Deals"
         },
     ])
 
@@ -81,7 +81,7 @@ export default function Dashboard() {
     const fetchAllDeals = async () => {
         try {
             const response = await axios.get('http://localhost:3000/api/deals', {
-                params: { stage_ne: 'won' }
+                params: { stage_ne: ['won', 'lost'] }
             })
 
             const data = response.data.data
@@ -131,9 +131,9 @@ export default function Dashboard() {
                         : (card.id === 2
                             ? { ...card, number: allLeads }
                             : (card.id === 3
-                                ? { ...card, number: notWonDeals }
+                                ? { ...card, number: unconvertedLeads }
                                 : (card.id === 4
-                                    ? { ...card, number: unconvertedLeads }
+                                    ? { ...card, number: notWonDeals }
                                     : card
                                 )
                             )

@@ -8,7 +8,7 @@ interface TaskResult {
     task_id: number;
     result_text: string;
     result_type: string;
-    result_date: string; // ISO date string
+    result_date: string; 
     created_by: number;
 }
 
@@ -42,7 +42,7 @@ export default function ActivityTable() {
             sevenDaysAgo.setDate(now.getDate() - 7);
 
             const tasks = response.data.data
-            const leadsMap: Record<string, string> = {}; // { lead_id: lead_name }
+            const leadsMap: Record<string, string> = {}; 
 
             for (const task of tasks) {
                 const response2 = await axios.get(`http://localhost:3000/api/leads/${task.lead_id}`);
@@ -100,7 +100,7 @@ export default function ActivityTable() {
                             {item.activity}
                         </div>
                         <div className="text-gray-800">{item.lead}</div>
-                        <div className="text-gray-800">{item.createdBy}</div>
+                        <div className="text-gray-800">{item.createdBy === "Uknown" ? "Unknown" : item.createdBy}</div>
                         <div className="text-right text-gray-800">{item.date}</div>
                     </div>
                 ))

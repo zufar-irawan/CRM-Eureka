@@ -7,7 +7,7 @@ import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS } from '../utils/constants';
 import { displayValue, getFirstChar } from "../utils/formatting";
 import { useUsers } from "../../../../leads/detail/[id]/hooks/useUsers";
 import { useLeadUser } from "../hooks/useLeadUser";
-import AddTaskResult from './AddTaskResult';
+import TaskResultWithAttachment from './TaskResultWithAttachment';
 import Swal from 'sweetalert2';
 
 interface TaskHeaderProps {
@@ -71,7 +71,7 @@ export default function TaskHeader({
 
       setIsUpdating(true);
       try {
-        // Jika status diubah ke "completed", tampilkan modal add result
+        // Jika status diubah ke "completed", tampilkan modal add result dengan attachment
         if (newStatus === 'completed') {
           // Set pending completion dan tampilkan modal
           setPendingCompletion(true);
@@ -81,8 +81,8 @@ export default function TaskHeader({
           Swal.fire({
             icon: 'info',
             title: 'Task Completed',
-            text: 'Please add the task result to complete the process.',
-            timer: 2000,
+            text: 'Please add the task result and any attachments to complete the process.',
+            timer: 3000,
             showConfirmButton: false
           });
         } else {
@@ -124,8 +124,8 @@ export default function TaskHeader({
       
       Swal.fire({
         icon: 'success',
-        title: 'Berhasil',
-        text: 'Task telah diselesaikan dan hasil berhasil ditambahkan!',
+        title: 'Success!',
+        text: 'Task completed successfully with result and attachments!',
         timer: 3000,
         showConfirmButton: false
       });
@@ -133,8 +133,8 @@ export default function TaskHeader({
       console.error('Error completing task:', error);
       Swal.fire({
         icon: 'error',
-        title: 'Gagal',
-        text: 'Gagal menyelesaikan task. Silakan coba lagi.'
+        title: 'Failed',
+        text: 'Failed to complete task. Please try again.'
       });
     }
   };
@@ -145,8 +145,8 @@ export default function TaskHeader({
     
     Swal.fire({
       icon: 'info',
-      title: 'Dibatalkan',
-      text: 'Penambahan hasil task dibatalkan. Status task tidak berubah.',
+      title: 'Cancelled',
+      text: 'Task completion cancelled. Status remains unchanged.',
       timer: 2000,
       showConfirmButton: false
     });
@@ -169,8 +169,8 @@ export default function TaskHeader({
 
       Swal.fire({
         icon: 'success',
-        title: 'Berhasil',
-        text: `Task berhasil ditugaskan ke ${selectedUser?.name || 'user'}!`,
+        title: 'Success',
+        text: `Task successfully assigned to ${selectedUser?.name || 'user'}!`,
         timer: 2000,
         showConfirmButton: false
       });
@@ -178,8 +178,8 @@ export default function TaskHeader({
       console.error('Error assigning user:', error);
       Swal.fire({
         icon: 'error',
-        title: 'Gagal',
-        text: 'Gagal menugaskan user. Silakan coba lagi.'
+        title: 'Failed',
+        text: 'Failed to assign user. Please try again.'
       });
     } finally {
       setIsAssigning(false);
@@ -325,44 +325,57 @@ export default function TaskHeader({
             </div>
             
             <div className="relative">
-              <button
-                onClick={() => !isUpdating && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                disabled={isUpdating}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isUpdating ? (
-                  <>
-                    <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Updating...</span>
-                  </>
-                ) : (
-                  <>
-                    <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
-                    <span className="capitalize">{task.status}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </>
-                )}
-              </button>
-
-              {isStatusDropdownOpen && !isUpdating && (
-                <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                  <div className="py-1">
-                    {TASK_STATUS_OPTIONS.map((status) => (
-                      <button
-                        key={status.value}
-                        onClick={() => handleStatusChange(status.value)}
-                        className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.value === task.status ? 'bg-gray-50 font-medium' : ''
-                          }`}
-                      >
-                        <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
-                        <span className="capitalize">{status.label}</span>
-                        {status.value === task.status && (
-                          <span className="ml-auto text-blue-600">✓</span>
-                        )}
-                      </button>
-                    ))}
+              {task.status === 'completed' ? (
+                // Completed task - status is locked and cannot be changed
+                <div className="border border-green-300 rounded-md px-3 py-2 text-sm bg-green-50 text-green-800 flex items-center space-x-2 cursor-not-allowed opacity-75">
+                  <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
+                  <span className="capitalize font-medium">{task.status}</span>
+                  <div className="w-4 h-4 flex items-center justify-center">
                   </div>
                 </div>
+              ) : (
+                // Non-completed task - status can be changed
+                <>
+                  <button
+                    onClick={() => !isUpdating && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                    disabled={isUpdating}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
+                        <span className="capitalize">{task.status}</span>
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      </>
+                    )}
+                  </button>
+
+                  {isStatusDropdownOpen && !isUpdating && (
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                      <div className="py-1">
+                        {TASK_STATUS_OPTIONS.map((status) => (
+                          <button
+                            key={status.value}
+                            onClick={() => handleStatusChange(status.value)}
+                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.value === task.status ? 'bg-gray-50 font-medium' : ''
+                              }`}
+                          >
+                            <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
+                            <span className="capitalize">{status.label}</span>
+                            {status.value === task.status && (
+                              <span className="ml-auto text-blue-600">✓</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -370,23 +383,29 @@ export default function TaskHeader({
       </div>
 
       {showAddResultModal && task && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  Task Completed! Add Result
+                  Complete Task with Result & Attachments
                 </h2>
                 <p className="text-sm text-gray-600">
-                  Tambahkan hasil atau catatan untuk task yang telah diselesaikan.
+                  Add task result and upload any relevant attachments to complete this task.
                 </p>
               </div>
-              <AddTaskResult
+              <TaskResultWithAttachment
                 taskId={task.id.toString()}
-                currentUser={currentUser}
-                onResultAdded={handleResultAdded}
-                onCancel={handleCancelAddResult}
+                onSuccess={handleResultAdded}
               />
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleCancelAddResult}
+                  className="w-full px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

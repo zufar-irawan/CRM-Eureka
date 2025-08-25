@@ -210,15 +210,15 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
         />
         
         {isCompressing && (
-          <p className="text-sm text-blue-600 mt-1 flex items-center">
-            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-            Compressing images...
-          </p>
+          <div className="text-sm text-blue-600 mt-1 flex items-center">
+            <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2 inline-block"></span>
+            <span>Compressing images...</span>
+          </div>
         )}
 
         {files.length > 0 && (
           <div className="mt-2">
-            <p className="text-sm text-gray-600">Selected files:</p>
+            <div className="text-sm text-gray-600">Selected files:</div>
             <ul className="text-sm text-gray-500">
               {files.map((file, index) => (
                 <li key={index} className="flex justify-between items-center py-1">
@@ -243,8 +243,8 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       >
         {isUploading ? (
           <>
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-            Uploading...
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 inline-block"></span>
+            <span>Uploading...</span>
           </>
         ) : (
           <>

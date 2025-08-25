@@ -390,7 +390,6 @@ export default function DealDetailPage() {
         return (
           <DealCommentTab dealId={String(deal.id)} currentUser={currentUser} />
         );
-      case "Activity":
       case "Emails":
       case "Calls":
       case "Notes":

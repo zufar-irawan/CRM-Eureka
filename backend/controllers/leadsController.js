@@ -1,6 +1,7 @@
 import { Leads } from "../models/leads/leadsModel.js";
 import { LeadComments } from "../models/leads/leadsCommentModel.js";
 import { Tasks } from "../models/tasks/tasksModel.js";
+import { User } from "../models/usersModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
 import { Companies } from "../models/companies/companiesModel.js";
 import { Contacts } from "../models/contacts/contactsModel.js";
@@ -720,6 +721,18 @@ export const updateLeadStage = async (req, res) => {
         }
 
         await lead.update({ stage }, { transaction });
+
+        // Add a comment for the stage change
+        const user = await User.findByPk(req.userId || 1);
+        const userName = user ? user.name : 'System';
+        
+        await LeadComments.create({
+            lead_id: lead.id,
+            user_id: req.userId || 1,
+            user_name: userName,
+            message: `Stage changed from ${oldStage} to ${stage}`,
+        }, { transaction });
+
         await transaction.commit();
 
         console.log(`Lead ${lead.code} (ID: ${lead.id}) stage updated from "${oldStage}" to "${stage}"`);

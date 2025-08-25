@@ -13,8 +13,7 @@ interface TabNavigationProps {
 }
 
 const tabs: Tab[] = [
-  { name: "Activity", icon: BarChart3 },
-  { name: "Comments", icon: MessageSquare, },
+  { name: "Activity", icon: MessageSquare, },
   //{ name: "Tasks", icon: CheckSquare },
 ];
  

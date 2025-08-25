@@ -9,7 +9,7 @@ import LeadTabs from "./components/LeadTabs";
 import LeadSidebar from "./components/LeadSidebar";
 import CommentsTab from "./components/Comments/CommentTab";
 import TasksTab from "./components/Tasks/TasksTab";
-import { ActivityTab } from "./components/ActivityTab";
+//import { ActivityTab } from "./components/ActivityTab";
 import ConvertToDealModal from "../../components/ConvertToDealModal";
 import { makeAuthenticatedRequest } from "./utils/auth";
 import { API_ENDPOINTS } from "./utils/constants";
@@ -82,7 +82,7 @@ export default function LeadDetailPage() {
   }, [router]);
 
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState("Notes");
+  const [activeTab, setActiveTab] = useState("Activity");
   const [selectedStatus, setSelectedStatus] = useState("New");
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
@@ -231,12 +231,10 @@ export default function LeadDetailPage() {
     if (!lead) return null;
 
     switch (activeTab) {
-      case "Comments":
+      case "Activity":
         return <CommentsTab leadId={id} currentUser={currentUser} />;
       case "Tasks":
         return <TasksTab currentUser={currentUser} />;
-      case "Activity":
-        return <ActivityTab lead={lead} />;
       case "Emails":
         return <EmailsTab lead={lead} />;
       case "Data":

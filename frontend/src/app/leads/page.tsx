@@ -113,7 +113,7 @@ const ALL_COLUMNS = {
   email: { key: 'email', label: 'Email', default: true, sortable: true },
   mobile: { key: 'mobile', label: 'Mobile No', default: true, sortable: true },
   updated_at: { key: 'updated_at', label: 'Last Modified', default: true, sortable: false },
-  owner: { key: 'owner', label: 'Owner', default: false, sortable: true },
+  leads: { key: 'leads', label: 'Leads', default: false, sortable: true },
   title: { key: 'title', label: 'Title', default: false, sortable: true },
   first_name: { key: 'first_name', label: 'First Name', default: false, sortable: true },
   last_name: { key: 'last_name', label: 'Last Name', default: false, sortable: true },
@@ -559,8 +559,8 @@ export default function MainLeads() {
             })}
           </span>
         );
-      case 'owner':
-        return <span className="text-xs text-gray-900">{lead.owner || '-'}</span>;
+      case 'Leads':
+        return <span className="text-xs text-gray-900">{lead.Leads || '-'}</span>;
       case 'title':
         return <span className="text-xs text-gray-900">{lead.title || '-'}</span>;
       case 'first_name':
@@ -648,11 +648,11 @@ export default function MainLeads() {
                 </div>
 
                 <div className="px-4 py-3">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Owner</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Leads</p>
                   <div className="relative mt-2">
                     <input
                       type="text"
-                      placeholder="Search by owner"
+                      placeholder="Search by leads"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"

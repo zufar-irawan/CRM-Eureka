@@ -44,7 +44,6 @@ export default function CreateTaskModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch users for assignment dropdown
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -109,7 +108,7 @@ export default function CreateTaskModal({
       };
 
       const response = await makeAuthenticatedRequest(
-        "http://localhost:5000/api/tasks",
+        API_ENDPOINTS.TASKS,
         {
           method: "POST",
           headers: {

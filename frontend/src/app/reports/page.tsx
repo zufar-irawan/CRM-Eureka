@@ -39,6 +39,7 @@ interface FilterState {
   endDate: string;
   salesName: string;
   viewType: "BULANAN" | "HARIAN";
+  monthYear: string;
 }
 
 const api = axios.create({
@@ -103,6 +104,7 @@ export default function ReportsPage() {
     endDate: "",
     salesName: "",
     viewType: "BULANAN",
+    monthYear: "",
   });
 
   useEffect(() => {
@@ -118,30 +120,27 @@ export default function ReportsPage() {
         view_type: filters.viewType,
       };
 
-      if (filters.startDate) {
-        if (filters.viewType === "HARIAN") {
-          params.start_date = filters.startDate;
+      if (filters.viewType === "BULANAN") {
+        if (filters.monthYear) {
+          const [year, month] = filters.monthYear.split('-').map(Number);
+          params.year = year;
+          params.month = month;
         } else {
-          const startDate = new Date(filters.startDate);
-          params.year = startDate.getFullYear();
-          params.month = startDate.getMonth() + 1;
+          const currentDate = new Date();
+          params.year = currentDate.getFullYear();
+          params.month = currentDate.getMonth() + 1;
         }
-      }
-
-      if (filters.endDate && filters.viewType === "HARIAN") {
-        params.end_date = filters.endDate;
+      } else { // HARIAN
+        if (filters.startDate) {
+          params.start_date = filters.startDate;
+        }
+        if (filters.endDate) {
+          params.end_date = filters.endDate;
+        }
       }
 
       if (filters.salesName) {
         params.sales_name = filters.salesName;
-      }
-
-      if (!filters.startDate && !filters.endDate) {
-        const currentDate = new Date();
-        if (filters.viewType === "BULANAN") {
-          params.year = currentDate.getFullYear();
-          params.month = currentDate.getMonth() + 1;
-        }
       }
 
       console.log('API Parameters:', params);
@@ -206,6 +205,7 @@ export default function ReportsPage() {
       endDate: "",
       salesName: "",
       viewType: "BULANAN",
+      monthYear: "",
     });
     setShowFilterDropdown(false);
   };
@@ -216,7 +216,8 @@ export default function ReportsPage() {
       ...prev,
       viewType: newViewType,
       startDate: "",
-      endDate: ""
+      endDate: "",
+      monthYear: ""
     }));
   };
 
@@ -369,21 +370,31 @@ export default function ReportsPage() {
                 <div className="border-b border-gray-100 px-4 py-3">
                   <p className="text-sm font-semibold text-gray-700 mb-2">Date Range</p>
                   <div className="space-y-2">
-                    <input
-                      type="date"
-                      placeholder="Start Date"
-                      value={filters.startDate}
-                      onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    {filters.viewType === "HARIAN" && (
+                    {filters.viewType === "BULANAN" ? (
                       <input
-                        type="date"
-                        placeholder="End Date"
-                        value={filters.endDate}
-                        onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                        type="month"
+                        placeholder="Select month"
+                        value={filters.monthYear}
+                        onChange={(e) => setFilters(prev => ({ ...prev, monthYear: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
+                    ) : (
+                      <>
+                        <input
+                          type="date"
+                          placeholder="Start Date"
+                          value={filters.startDate}
+                          onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <input
+                          type="date"
+                          placeholder="End Date"
+                          value={filters.endDate}
+                          onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </>
                     )}
                   </div>
                 </div>

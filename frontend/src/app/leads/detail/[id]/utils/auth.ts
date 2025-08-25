@@ -19,12 +19,10 @@ export const getCurrentUserFromStorage = (): CurrentUser | null => {
   return null;
 };
 
-export const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
-  const token = getAuthToken();
+export const makeAuthenticatedRequest = async (url:string, options: RequestInit = {}) => {
   const headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
     ...options.headers,
   };
 
@@ -32,5 +30,6 @@ export const makeAuthenticatedRequest = async (url: string, options: RequestInit
     ...options,
     headers,
     mode: 'cors',
+    credentials: 'include',
   });
 };

@@ -100,7 +100,7 @@ export default function ActivityTable() {
                             {item.activity}
                         </div>
                         <div className="text-gray-800">{item.lead}</div>
-                        <div className="text-gray-800">{item.createdBy}</div>
+                        <div className="text-gray-800">{item.createdBy === "Uknown" ? "Unknown" : item.createdBy}</div>
                         <div className="text-right text-gray-800">{item.date}</div>
                     </div>
                 ))

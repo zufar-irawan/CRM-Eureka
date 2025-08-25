@@ -36,6 +36,11 @@ interface SortConfig {
   direction: 'asc' | 'desc';
 }
 
+interface User {
+  id: number;
+  name: string;
+}
+
 function DeleteLeadModal({
   selectedCount,
   selectedIds,
@@ -174,6 +179,7 @@ export default function MainLeads() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leadsToDelete, setLeadsToDelete] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const [userMap, setUserMap] = useState<Map<number, string>>(new Map());
 
   // Initialize visible columns with defaults
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
@@ -185,7 +191,8 @@ export default function MainLeads() {
   const stages = ["new", "contacted", "qualification", "unqualified"];
 
   useEffect(() => {
-    fetchLeads()
+    fetchLeads();
+    fetchUsers();
 
     const refreshLeads = () => {
       fetchLeads()
@@ -218,6 +225,18 @@ export default function MainLeads() {
       })
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get<{ data: User[] }>("/users");
+      if (response.data && Array.isArray(response.data.data)) {
+        const newMap = new Map(response.data.data.map((user) => [user.id, user.name]));
+        setUserMap(newMap);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
     }
   };
 
@@ -559,8 +578,9 @@ export default function MainLeads() {
             })}
           </span>
         );
-      case 'Leads':
-        return <span className="text-xs text-gray-900">{lead.Leads || '-'}</span>;
+      case 'owner':
+        const ownerName = userMap.get(lead.owner);
+        return <span className="text-xs text-gray-900">{ownerName || lead.owner || '-'}</span>;
       case 'title':
         return <span className="text-xs text-gray-900">{lead.title || '-'}</span>;
       case 'first_name':

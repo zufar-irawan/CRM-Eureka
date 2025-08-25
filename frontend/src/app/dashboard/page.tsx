@@ -81,7 +81,7 @@ export default function Dashboard() {
     const fetchAllDeals = async () => {
         try {
             const response = await axios.get('http://localhost:3000/api/deals', {
-                params: { stage_ne: 'won' }
+                params: { stage_ne: ['won', 'lost'] }
             })
 
             const data = response.data.data

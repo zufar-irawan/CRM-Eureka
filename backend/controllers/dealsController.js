@@ -506,7 +506,31 @@ export const updateDeal = async (req, res) => {
             }
         }
 
+        const changes = [];
+        for (const key in updateData) {
+            if (deal[key] !== updateData[key] && key !== 'stage') {
+                changes.push(`- ${key} from "${deal[key]}" to "${updateData[key]}"`);
+            }
+        }
+
+        if (updateData.stage && deal.stage !== updateData.stage) {
+            changes.push(`- Stage changed from "${deal.stage}" to "${updateData.stage}"`);
+        }
+
         await deal.update(updateData, { transaction });
+
+        const user = await User.findByPk(req.userId || 1);
+        const userName = user ? user.name : 'System';
+
+        if (changes.length > 0) {
+            await DealComments.create({
+                deal_id: deal.id,
+                user_id: req.userId || 1,
+                user_name: userName,
+                message: `Deal details updated:\n${changes.join('\n')}`,
+            }, { transaction });
+        }
+        
         await transaction.commit();
 
 
@@ -610,6 +634,17 @@ export const updateDealStage = async (req, res) => {
             updated_at: new Date()
         }, { transaction });
 
+        // Add a comment for the stage change
+        const user = await User.findByPk(req.userId || 1);
+        const userName = user ? user.name : 'System';
+
+        await DealComments.create({
+            deal_id: deal.id,
+            user_id: req.userId || 1,
+            user_name: userName,
+            message: `Stage changed from ${oldStage} to ${stage}`,
+        }, { transaction });
+
         await transaction.commit();
 
 
@@ -618,9 +653,9 @@ export const updateDealStage = async (req, res) => {
         res.json({
             success: true,
             message: 'Deal stage updated successfully',
-            data: { 
-                id: deal.id, 
-                code: deal.code, 
+            data: {
+                id: deal.id,
+                code: deal.code,
                 stage: deal.stage,
                 old_stage: oldStage,
                 updated_at: new Date()

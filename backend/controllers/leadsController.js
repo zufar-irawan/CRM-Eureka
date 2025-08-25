@@ -1,6 +1,7 @@
 import { Leads } from "../models/leads/leadsModel.js";
 import { LeadComments } from "../models/leads/leadsCommentModel.js";
 import { Tasks } from "../models/tasks/tasksModel.js";
+import { User } from "../models/usersModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
 import { Companies } from "../models/companies/companiesModel.js";
 import { Contacts } from "../models/contacts/contactsModel.js";
@@ -306,7 +307,8 @@ export const updateLead = async (req, res) => {
             description
         } = req.body;
 
-        await lead.update({
+        const changes = [];
+        const updatedFields = {
             owner: owner !== undefined ? owner : lead.owner,
             company: company !== undefined ? company : lead.company,
             title: title !== undefined ? title : lead.title,
@@ -330,7 +332,31 @@ export const updateLead = async (req, res) => {
             postal_code: postal_code !== undefined ? postal_code : lead.postal_code,
             country: country !== undefined ? country : lead.country,
             description: description !== undefined ? description : lead.description
-        }, { transaction });
+        };
+
+        for (const key in updatedFields) {
+            if (lead[key] !== updatedFields[key] && key !== 'stage') {
+                changes.push(`- ${key} from "${lead[key]}" to "${updatedFields[key]}"`);
+            }
+        }
+
+        if (lead.stage !== updatedFields.stage) {
+            changes.push(`${lead.stage} to ${updatedFields.stage}`);
+        }
+
+        await lead.update(updatedFields, { transaction });
+        
+        const user = await User.findByPk(req.userId || 1);
+        const userName = user ? user.name : 'System';
+
+        if (changes.length > 0) {
+            await LeadComments.create({
+                lead_id: lead.id,
+                user_id: req.userId || 1,
+                user_name: userName,
+                message: `Stage changed from ${changes.join('\n')}`,
+            }, { transaction });
+        }
 
         await transaction.commit();
 
@@ -720,6 +746,18 @@ export const updateLeadStage = async (req, res) => {
         }
 
         await lead.update({ stage }, { transaction });
+
+        // Add a comment for the stage change
+        const user = await User.findByPk(req.userId || 1);
+        const userName = user ? user.name : 'System';
+        
+        await LeadComments.create({
+            lead_id: lead.id,
+            user_id: req.userId || 1,
+            user_name: userName,
+            message: `Stage changed from ${oldStage} to ${stage}`,
+        }, { transaction });
+
         await transaction.commit();
 
         console.log(`Lead ${lead.code} (ID: ${lead.id}) stage updated from "${oldStage}" to "${stage}"`);

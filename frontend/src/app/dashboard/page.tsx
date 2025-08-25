@@ -3,6 +3,7 @@
 import Sidebar from "@/components/Sidebar"
 import dynamic from "next/dynamic"
 import ActivityTable from "./components/ActivityTable"
+import EmptySection from "./components/EmptySection"
 import useUser from "../../../hooks/useUser"
 import { useEffect, useState } from "react"
 import axios from "axios"
@@ -171,12 +172,17 @@ export default function Dashboard() {
                         ))}
                     </div>
 
-                    <div className="border rounded-3xl border-gray-300 p-8 bg-white">
-                        <p className="text-xl text-gray-900 mb-4">
-                            All Tasks
-                        </p>
+                    {/* Two sections side by side */}
+                    <div className="flex gap-6">
+                        <div className="border rounded-3xl border-gray-300 p-8 bg-white flex-1">
+                            <p className="text-xl text-gray-900 mb-4">
+                                Chart
+                            </p>
 
-                        <BarChart />
+                            <BarChart />
+                        </div>
+
+                        <EmptySection />
                     </div>
 
                     <div className="border rounded-3xl border-gray-300 p-8 bg-white">

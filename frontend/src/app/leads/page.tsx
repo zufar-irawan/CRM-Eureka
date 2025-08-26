@@ -180,6 +180,7 @@ export default function MainLeads() {
   const [leadsToDelete, setLeadsToDelete] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
   const [userMap, setUserMap] = useState<Map<number, string>>(new Map());
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
 
   // Initialize visible columns with defaults
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
@@ -189,6 +190,16 @@ export default function MainLeads() {
   });
 
   const stages = ["new", "contacted", "qualification", "unqualified"];
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+    }, 500)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [searchTerm])
 
   useEffect(() => {
     fetchLeads();
@@ -203,7 +214,7 @@ export default function MainLeads() {
     return () => {
       window.removeEventListener("lead-created", refreshLeads)
     }
-  }, [selectedStage, searchTerm]);
+  }, [selectedStage, debouncedSearch]);
 
   const fetchLeads = async () => {
     try {
@@ -212,7 +223,7 @@ export default function MainLeads() {
         params: {
           status: 0,
           ...(selectedStage ? { stage: selectedStage } : {}),
-          ...(searchTerm ? { search: searchTerm } : {}),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
         }
       });
       setOriginalLeads(response.data.leads);

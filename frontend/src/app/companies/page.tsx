@@ -56,25 +56,25 @@ export default function CompaniesList() {
     const router = useRouter();
 
     useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const isAuthenticated = await checkAuthStatus();
-        if (!isAuthenticated) {
-          Swal.fire({
-            icon: "info",
-            title: "You're not logged in",
-            text: "Make sure to login first!"
-          });
-          router.replace('/login');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        router.replace('/login');
-      }
-    };
+        const checkAuth = async () => {
+            try {
+                const isAuthenticated = await checkAuthStatus();
+                if (!isAuthenticated) {
+                    Swal.fire({
+                        icon: "info",
+                        title: "You're not logged in",
+                        text: "Make sure to login first!"
+                    });
+                    router.replace('/login');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                router.replace('/login');
+            }
+        };
 
-    checkAuth();
-  }, [router]);
+        checkAuth();
+    }, [router]);
 
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -84,6 +84,7 @@ export default function CompaniesList() {
     const [currentLead, setCurrentLead] = useState<any>(null);
     const [showColumnDropdown, setShowColumnDropdown] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
 
     const [visibleColumns, setVisibleColumns] = useState<string[]>(
         allColumns.map(col => col.key)
@@ -117,16 +118,13 @@ export default function CompaniesList() {
     }
 
     useEffect(() => {
-        const fetchFilteredData = async () => {
-            await fetchData({
-                setData,
-                setLoading,
-                url: "/companies/",
-                searchTerm
-            });
-        };
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm)
+        }, 500)
 
-        fetchFilteredData();
+        return () => {
+            clearTimeout(handler)
+        }
     }, [searchTerm]);
 
     return (
@@ -234,7 +232,7 @@ export default function CompaniesList() {
                     </div>
                 </div>
 
-                <DesktopTable pathname="/companies/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} searchTerm={searchTerm} />
+                <DesktopTable pathname="/companies/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} searchTerm={debouncedSearch} />
 
                 <MobileCards pathname="/companies/" fields={allFields} visibleFields={visibleColumns} />
 

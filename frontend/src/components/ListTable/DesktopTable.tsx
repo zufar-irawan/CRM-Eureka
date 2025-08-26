@@ -230,8 +230,8 @@ export default function DesktopTable({
                 <th
                   key={col.key}
                   className={`group px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${col.sortable !== false
-                      ? "cursor-pointer hover:bg-gray-100 select-none"
-                      : ""
+                    ? "cursor-pointer hover:bg-gray-100 select-none"
+                    : ""
                     }`}
                   onClick={() => col.sortable !== false && handleSort(col.key)}
                 >
@@ -313,8 +313,8 @@ export default function DesktopTable({
 
                         <div
                           className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${data.indexOf(row) >= data.length - 2
-                              ? "bottom-full mb-1"
-                              : "top-full mt-1"
+                            ? "bottom-full mb-1"
+                            : "top-full mt-1"
                             }`}
                         >
                           <div className="py-1">

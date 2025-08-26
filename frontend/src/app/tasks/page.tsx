@@ -116,6 +116,7 @@ export default function TasksList() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
 
   const status = ["new", "pending", "completed", "overdue", "cancelled"];
   const categories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
@@ -232,20 +233,10 @@ export default function TasksList() {
   }
 
   useEffect(() => {
-    const fetchFilteredData = async () => {
-      await fetchData({
-        setData,
-        setLoading,
-        url: "/tasks/",
-        selectedStatus,
-        selectedCategory,
-        selectedPriority,
-        searchTerm
-      });
-    };
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500)
 
-    fetchFilteredData();
-  }, [selectedStatus, selectedCategory, selectedPriority, searchTerm]); // Dependency array untuk memantau perubahan filter
+    return () => clearTimeout(handler)
+  }, [searchTerm]); // Dependency array untuk memantau perubahan filter
 
   return (
     <main className="p-4 overflow-visible lg:p-6 bg-white pb-6 relative">
@@ -426,7 +417,7 @@ export default function TasksList() {
           selectedStatus={selectedStatus}
           selectedCategory={selectedCategory}
           selectedPriority={selectedPriority}
-          searchTerm={searchTerm}
+          searchTerm={debouncedSearch}
         />
 
         <MobileCards

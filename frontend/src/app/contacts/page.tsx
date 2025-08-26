@@ -101,21 +101,14 @@ export default function CompaniesList() {
   const [currentLead, setCurrentLead] = useState<any>(null);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
 
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
     allColumns.map(col => col.key)
   )
 
-  const [visiblieFields, setVisibleFields] = useState<string[]>(
-    allFields.map(col => col.key)
-  )
-
   const toggleColumn = (key: string) => {
     setVisibleColumns(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    )
-
-    setVisibleFields(prev =>
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     )
   }
@@ -134,17 +127,27 @@ export default function CompaniesList() {
   }
 
   useEffect(() => {
-    const fetchFilteredData = async () => {
-      await fetchData({
-        setData,
-        setLoading,
-        url: "/contacts/",
-        searchTerm
-      });
-    };
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+    }, 500)
 
-    fetchFilteredData();
-  }, [searchTerm]); // Dependency array untuk memantau perubahan filter
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [searchTerm])
+
+  // useEffect(() => {
+  //   const fetchFilteredData = async () => {
+  //     await fetchData({
+  //       setData,
+  //       setLoading,
+  //       url: "/contacts/",
+  //       searchTerm: debouncedSearch
+  //     });
+  //   };
+
+  //   fetchFilteredData();
+  // }, [debouncedSearch]);
 
   return (
     <main className="p-4 overflow-visible lg:p-6 bg-white pb-6 relative">
@@ -250,7 +253,7 @@ export default function CompaniesList() {
           </div>
         </div>
 
-        <DesktopTable pathname="/contacts/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} searchTerm={searchTerm} />
+        <DesktopTable pathname="/contacts/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} searchTerm={debouncedSearch} />
 
         <MobileCards pathname="/contacts/" fields={allFields} visibleFields={visibleColumns} />
 

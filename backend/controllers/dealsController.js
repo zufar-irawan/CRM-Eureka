@@ -68,6 +68,7 @@ export const getAllDeals = async (req, res) => {
 
         const offset = (page - 1) * limit;
         const whereConditions = {};
+        const whereLead = {}
 
         if (stage) {
             whereConditions.stage = stage;
@@ -81,10 +82,10 @@ export const getAllDeals = async (req, res) => {
         if (search) {
             whereConditions[Op.or] = [
                 { title: { [Op.like]: `%${search}%` } },
-                { stage: { [Op.like]: `%${search}%` } },
-                { fullname: { [Op.like]: `%${search}%` } },
                 { code: { [Op.like]: `%${search}%` } }
             ];
+
+            whereLead.fullname = { [Op.like]: `%${search}` }
         }
 
         const deals = await Deals.findAndCountAll({
@@ -93,6 +94,7 @@ export const getAllDeals = async (req, res) => {
                 {
                     model: Leads,
                     as: 'lead',
+                    where: Object.keys(whereLead).length ? whereLead : undefined,
                     attributes: ['id', 'code', 'company', 'fullname', 'email', 'phone'],
                     required: false
                 },
@@ -288,11 +290,11 @@ export const createDeal = async (req, res) => {
 
         if (lead_id) {
             const leadWhereCondition = isNaN(lead_id) ? { code: lead_id } : { id: parseInt(lead_id) };
-            const lead = await Leads.findOne({ 
+            const lead = await Leads.findOne({
                 where: leadWhereCondition,
-                transaction 
+                transaction
             });
-            
+
             if (!lead) {
                 await transaction.rollback();
                 return res.status(404).json({
@@ -439,21 +441,21 @@ export const createDeal = async (req, res) => {
 // PUT /api/deals/:id - Update deal with KPI integration
 export const updateDeal = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { id } = req.params;
         const updateData = { ...req.body };
-        
+
         updateData.updated_at = new Date();
 
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
-        const deal = await Deals.findOne({ 
+        const deal = await Deals.findOne({
             where: whereCondition,
             transaction,
             lock: true
         });
-        
+
         if (!deal) {
             await transaction.rollback();
             return res.status(404).json({
@@ -530,7 +532,7 @@ export const updateDeal = async (req, res) => {
                 message: `Deal details updated:\n${changes.join('\n')}`,
             }, { transaction });
         }
-        
+
         await transaction.commit();
 
 
@@ -583,7 +585,7 @@ export const updateDeal = async (req, res) => {
 // PUT /api/deals/:id/updateStage - Update deal stage/status with KPI integration
 export const updateDealStage = async (req, res) => {
     const transaction = await sequelize.transaction();
-    
+
     try {
         const { id } = req.params;
         const { stage } = req.body;
@@ -599,12 +601,12 @@ export const updateDealStage = async (req, res) => {
 
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
-        const deal = await Deals.findOne({ 
+        const deal = await Deals.findOne({
             where: whereCondition,
             transaction,
             lock: true
         });
-        
+
         if (!deal) {
             await transaction.rollback();
             return res.status(404).json({
@@ -614,7 +616,7 @@ export const updateDealStage = async (req, res) => {
         }
 
         const oldStage = deal.stage;
-        
+
         if (oldStage === stage) {
             await transaction.rollback();
             return res.status(200).json({
@@ -777,7 +779,7 @@ export const createDealFromLead = async (req, res) => {
         }, { transaction });
 
         await transaction.commit();
-        
+
         const completeDeal = await Deals.findByPk(deal.id, {
             include: [
                 {
@@ -852,7 +854,7 @@ export const deleteDeal = async (req, res) => {
 export const getDealComments = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         let dealId;
         if (isNaN(id)) {
             const deal = await Deals.findOne({ where: { code: id } });
@@ -912,7 +914,7 @@ export const addDealComment = async (req, res) => {
 
     try {
         const { id } = req.params;
-        
+
         let dealId;
         if (isNaN(id)) {
             const deal = await Deals.findOne({ where: { code: id }, transaction });
@@ -1019,7 +1021,7 @@ export const addDealComment = async (req, res) => {
 export const getDealCommentThread = async (req, res) => {
     try {
         const { id, commentId } = req.params;
-        
+
         let dealId;
         if (isNaN(id)) {
             const deal = await Deals.findOne({ where: { code: id } });
@@ -1033,7 +1035,7 @@ export const getDealCommentThread = async (req, res) => {
         } else {
             dealId = parseInt(id);
         }
-        
+
         const commentIdInt = parseInt(commentId);
 
         if (isNaN(commentIdInt)) {
@@ -1112,7 +1114,7 @@ export const deleteDealComment = async (req, res) => {
 
     try {
         const { id, commentId } = req.params;
-        
+
         let dealId;
         if (isNaN(id)) {
             const deal = await Deals.findOne({ where: { code: id }, transaction });
@@ -1127,7 +1129,7 @@ export const deleteDealComment = async (req, res) => {
         } else {
             dealId = parseInt(id);
         }
-        
+
         const commentIdInt = parseInt(commentId);
 
         if (isNaN(commentIdInt)) {
@@ -1156,7 +1158,7 @@ export const deleteDealComment = async (req, res) => {
 
         await comment.destroy({ transaction });
         await transaction.commit();
-        
+
         res.json({
             success: true,
             message: 'Comment deleted successfully'

@@ -165,6 +165,7 @@ export default function Deals() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
   const [originalLeads, setOriginalLeads] = useState<any[]>([]);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
   const openEditModal = useDealEditStore((state) => state.openModal)
 
   const stages = ["proposal", "negotiation", "won", "lost"];
@@ -174,6 +175,16 @@ export default function Deals() {
       .filter(([_, column]) => column.default)
       .map(([key, _]) => key);
   });
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+    }, 500)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [searchTerm])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -198,7 +209,7 @@ export default function Deals() {
       document.removeEventListener("mousedown", handleClickOutside)
       window.removeEventListener("deals-add", handleRefresh)
     };
-  }, [selectedStage, searchTerm]);
+  }, [selectedStage, debouncedSearch]);
 
   const fetchDeals = async () => {
     try {
@@ -206,7 +217,7 @@ export default function Deals() {
       const response = await api.get("/deals/", {
         params: {
           ...(selectedStage ? { stage: selectedStage } : {}),
-          ...(searchTerm ? { search: searchTerm } : {}),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
         }
       })
 
@@ -557,7 +568,7 @@ export default function Deals() {
                       <div className="relative mt-2">
                         <input
                           type="text"
-                          placeholder="Search deals"
+                          placeholder="Search deals by title and code"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"

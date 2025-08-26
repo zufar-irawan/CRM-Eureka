@@ -1,30 +1,20 @@
 "use client"
 
-import {
-  ChevronLeft,
-  ChevronRight,
-  Edit,
-  Trash2,
-  MoreHorizontal,
-  Building2,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  UserCircle,
-  ChevronDown,
-  Bell,
-  BarChart3,
-  Users,
-  Handshake,
-  CheckSquare,
-  FileText,
-  FileSignature,
-  LineChart
-} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { 
+  Trash2, 
+  ArrowLeft, 
+  Edit, 
+  Building2, 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin,
+  Handshake,
+  Users,
+  Plus
+} from 'lucide-react';
 import Swal from 'sweetalert2';
 import { checkAuthStatus } from '../../../../../utils/auth';
 
@@ -56,6 +46,12 @@ interface Company {
 
 const CompanyDetailPage = () => {
   const router = useRouter();
+  const params = useParams();
+  const companyId = params.id;
+  
+  const [company, setCompany] = useState<Company | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -74,41 +70,21 @@ const CompanyDetailPage = () => {
         router.replace('/login');
       }
     };
+
     checkAuth();
   }, [router]);
-
-  const params = useParams();
-  const companyId = params.id;
-  const [company, setCompany] = useState<Company | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'deals' | 'contacts'>('deals');
 
   useEffect(() => {
     const fetchCompany = async () => {
       try {
         setLoading(true);
-        console.log('Fetching company with ID:', companyId);
-
         const response = await fetch(`/api/companies/${companyId}`);
-        console.log('Response status:', response.status);
-
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP Error: ${response.status}`);
+          throw new Error('Failed to fetch company');
         }
-
         const data = await response.json();
-        console.log('API Response:', data);
-
-        if (data.success) {
-          console.log('Company data:', data.data);
-          setCompany(data.data);
-        } else {
-          throw new Error(data.message || 'Failed to fetch company');
-        }
+        setCompany(data.data);
       } catch (err) {
-        console.error('Error fetching company:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
@@ -120,27 +96,110 @@ const CompanyDetailPage = () => {
     }
   }, [companyId]);
 
+  const handleDeleteCompany = async () => {
+    if (!company) return;
+
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You won't be able to revert this! This will delete ${company.name} and all associated data.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/api/companies/${companyId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete company');
+        }
+
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Company has been deleted successfully.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        router.push('/companies');
+      } catch (error) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to delete company. Please try again.',
+          icon: 'error'
+        });
+      }
+    }
+  };
+
+  const handleEditCompany = () => {
+    router.push(`/companies/${companyId}/edit`);
+  };
+
+  const handleCreateDeal = () => {
+    router.push(`/deals/create?company_id=${companyId}`);
+  };
+
+  const handleCreateContact = () => {
+    router.push(`/contacts/create?company_id=${companyId}`);
+  };
+
+  const handleGoBack = () => {
+    router.back();
+  };
+
+  const getStageColor = (stage: string) => {
+    switch (stage.toLowerCase()) {
+      case 'prospecting':
+        return 'bg-slate-100 text-slate-700';
+      case 'qualification':
+        return 'bg-blue-50 text-blue-700';
+      case 'proposal':
+        return 'bg-amber-50 text-amber-700';
+      case 'negotiation':
+        return 'bg-orange-50 text-orange-700';
+      case 'closed won':
+        return 'bg-green-50 text-green-700';
+      case 'closed lost':
+        return 'bg-red-50 text-red-700';
+      default:
+        return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-gray-50 items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading company data...</p>
-        </div>
+      <div className="flex min-h-screen bg-slate-50 items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen bg-gray-50 items-center justify-center">
+      <div className="flex min-h-screen bg-slate-50 items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 mb-2">Error: {error}</div>
+          <div className="text-red-600 mb-3">{error}</div>
           <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            onClick={handleGoBack}
+            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
           >
-            Retry
+            Go Back
           </button>
         </div>
       </div>
@@ -149,317 +208,265 @@ const CompanyDetailPage = () => {
 
   if (!company) {
     return (
-      <div className="flex min-h-screen bg-gray-50 items-center justify-center">
+      <div className="flex min-h-screen bg-slate-50 items-center justify-center">
         <div className="text-center">
-          <div>Company not found</div>
+          <div className="mb-3">Company not found</div>
+          <button
+            onClick={handleGoBack}
+            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+          >
+            Go Back
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar - Company Details */}
-      <div className="w-80 bg-white shadow-lg border-r border-gray-200 flex flex-col h-screen">
-        {/* Company Header */}
-        <div className="p-4 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-blue-600" />
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleGoBack}
+                className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold text-slate-900">{company.name}</h1>
+                <p className="text-sm text-slate-600">Company Details</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">
-                {company.name || 'Unnamed Company'}
-              </h1>
-            </div>
-          </div>
-          <button className="w-full px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center space-x-2 text-sm">
-            <Trash2 className="w-3 h-3" />
-            <span>Delete</span>
-          </button>
-        </div>
-
-        {/* Details Section */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="px-4 py-2 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-            <h2 className="text-base font-semibold text-gray-900">Details</h2>
-            <button className="text-gray-400 hover:text-gray-600">
-              <Edit className="w-4 h-4" />
+            <button
+              onClick={handleDeleteCompany}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
             </button>
-          </div>
-          <div className="p-4 flex-1 overflow-hidden">
-            <div className="space-y-3 h-full">
-              {/* Row 1 - Company Name */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Company Name
-                </label>
-                <p className="text-xs text-gray-900 py-1">
-                  {company.name}
-                </p>
-              </div>
-
-              {/* Row 2 - Full width for email */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                {company.email ? (
-                  <p className="text-xs text-blue-600 py-1 hover:underline cursor-pointer break-all">
-                    {company.email}
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-500 py-1 border-b border-dashed border-gray-300 cursor-pointer hover:text-gray-700">
-                    Add Email...
-                  </p>
-                )}
-              </div>
-
-              {/* Row 3 - Full width for phone */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Phone
-                </label>
-                {company.phone ? (
-                  <div className="flex items-center space-x-1">
-                    <p className="text-xs text-gray-900 py-1">
-                      {company.phone}
-                    </p>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <ChevronDown className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-500 py-1 border-b border-dashed border-gray-300 cursor-pointer hover:text-gray-700">
-                    Add Phone...
-                  </p>
-                )}
-              </div>
-
-              {/* Row 4 - Full width for address */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Address
-                </label>
-                {company.address ? (
-                  <p className="text-xs text-gray-900 py-1">
-                    {company.address}
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-500 py-1 border-b border-dashed border-gray-300 cursor-pointer hover:text-gray-700">
-                    Add Address...
-                  </p>
-                )}
-              </div>
-
-
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content - Deals/Contacts Section */}
-      <div className="flex-1 p-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {/* Tab Navigation */}
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('deals')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'deals'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } transition-colors`}
-              >
-                <div className="flex items-center">
-                  <Handshake className="w-4 h-4 mr-2" />
-                  Deals
-                  <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                    {company?.deals?.length || 0}
-                  </span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('contacts')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'contacts'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } transition-colors`}
-              >
-                <div className="flex items-center">
-                  <Users className="w-4 h-4 mr-2" />
-                  Contacts
-                  <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                    {company?.contacts?.length || 0}
-                  </span>
-                </div>
-              </button>
-            </nav>
+      <div className="p-4 space-y-4">
+        
+        {/* Company Details */}
+        <div className="bg-white rounded-lg border border-slate-200">
+          <div className="flex items-center justify-between p-3 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-slate-500" />
+              <h2 className="font-medium text-slate-900">Company Details</h2>
+            </div>
+            <button
+              onClick={handleEditCompany}
+              className="flex items-center gap-1 px-2 py-1 text-slate-600 hover:bg-slate-50 rounded text-sm transition-colors"
+            >
+              <Edit className="w-3.5 h-3.5" />
+              Edit
+            </button>
           </div>
 
-          {/* Tab Content */}
-          {activeTab === 'deals' ? (
-            // Deals Tab Content
-            <>
-              {company.deals && company.deals.length > 0 ? (
-                <div>
-                  <table className="w-full table-fixed">
-                    {/* Table Header */}
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="w-[30%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Title
-                        </th>
-                        <th className="w-[15%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Value
-                        </th>
-                        <th className="w-[15%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Stage
-                        </th>
-                        <th className="w-[20%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Created
-                        </th>
-                        <th className="w-[20%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Updated
-                        </th>
-                      </tr>
-                    </thead>
+          <div className="p-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div>
+                <div className="text-slate-500 text-xs font-medium mb-1">Company Name</div>
+                <div className="text-slate-900">{company.name}</div>
+              </div>
+              <div>
+                <div className="text-slate-500 text-xs font-medium mb-1">Email</div>
+                <div className={company.email ? "text-blue-600 hover:underline cursor-pointer" : "text-slate-400"}>
+                  {company.email || "Not specified"}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-500 text-xs font-medium mb-1">Phone</div>
+                <div className={company.phone ? "text-slate-900" : "text-slate-400"}>
+                  {company.phone || "Not specified"}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-500 text-xs font-medium mb-1">Address</div>
+                <div className={company.address ? "text-slate-900" : "text-slate-400"}>
+                  {company.address || "Not specified"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                    {/* Table Body */}
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {company.deals.map((deal) => (
-                        <tr key={deal.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-3 py-3">
-                            <span className="text-xs font-medium text-gray-900 truncate">
-                              {deal.title}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className="text-xs font-semibold text-gray-900">
-                              {deal.value.toLocaleString()}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              <div className="w-1 h-1 bg-yellow-500 rounded-full mr-1"></div>
-                              {deal.stage}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className="text-xs text-gray-500">
-                              {new Date(deal.created_at).toLocaleDateString()}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className="text-xs text-gray-500">
-                              {new Date(deal.updated_at).toLocaleDateString()}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Handshake className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No deals</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Get started by creating a new deal for this company.
-                  </p>
-                </div>
-              )}
-            </>
+        {/* Deals */}
+        <div className="bg-white rounded-lg border border-slate-200">
+          <div className="flex items-center justify-between p-3 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <Handshake className="w-4 h-4 text-slate-500" />
+              <h2 className="font-medium text-slate-900">
+                Deals ({company.deals?.length || 0})
+              </h2>
+            </div>
+            <button
+              onClick={handleCreateDeal}
+              className="flex items-center gap-1 px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Deal
+            </button>
+          </div>
+
+          {company.deals && company.deals.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left p-3 font-medium text-slate-700">Title</th>
+                    <th className="text-left p-3 font-medium text-slate-700">Value</th>
+                    <th className="text-left p-3 font-medium text-slate-700">Stage</th>
+                    <th className="text-left p-3 font-medium text-slate-700">Created</th>
+                    <th className="text-left p-3 font-medium text-slate-700">Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {company.deals.map((deal) => (
+                    <tr key={deal.id} className="border-b border-slate-100 hover:bg-slate-50">
+                      <td className="p-3">
+                        <div className="font-medium text-slate-900">{deal.title}</div>
+                      </td>
+                      <td className="p-3">
+                        <div className="font-semibold text-slate-900">{formatCurrency(deal.value)}</div>
+                      </td>
+                      <td className="p-3">
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStageColor(deal.stage)}`}>
+                          <div className="w-1 h-1 bg-current rounded-full"></div>
+                          {deal.stage}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <div className="text-slate-600">
+                          {new Date(deal.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="text-slate-600">
+                          {new Date(deal.updated_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
-            // Contacts Tab Content
-            <>
-              {company.contacts && company.contacts.length > 0 ? (
-                <div>
-                  <table className="w-full table-fixed">
-                    {/* Table Header */}
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="w-[25%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="w-[25%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="w-[15%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Phone
-                        </th>
-                        <th className="w-[15%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Position
-                        </th>
-                        <th className="w-[20%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Created
-                        </th>
-                      </tr>
-                    </thead>
-
-                    {/* Table Body */}
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {company.contacts.map((contact) => (
-                        <tr key={contact.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-3 py-3">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mr-3">
-                                <User className="w-4 h-4 text-gray-600" />
-                              </div>
-                              <span className="text-xs font-medium text-gray-900 truncate">
-                                {contact.name}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-3">
-                            {contact.email ? (
-                              <span className="text-xs text-blue-600 hover:underline cursor-pointer truncate">
-                                {contact.email}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3">
-                            {contact.phone ? (
-                              <span className="text-xs text-gray-900 truncate">
-                                {contact.phone}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3">
-                            {contact.position ? (
-                              <span className="text-xs text-gray-900 truncate">
-                                {contact.position}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3">
-                            <span className="text-xs text-gray-500">
-                              {new Date(contact.created_at).toLocaleDateString()}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Users className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No contacts</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Get started by creating a new contact for this company.
-                  </p>
-                </div>
-              )}
-            </>
+            <div className="text-center py-8">
+              <Handshake className="mx-auto h-8 w-8 text-slate-400 mb-2" />
+              <div className="text-slate-600 mb-2">No deals yet</div>
+              <button
+                onClick={handleCreateDeal}
+                className="text-blue-600 text-sm hover:underline"
+              >
+                Create the first deal
+              </button>
+            </div>
           )}
         </div>
+
+        {/* Contacts */}
+        <div className="bg-white rounded-lg border border-slate-200">
+          <div className="flex items-center justify-between p-3 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-slate-500" />
+              <h2 className="font-medium text-slate-900">
+                Contacts ({company.contacts?.length || 0})
+              </h2>
+            </div>
+            <button
+              onClick={handleCreateContact}
+              className="flex items-center gap-1 px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Contact
+            </button>
+          </div>
+
+          {company.contacts && company.contacts.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left p-3 font-medium text-slate-700">Name</th>
+                    <th className="text-left p-3 font-medium text-slate-700">Email</th>
+                    <th className="text-left p-3 font-medium text-slate-700">Phone</th>
+                    <th className="text-left p-3 font-medium text-slate-700">Position</th>
+                    <th className="text-left p-3 font-medium text-slate-700">Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {company.contacts.map((contact) => (
+                    <tr 
+                      key={contact.id} 
+                      className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
+                      onClick={() => router.push(`/contacts/${contact.id}`)}
+                    >
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                            <User className="w-4 h-4 text-slate-600" />
+                          </div>
+                          <div className="font-medium text-slate-900">{contact.name}</div>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className={contact.email ? "text-blue-600 hover:underline" : "text-slate-400"}>
+                          {contact.email || "Not specified"}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className={contact.phone ? "text-slate-900" : "text-slate-400"}>
+                          {contact.phone || "Not specified"}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className={contact.position ? "text-slate-900" : "text-slate-400"}>
+                          {contact.position || "Not specified"}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="text-slate-600">
+                          {new Date(contact.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="mx-auto h-8 w-8 text-slate-400 mb-2" />
+              <div className="text-slate-600 mb-2">No contacts yet</div>
+              <button
+                onClick={handleCreateContact}
+                className="text-blue-600 text-sm hover:underline"
+              >
+                Create the first contact
+              </button>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

@@ -769,10 +769,25 @@ export const getTaskResults = async (req, res) => {
       order: [['result_date', 'DESC']]
     });
 
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const resultsWithAttachmentUrls = results.map(result => {
+      const resultJSON = result.toJSON();
+      if (resultJSON.attachments && resultJSON.attachments.length > 0) {
+        resultJSON.attachments = resultJSON.attachments.map(attachment => {
+          return {
+            ...attachment,
+            download_url: `${baseUrl}/api/tasks/attachments/${attachment.id}/download`,
+            view_url: attachment.file_type === 'image' ? `${baseUrl}/api/tasks/attachments/${attachment.id}/view` : null
+          };
+        });
+      }
+      return resultJSON;
+    });
+
     res.status(200).json({
       success: true,
-      data: results,
-      message: `Found ${results.length} task results`
+      data: resultsWithAttachmentUrls,
+      message: `Found ${resultsWithAttachmentUrls.length} task results`
     });
   } catch (error) {
     console.error('Error fetching task results:', error);
@@ -1333,12 +1348,13 @@ export const getTaskAttachments = async (req, res) => {
     });
 
     // Add download and view URLs
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const attachmentsWithUrls = attachments.map(attachment => {
       const attachmentData = attachment.toJSON();
       return {
         ...attachmentData,
-        download_url: `/api/tasks/attachments/${attachment.id}/download`,
-        view_url: attachment.file_type === 'image' ? `/api/tasks/attachments/${attachment.id}/view` : null
+        download_url: `${baseUrl}/api/tasks/attachments/${attachment.id}/download`,
+        view_url: attachment.file_type === 'image' ? `${baseUrl}/api/tasks/attachments/${attachment.id}/view` : null
       };
     });
 

@@ -1,25 +1,12 @@
 import { useState, useCallback } from 'react';
 import { makeAuthenticatedRequest } from '../utils/auth';
 import { TASK_API_ENDPOINTS } from '../utils/constants';
-
-interface TaskResult {
-  id: string | number;
-  task_id: number;
-  result_text: string;
-  result_type: string;
-  result_date: string;
-  created_by: number | null;
-  created_by_name?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { TaskResult, TaskAttachment } from '../types';
 
 export function useTaskResults(taskId?: string | string[]) {
   const [results, setResults] = useState<TaskResult[]>([]);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [resultsError, setResultsError] = useState<string | null>(null);
-
-  // Normalize taskId to string
   const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
 
   const fetchResults = useCallback(async () => {
@@ -39,11 +26,9 @@ export function useTaskResults(taskId?: string | string[]) {
       }
       
       const data = await response.json();
-      
-      // Handle different response formats
       const resultsData = data.success ? data.data : data;
       const resultsArray = Array.isArray(resultsData) ? resultsData : [];
-      
+
       setResults(resultsArray);
     } catch (err: any) {
       console.error('Error fetching results:', err);
@@ -73,8 +58,6 @@ export function useTaskResults(taskId?: string | string[]) {
         
         const data = await response.json();
         const resultData = data.success ? data.data : data;
-        
-        // Add to current results
         setResults(prev => [...prev, resultData]);
         
         return resultData;

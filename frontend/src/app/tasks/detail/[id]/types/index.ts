@@ -41,6 +41,7 @@ export interface TaskResult {
   created_by_name?: string;
   created_at: string;
   updated_at: string;
+  attachments?: TaskAttachment[];
 }
 export interface TaskAttachment {
   id: number;

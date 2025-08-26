@@ -74,7 +74,6 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
         <div className="mb-6">
           <TaskResultWithAttachment
             taskId={taskId as string}
-            currentUser={currentUser}
             onSuccess={handleResultAdded}
           />
         </div>
@@ -118,45 +117,20 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
       ) : (
         /* Results List */
         <div className="space-y-4">
-          {resultsArray.map((r) => {
-            const mappedResult: TaskResult = {
-              id: r.id,
-              task_id: r.task_id,
-              result_text: r.result_text,
-              result_type: r.result_type as 'email' | 'meeting' | 'call' | 'visit' | 'note',
-              result_date: r.result_date,
-              created_by: r.created_by,
-              created_by_name: r.created_by_name,
-              created_at: r.created_at,
-              updated_at: r.updated_at,
-            };
-            return (
+          {resultsArray.map((result) => (
               <TaskResultItem
-                key={mappedResult.id}
-                result={mappedResult}
+                key={result.id}
+                result={result}
                 currentUser={currentUser}
                 onUpdate={handleResultUpdated}
                 onDelete={handleResultDeleted}
+                attachments={result.attachments || []}
               />
-            );
-          })}
+            ))}
         </div>
       )}
 
-      {/* Footer Action */}
-      {!showAddResult && resultsArray.length > 0 && (
-        <div className="flex items-center justify-center mt-8 pt-6 border-t border-gray-200">
-          <button
-            onClick={() => setShowAddResult(true)}
-            className="flex items-center space-x-2 px-6 py-3 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            <FileText className="w-4 h-4" />
-            <span>Add Result</span>
-          </button>
-        </div>
-      )}
-
-      {/* Footer Stats */}
+      {/* Footer Stats - Only show if there are results */}
       {resultsArray.length > 0 && (
         <div className="mt-8 pt-4 border-t border-gray-200 text-center">
           <p className="text-xs text-gray-500">

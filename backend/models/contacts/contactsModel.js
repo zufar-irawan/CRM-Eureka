@@ -16,6 +16,14 @@ export const Contacts = sequelize.define('Contacts', {
             key: 'id'
         }
     },
+    lead_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'leads',
+            key: 'id'
+        }
+    },
     name: {
         type: DataTypes.STRING(255),
         allowNull: true

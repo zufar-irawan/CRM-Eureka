@@ -554,6 +554,7 @@ export const convertLead = async (req, res) => {
                 } else {
                     // Create new contact
                     const newContact = await Contacts.create({
+                        lead_id: lead.id,
                         company_id: companyId,
                         name: contactName,
                         email: lead.email,

@@ -239,6 +239,13 @@ export const setupAssociations = () => {
         onUpdate: 'CASCADE'
     });
     
+    Contacts.belongsTo(Leads, {
+        foreignKey: 'lead_id',
+        as: 'lead',
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE'
+    });
+
     // User to KPI Daily associations
     User.hasMany(SalesKpiDaily, {
         foreignKey: 'sales_id',

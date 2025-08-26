@@ -94,7 +94,6 @@ export const getAllDeals = async (req, res) => {
                 {
                     model: Leads,
                     as: 'lead',
-                    where: Object.keys(whereLead).length ? whereLead : undefined,
                     attributes: ['id', 'code', 'company', 'fullname', 'email', 'phone'],
                     required: false
                 },

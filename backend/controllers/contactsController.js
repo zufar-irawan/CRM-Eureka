@@ -1,6 +1,9 @@
 import { Contacts } from "../models/contacts/contactsModel.js";
 import { Companies } from "../models/companies/companiesModel.js";
 import { Deals } from "../models/deals/dealsModel.js";
+import { Tasks } from "../models/tasks/tasksModel.js";
+import { Leads } from "../models/leads/leadsModel.js";
+import { User } from "../models/usersModel.js";
 import { Op, Transaction } from "sequelize";
 import { sequelize } from '../config/db.js';
 
@@ -423,6 +426,84 @@ export const getContactsByCompany = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Error fetching contacts",
+            error: error.message
+        });
+    }
+};
+
+export const getTasksByContact = async (req, res) => {
+    try {
+        const contactId = parseInt(req.params.id, 10);
+        if (isNaN(contactId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid contact ID"
+            });
+        }
+
+        const contact = await Contacts.findByPk(contactId, {
+            attributes: ['id', 'lead_id']
+        });
+
+        if (!contact) {
+            return res.status(404).json({
+                success: false,
+                message: "Contact not found"
+            });
+        }
+
+        if (!contact.lead_id) {
+            return res.status(200).json({
+                success: true,
+                message: "Contact is not associated with a lead, no tasks found.",
+                data: []
+            });
+        }
+
+        const tasks = await Tasks.findAll({
+            where: { lead_id: contact.lead_id },
+            include: [
+                {
+                    model: User,
+                    as: 'assignee',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: User,
+                    as: 'creator',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: Leads,
+                    as: 'lead',
+                    attributes: ['id', 'code', 'company', 'fullname'],
+                    required: false
+                }
+            ],
+            order: [['created_at', 'DESC']]
+        });
+        
+        const transformedTasks = tasks.map(task => {
+            const taskData = task.toJSON();
+            return {
+                ...taskData,
+                assigned_user_name: taskData.assignee ? taskData.assignee.name : 'Unassigned',
+                created_by_name: taskData.creator ? taskData.creator.name : 'Unknown',
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: transformedTasks
+        });
+
+    } catch (error) {
+        console.error('Error fetching tasks by contact:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching tasks",
             error: error.message
         });
     }

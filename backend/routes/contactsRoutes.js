@@ -4,8 +4,9 @@ import {
     getContactById, 
     getContactsByCompany, 
     createContact, 
-    updateContact, 
-    deleteContact 
+    updateContact,
+    deleteContact,
+    getTasksByContact
 } from '../controllers/contactsController.js';
 
 const router = express.Router();
@@ -15,4 +16,5 @@ router.post('/', createContact);
 router.put('/:id', updateContact);
 router.delete('/:id', deleteContact);
 router.get('/company/:companyId', getContactsByCompany);
+router.get('/:id/tasks', getTasksByContact);
 export default router;

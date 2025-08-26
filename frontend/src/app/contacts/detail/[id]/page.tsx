@@ -135,42 +135,29 @@ const ContactDetailPage = () => {
 
   useEffect(() => {
     const fetchTasks = async () => {
+      if (!contactId) return;
+
       try {
         setTasksLoading(true);
-        // Use the new contact tasks endpoint
         const response = await fetch(`/api/contacts/${contactId}/tasks`);
         
-        if (response.ok) {
-          const data = await response.json();
-          setTasks(data.data || []);
-        } else {
-          // Fallback to search method if endpoint doesn't exist yet
-          if (contact) {
-            const searchQuery = contact.company?.name || contact.name;
-            const searchResponse = await fetch(`/api/tasks?search=${encodeURIComponent(searchQuery)}`);
-            
-            if (searchResponse.ok) {
-              const searchData = await searchResponse.json();
-              const filteredTasks = searchData.data?.filter((task: Task) => 
-                task.lead?.company?.toLowerCase().includes(contact.company?.name?.toLowerCase() || '') ||
-                task.lead?.fullname?.toLowerCase().includes(contact.name?.toLowerCase() || '')
-              ) || [];
-              setTasks(filteredTasks);
-            }
-          }
+        if (!response.ok) {
+          throw new Error('Failed to fetch tasks for the contact');
         }
+        
+        const data = await response.json();
+        setTasks(data.data || []);
       } catch (err) {
         console.error('Error fetching tasks:', err);
+        setError(err instanceof Error ? `Failed to load tasks: ${err.message}` : 'An unknown error occurred while fetching tasks');
         setTasks([]);
       } finally {
         setTasksLoading(false);
       }
     };
 
-    if (contactId) {
-      fetchTasks();
-    }
-  }, [contactId, contact]);
+    fetchTasks();
+  }, [contactId]);
 
   const handleDeleteContact = async () => {
     if (!contact) return;

@@ -53,8 +53,8 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <MessageSquare className="h-5 w-5 text-gray-500" />
-          <h2 className="text-lg font-medium">Comments</h2>
+          {/* <MessageSquare className="h-5 w-5 text-gray-500" /> */}
+          <h2 className="text-xl font-semibold text-gray-900">Comments</h2>
           <span className="text-sm text-gray-500">({commentsArray.length})</span>
         </div>
         <button

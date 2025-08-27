@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import type { Comment, CurrentUser, CommentResponse } from '../types';
 import { makeAuthenticatedRequest } from '../utils/auth';
+import Swal from 'sweetalert2';
 
 export const useDealsComments = (dealId: string | string[] | undefined) => {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -160,9 +161,20 @@ export const useDealsComments = (dealId: string | string[] | undefined) => {
 
   // Delete comment (handles nested deletion)
   const handleDeleteComment = useCallback(async (commentId: number) => {
-    if (!window.confirm('Are you sure you want to delete this comment and all its replies?')) {
-      return;
-    }
+    const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "Do you really want to delete this comment and all its replies?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+  });
+
+  if (!result.isConfirmed) {
+    return; 
+  }
 
     try {
       const response = await makeAuthenticatedRequest(

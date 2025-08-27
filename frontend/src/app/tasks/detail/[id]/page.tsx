@@ -71,9 +71,11 @@ export default function TaskDetailPage() {
       case "Comments":
         return <TaskCommentsTab taskId={id} currentUser={currentUser} />;
       case "Results":
-        return <TaskResultsTab taskId={id as string} currentUser={currentUser} />;
+        return (
+          <TaskResultsTab taskId={id as string} currentUser={currentUser} />
+        );
       case "Attachments":
-        return <TaskAttachmentsList taskId={id as string} />;
+        return <TaskAttachmentsList taskId={id as string} currentUser={currentUser} />;
       default:
         return (
           <div className="p-6">

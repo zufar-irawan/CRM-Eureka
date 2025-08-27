@@ -341,7 +341,7 @@ export const updateLead = async (req, res) => {
         }
 
         if (lead.stage !== updatedFields.stage) {
-            changes.push(`- Stage changed from "${lead.stage}" to "${updatedFields.stage}"`);
+            changes.push(`Stage changed from ${lead.stage} to ${updatedFields.stage}`);
         }
 
         await lead.update(updatedFields, { transaction });
@@ -387,10 +387,7 @@ export const deleteLead = async (req, res) => {
 
     try {
         const { id } = req.params;
-
-        // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
-
         const lead = await Leads.findOne({
             where: whereCondition,
             transaction

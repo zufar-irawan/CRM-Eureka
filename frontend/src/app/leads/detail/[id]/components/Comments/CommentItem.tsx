@@ -1,4 +1,3 @@
-// Updated CommentItem.tsx dengan support nested replies
 "use client";
 
 import { Reply, MoreHorizontal, Trash2, ChevronDown, ChevronUp, MessageCircle } from 'lucide-react';
@@ -6,6 +5,7 @@ import { useState } from 'react';
 import type { Comment, CurrentUser } from '../../types';
 import { formatDate, getFirstChar } from '../../utils/formatting';
 import ReplyForm from './ReplyForm';
+import Swal from 'sweetalert2';
 
 interface CommentItemProps {
   comment: Comment;
@@ -78,6 +78,66 @@ export default function CommentItem({
     onReplySubmit(comment.id);
   };
 
+  const handleDeleteClick = async () => {
+    const result = await Swal.fire({
+      title: 'Delete Comment?',
+      html: `
+        <div class="text-left">
+          <p class="text-gray-600 mb-3">Are you sure you want to delete this comment?</p>
+          ${hasReplies ? `<div class="mt-3 p-2 bg-yellow-50 rounded border-l-4 border-yellow-400">
+            <p class="text-sm text-yellow-800">⚠️ This comment has ${comment.replies?.length} ${comment.replies?.length === 1 ? 'reply' : 'replies'} that will also be deleted.</p>
+          </div>` : ''}
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Delete',
+      cancelButtonText: 'Cancel',
+      focusCancel: true,
+      customClass: {
+        popup: 'rounded-lg',
+        title: 'text-lg font-semibold text-gray-900',
+        confirmButton: 'rounded-lg font-medium px-4 py-2',
+        cancelButton: 'rounded-lg font-medium px-4 py-2'
+      }
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await onDelete(comment.id);
+        
+        // Success notification
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Comment has been deleted successfully.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          customClass: {
+            popup: 'rounded-lg',
+            title: 'text-lg font-semibold text-gray-900'
+          }
+        });
+      } catch (error) {
+        // Error notification
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to delete comment. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#dc2626',
+          confirmButtonText: 'OK',
+          customClass: {
+            popup: 'rounded-lg',
+            title: 'text-lg font-semibold text-gray-900',
+            confirmButton: 'rounded-lg font-medium px-4 py-2'
+          }
+        });
+      }
+    }
+  };
+
   return (
     <div className="relative">
       {/* Connector line for nested comments */}
@@ -143,7 +203,7 @@ export default function CommentItem({
                 <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                   {(comment.user_id === currentUser?.id || currentUser?.role === "admin") && (
                     <button
-                      onClick={() => onDelete(comment.id)}
+                      onClick={handleDeleteClick}
                       className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 rounded-lg"
                     >
                       <Trash2 className="w-4 h-4" />

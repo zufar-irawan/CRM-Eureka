@@ -15,11 +15,9 @@ export const login = async (req, res) => {
                 through: { attributes: [] }
             }]
         });
-
         if (!user) {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
-
         const md5Hash = crypto.createHash('md5').update(password).digest('hex');
         if (user.password !== md5Hash) {
             return res.status(401).json({ message: "Password salah" });

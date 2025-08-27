@@ -59,8 +59,8 @@ export default function EmptySection() {
                     }
                 }
 
-                // Ubah ke array dan limit jadi 10 sales teratas
-                const pivotArray = Object.values(pivot).slice(0, 10);
+                // Ubah ke array dan limit jadi 6 sales untuk menghemat ruang
+                const pivotArray = Object.values(pivot).slice(0, 6);
 
                 setPivotData(pivotArray);
             } catch (error) {
@@ -72,12 +72,12 @@ export default function EmptySection() {
     }, []);
 
     return (
-        <div className="border rounded-3xl border-gray-300 p-8 bg-white flex-1">
-            <p className="text-xl text-gray-900 mb-4">All Task Summary</p>
+        <div className="border rounded-2xl border-gray-300 p-4 bg-white h-full flex flex-col">
+            <p className="text-lg text-gray-900 mb-2 flex-shrink-0">All Task Summary</p>
 
-            <div className="p-4 w-full max-w-5xl mx-auto mt-6 overflow-x-auto">
+            <div className="flex-1 overflow-auto">
                 {/* Header Row */}
-                <div className="grid grid-cols-6 font-semibold text-gray-500 text-xs border-b pb-4 text-center">
+                <div className="grid grid-cols-6 font-semibold text-gray-500 text-xs border-b pb-2 text-center sticky top-0 bg-white">
                     <div>Sales</div>
                     {STATUS_COLUMNS.map((status) => (
                         <div key={status} className="capitalize">
@@ -91,9 +91,9 @@ export default function EmptySection() {
                     pivotData.map((item, index) => (
                         <div
                             key={index}
-                            className="grid grid-cols-6 items-center text-xs py-4 border-b last:border-b-0 text-center"
+                            className="grid grid-cols-6 items-center text-xs py-2 border-b last:border-b-0 text-center"
                         >
-                            <div className="text-gray-800">{item.sales}</div>
+                            <div className="text-gray-800 truncate">{item.sales}</div>
                             <div className="text-gray-800">{item.overdue}</div>
                             <div className="text-gray-800">{item.new}</div>
                             <div className="text-gray-800">{item.pending}</div>

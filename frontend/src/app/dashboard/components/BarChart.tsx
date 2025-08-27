@@ -34,7 +34,8 @@ export default function TaskDonutChart() {
                     "#EF4444", 
                     "#6B7280"  
                 ],
-                borderWidth: 1
+                borderWidth: 0,
+                cutout: '50%'
             }
         ]
     });
@@ -75,7 +76,8 @@ export default function TaskDonutChart() {
                             "#EF4444",
                             "#6B7280"
                         ],
-                        borderWidth: 1
+                        borderWidth: 0,
+                        cutout: '50%'
                     }
                 ]
             });
@@ -89,9 +91,33 @@ export default function TaskDonutChart() {
         fetchTasks();
     }, []);
 
+    const options = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom' as const,
+                labels: {
+                    padding: 10,
+                    usePointStyle: true,
+                    font: {
+                        size: 10
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white',
+                cornerRadius: 4,
+                displayColors: true
+            }
+        }
+    };
+
     return (
-        <div className="max-w-md mx-auto">
-            <Doughnut data={chartData} />
+        <div className="w-full h-full">
+            <Doughnut data={chartData} options={options} />
         </div>
     );
 }

@@ -336,7 +336,7 @@ export const updateLead = async (req, res) => {
 
         for (const key in updatedFields) {
             if (lead[key] !== updatedFields[key] && key !== 'stage') {
-                changes.push(`- ${key} from "${lead[key]}" to "${updatedFields[key]}"`);
+                changes.push(`- ${key} from to "${updatedFields[key]}"`);
             }
         }
 

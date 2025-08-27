@@ -147,55 +147,60 @@ export default function Dashboard() {
     }, [])
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex h-screen overflow-hidden">
             <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
-            <div className={`flex ${isMinimized ? 'ml-16' : 'ml-50'} flex-1 flex-col bg-slate-100`}>
-                <header className="bg-slate-800 text-white p-8 text-right">
-                    <p className="text-xl">
+            <div className={`flex ${isMinimized ? 'ml-16' : 'ml-50'} flex-1 flex-col bg-slate-100 overflow-hidden`}>
+                <header className="bg-slate-800 text-white p-4 text-right flex-shrink-0">
+                    <p className="text-lg">
                         Hi, <span>{loading ? "..." : user?.name || "User"}</span>
                     </p>
                 </header>
 
-                <main className="px-15 py-10 space-y-6">
-                    <div className="text-center grid grid-cols-4 gap-3">
+                <main className="px-6 py-4 space-y-4 flex-1 overflow-hidden flex flex-col">
+                    {/* Stats Cards - Compact */}
+                    <div className="grid grid-cols-4 gap-3 flex-shrink-0">
                         {cards.map((card) => (
-                            <div key={card.id} className="border rounded-3xl border-gray-300 p-8 bg-white">
-                                <p className="text-2xl font-bold text-gray-800">
+                            <div key={card.id} className="border rounded-2xl border-gray-300 p-4 bg-white">
+                                <p className="text-xl font-bold text-gray-800">
                                     {card.number}
                                 </p>
-
-                                <p className="text-xl text-gray-700">
+                                <p className="text-sm text-gray-700">
                                     {card.title}
                                 </p>
                             </div>
                         ))}
                     </div>
 
-                    {/* Two sections side by side */}
-                    <div className="flex gap-6">
-                        <div className="border rounded-3xl border-gray-300 p-8 bg-white flex-1">
-                            <p className="text-xl text-gray-900 mb-4">
+                    {/* Two sections side by side - Fixed height */}
+                    <div className="flex gap-4 flex-shrink-0" style={{height: '280px'}}>
+                        <div className="border rounded-2xl border-gray-300 p-4 bg-white flex-1">
+                            <p className="text-lg text-gray-900 mb-2">
                                 Chart
                             </p>
-
-                            <BarChart />
+                            <div className="h-56 flex items-center justify-center">
+                                <div className="w-48 h-48">
+                                    <BarChart />
+                                </div>
+                            </div>
                         </div>
 
-                        <EmptySection />
+                        <div className="flex-1">
+                            <EmptySection />
+                        </div>
                     </div>
 
-                    <div className="border rounded-3xl border-gray-300 p-8 bg-white">
-                        <p className="text-xl text-gray-900">
+                    {/* Recent Activities - Flexible height */}
+                    <div className="border rounded-2xl border-gray-300 p-4 bg-white flex-1 min-h-0 flex flex-col">
+                        <p className="text-lg text-gray-900 mb-2 flex-shrink-0">
                             Recent Activities
                         </p>
-
-                        <ActivityTable />
+                        <div className="flex-1 overflow-auto">
+                            <ActivityTable />
+                        </div>
                     </div>
-
                 </main>
             </div>
-
         </div>
     )
 }

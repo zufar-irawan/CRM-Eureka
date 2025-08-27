@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-  Trash2, 
-  ArrowLeft, 
-  Edit, 
-  Building2, 
-  User, 
-  Mail, 
-  Phone, 
+import {
+  Trash2,
+  ArrowLeft,
+  Edit,
+  Building2,
+  User,
+  Mail,
+  Phone,
   MapPin,
   Handshake,
   Eye,
@@ -83,7 +83,7 @@ const ContactDetailPage = () => {
   const router = useRouter();
   const params = useParams();
   const contactId = params.id;
-  
+
   const [contact, setContact] = useState<Contact | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,11 +140,11 @@ const ContactDetailPage = () => {
       try {
         setTasksLoading(true);
         const response = await fetch(`/api/contacts/${contactId}/tasks`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch tasks for the contact');
         }
-        
+
         const data = await response.json();
         setTasks(data.data || []);
       } catch (err) {
@@ -349,7 +349,7 @@ const ContactDetailPage = () => {
       </div>
 
       <div className="p-4 space-y-4">
-        
+
         {/* Contact Details */}
         <div className="bg-white rounded-lg border border-slate-200">
           <div className="flex items-center justify-between p-3 border-b border-slate-200">
@@ -357,13 +357,6 @@ const ContactDetailPage = () => {
               <User className="w-4 h-4 text-slate-500" />
               <h2 className="font-medium text-slate-900">Contact Details</h2>
             </div>
-            <button
-              onClick={handleEditContact}
-              className="flex items-center gap-1 px-2 py-1 text-slate-600 hover:bg-slate-50 rounded text-sm transition-colors"
-            >
-              <Edit className="w-3.5 h-3.5" />
-              Edit
-            </button>
           </div>
 
           <div className="p-3">

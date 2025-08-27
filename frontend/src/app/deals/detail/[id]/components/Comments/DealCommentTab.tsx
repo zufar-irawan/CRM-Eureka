@@ -57,7 +57,7 @@ export default function DealCommentsTab({ dealId, currentUser }: DealCommentsTab
       {/* Header with Statistics */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center space-x-6">
-          <h2 className="text-xl font-semibold text-gray-900">Comments</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Activity</h2>
           {totalComments > 0 && (
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <div className="flex items-center space-x-1">
@@ -98,7 +98,7 @@ export default function DealCommentsTab({ dealId, currentUser }: DealCommentsTab
       {commentsError && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <p className="text-red-700 text-sm">{commentsError}</p>
-          <button 
+          <button
             onClick={fetchComments}
             className="text-red-700 text-sm underline mt-2 hover:text-red-800"
           >
@@ -175,7 +175,7 @@ export default function DealCommentsTab({ dealId, currentUser }: DealCommentsTab
             <MessageSquare className="w-4 h-4" />
             <span>Add Comment</span>
           </button>
-          
+
           {comments.length > 0 && (
             <button
               onClick={() => handleStartReply(comments[0].id)}

@@ -2,8 +2,10 @@
 
 import Header from "@/components/Header"
 import Sidebar from "@/components/Sidebar"
+import { useContactModalStore } from "@/Store/contactModalStore"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
+import ContactModal from "./edit/editModal"
 
 export default function CompaniesLayout(
     { children }:
@@ -12,6 +14,7 @@ export default function CompaniesLayout(
     const [isMinimized, setIsMinimized] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
+    const { isOpens, editData, closeModal } = useContactModalStore();
 
     const PathName = usePathname()
 
@@ -32,6 +35,14 @@ export default function CompaniesLayout(
                 </div>
 
             </div>
+
+            {isOpens && editData && (
+                <ContactModal
+                    data={editData}
+                    onClose={closeModal}
+                    onUpdated={() => window.dispatchEvent(new Event("create"))}
+                />
+            )}
         </div>
     )
 }

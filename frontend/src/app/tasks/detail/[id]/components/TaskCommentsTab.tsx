@@ -14,7 +14,7 @@ interface TaskCommentsTabProps {
 
 export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTabProps) {
   const [showAddComment, setShowAddComment] = useState(false);
-  
+
   const {
     comments,
     commentsLoading,

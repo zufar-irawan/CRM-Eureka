@@ -15,22 +15,13 @@ import fetchData from "@/components/ListTable/Functions/FetchData";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { checkAuthStatus } from "../../../utils/auth";
+import { useCompaniesModalStore } from "@/Store/companiesModalStore";
 
 const allColumns: Column[] = [
     { key: "name", label: "Name" },
     { key: "address", label: "Address" },
     { key: "phone", label: "Phone" },
     { key: "email", label: "Email" },
-    {
-        key: "created_at",
-        label: "Last Modified",
-        render: (value) =>
-            new Date(value).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-            }),
-    },
 ]
 
 const allFields: Field[] = [
@@ -40,16 +31,6 @@ const allFields: Field[] = [
     { key: "email", label: "Email" },
     { key: "status", label: "Status" },
     { key: "priority", label: "Priority" },
-    {
-        key: "created_at",
-        label: "Last Modified",
-        render: (value) =>
-            new Date(value).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-            }),
-    },
 ]
 
 export default function CompaniesList() {
@@ -85,6 +66,8 @@ export default function CompaniesList() {
     const [showColumnDropdown, setShowColumnDropdown] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
+
+    const openModal = useCompaniesModalStore((state) => state.openModal)
 
     const [visibleColumns, setVisibleColumns] = useState<string[]>(
         allColumns.map(col => col.key)
@@ -232,7 +215,7 @@ export default function CompaniesList() {
                     </div>
                 </div>
 
-                <DesktopTable pathname="/companies/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} searchTerm={debouncedSearch} />
+                <DesktopTable pathname="/companies/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} searchTerm={debouncedSearch} onEdit={(row) => openModal(row)} />
 
                 <MobileCards pathname="/companies/" fields={allFields} visibleFields={visibleColumns} />
 

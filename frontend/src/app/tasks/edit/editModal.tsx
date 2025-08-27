@@ -24,8 +24,16 @@ export default function EditTasksModal({ onClose, onUpdated, data }: Props) {
     const [contactOptions, setContactOptions] = useState<any[]>([])
 
     useEffect(() => {
-        setForm(data); // sync data
+        if (data) {
+            setForm({
+                ...data,
+                due_date: data.due_date
+                    ? new Date(data.due_date).toISOString().slice(0, 16) // format untuk datetime-local
+                    : "",
+            });
+        }
     }, [data]);
+
 
     useEffect(() => {
         const fetchLeads = async () => {

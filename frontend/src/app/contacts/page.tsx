@@ -15,6 +15,7 @@ import fetchData from "@/components/ListTable/Functions/FetchData";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { checkAuthStatus } from "../../../utils/auth";
+import { useContactModalStore } from "@/Store/contactModalStore";
 
 const allColumns: Column[] = [
   { key: "name", label: "Name" },
@@ -29,16 +30,6 @@ const allColumns: Column[] = [
     key: "company.name",
     label: "Company",
     render: (_: any, row: any) => row.company?.name || "-"
-  },
-  {
-    key: "created_at",
-    label: "Last Modified",
-    render: (value) =>
-      new Date(value).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
   },
 ];
 
@@ -55,16 +46,6 @@ const allFields: Field[] = [
     key: "company.name",
     label: "Company",
     render: (_: any, row: any) => row.company?.name || "-"
-  },
-  {
-    key: "created_at",
-    label: "Last Modified",
-    render: (value) =>
-      new Date(value).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
   },
 ];
 
@@ -92,6 +73,8 @@ export default function CompaniesList() {
 
     checkAuth();
   }, [router]);
+
+  const openModal = useContactModalStore((state) => state.openModal)
 
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,19 +118,6 @@ export default function CompaniesList() {
       clearTimeout(handler)
     }
   }, [searchTerm])
-
-  // useEffect(() => {
-  //   const fetchFilteredData = async () => {
-  //     await fetchData({
-  //       setData,
-  //       setLoading,
-  //       url: "/contacts/",
-  //       searchTerm: debouncedSearch
-  //     });
-  //   };
-
-  //   fetchFilteredData();
-  // }, [debouncedSearch]);
 
   return (
     <main className="p-4 overflow-visible lg:p-6 bg-white pb-6 relative">
@@ -253,7 +223,7 @@ export default function CompaniesList() {
           </div>
         </div>
 
-        <DesktopTable pathname="/contacts/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} searchTerm={debouncedSearch} />
+        <DesktopTable pathname="/contacts/" columns={allColumns} visibleColumns={visibleColumns} loading={loading} setLoading={setLoading} searchTerm={debouncedSearch} onEdit={(row) => openModal(row)} />
 
         <MobileCards pathname="/contacts/" fields={allFields} visibleFields={visibleColumns} />
 

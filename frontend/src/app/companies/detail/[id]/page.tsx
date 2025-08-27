@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-  Trash2, 
-  ArrowLeft, 
-  Edit, 
-  Building2, 
-  User, 
-  Mail, 
-  Phone, 
+import {
+  Trash2,
+  ArrowLeft,
+  Edit,
+  Building2,
+  User,
+  Mail,
+  Phone,
   MapPin,
   Handshake,
   Users,
@@ -48,7 +48,7 @@ const CompanyDetailPage = () => {
   const router = useRouter();
   const params = useParams();
   const companyId = params.id;
-  
+
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -252,7 +252,7 @@ const CompanyDetailPage = () => {
       </div>
 
       <div className="p-4 space-y-4">
-        
+
         {/* Company Details */}
         <div className="bg-white rounded-lg border border-slate-200">
           <div className="flex items-center justify-between p-3 border-b border-slate-200">
@@ -260,13 +260,6 @@ const CompanyDetailPage = () => {
               <Building2 className="w-4 h-4 text-slate-500" />
               <h2 className="font-medium text-slate-900">Company Details</h2>
             </div>
-            <button
-              onClick={handleEditCompany}
-              className="flex items-center gap-1 px-2 py-1 text-slate-600 hover:bg-slate-50 rounded text-sm transition-colors"
-            >
-              <Edit className="w-3.5 h-3.5" />
-              Edit
-            </button>
           </div>
 
           <div className="p-3">
@@ -411,8 +404,8 @@ const CompanyDetailPage = () => {
                 </thead>
                 <tbody>
                   {company.contacts.map((contact) => (
-                    <tr 
-                      key={contact.id} 
+                    <tr
+                      key={contact.id}
                       className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
                       onClick={() => router.push(`/contacts/${contact.id}`)}
                     >

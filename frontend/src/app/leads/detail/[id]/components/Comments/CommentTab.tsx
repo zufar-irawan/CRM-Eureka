@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, MessageSquare, Users, MessageCircle, RefreshCw } from 'lucide-react';
+import { Plus, MessageSquare, Users, MessageCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import type { CurrentUser } from '../../types';
 import { useComments } from '../../hooks/useComments';
@@ -118,58 +118,6 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
     }
   };
 
-  // Handle refresh with confirmation
-  const handleRefreshComments = async () => {
-    if (commentsLoading) return;
-
-    const result = await Swal.fire({
-      title: 'Refresh Comments?',
-      text: 'This will reload all comments and may lose any unsaved changes.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3b82f6',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Refresh',
-      cancelButtonText: 'Cancel',
-      customClass: {
-        popup: 'rounded-lg',
-        title: 'text-lg font-semibold text-gray-900',
-        confirmButton: 'rounded-lg font-medium px-4 py-2',
-        cancelButton: 'rounded-lg font-medium px-4 py-2'
-      }
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await fetchComments();
-        Swal.fire({
-          title: 'Refreshed!',
-          text: 'Comments have been reloaded.',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-          customClass: {
-            popup: 'rounded-lg',
-            title: 'text-lg font-semibold text-gray-900'
-          }
-        });
-      } catch (error) {
-        Swal.fire({
-          title: 'Refresh Failed',
-          text: 'Could not reload comments. Please check your connection.',
-          icon: 'error',
-          confirmButtonColor: '#dc2626',
-          confirmButtonText: 'OK',
-          customClass: {
-            popup: 'rounded-lg',
-            title: 'text-lg font-semibold text-gray-900',
-            confirmButton: 'rounded-lg font-medium px-4 py-2'
-          }
-        });
-      }
-    }
-  };
-
   // Handle cancel new comment with confirmation if there's content
   const handleCancelNewComment = async () => {
     if (newComment.trim()) {
@@ -235,16 +183,6 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
         </div>
         
         <div className="flex items-center space-x-3">
-          {/* Refresh Button */}
-          <button
-            onClick={handleRefreshComments}
-            disabled={commentsLoading}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Refresh comments"
-          >
-            <RefreshCw className={`w-4 h-4 ${commentsLoading ? 'animate-spin' : ''}`} />
-          </button>
-          
           {/* New Comment Button */}
           <button
             onClick={() => setShowNewComment(true)}
@@ -376,15 +314,6 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
         <div className="mt-8 pt-4 border-t border-gray-200 text-center">
           <p className="text-xs text-gray-500">
             Showing {topLevelComments} comments with {totalComments - topLevelComments} replies
-            {totalComments > 10 && (
-              <span className="mx-2">•</span>
-            )}
-            <button
-              onClick={handleRefreshComments}
-              className="text-blue-600 hover:text-blue-700 underline"
-            >
-              Refresh
-            </button>
           </p>
         </div>
       )}

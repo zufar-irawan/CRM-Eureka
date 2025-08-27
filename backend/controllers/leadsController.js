@@ -335,26 +335,23 @@ export const updateLead = async (req, res) => {
         };
 
         for (const key in updatedFields) {
-            if (lead[key] !== updatedFields[key] && key !== 'stage') {
-                changes.push(`- ${key} from to "${updatedFields[key]}"`);
+            if (lead[key] !== updatedFields[key] && key !== 'stage' && key !== 'updated_at') {
+                changes.push(`- ${key} has been updated`);
             }
         }
 
         if (lead.stage !== updatedFields.stage) {
-            changes.push(`${lead.stage} to ${updatedFields.stage}`);
+            changes.push(`- Stage changed from "${lead.stage}" to "${updatedFields.stage}"`);
         }
 
         await lead.update(updatedFields, { transaction });
         
-        const user = await User.findByPk(req.userId || 1);
-        const userName = user ? user.name : 'System';
-
         if (changes.length > 0) {
             await LeadComments.create({
                 lead_id: lead.id,
-                user_id: req.userId || 1,
-                user_name: userName,
-                message: `Stage changed from ${changes.join('\n')}`,
+                user_id: req.userId,
+                user_name: req.userName,
+                message: `Lead details updated:\n${changes.join('\n')}`,
             }, { transaction });
         }
 
@@ -749,13 +746,10 @@ export const updateLeadStage = async (req, res) => {
         await lead.update({ stage }, { transaction });
 
         // Add a comment for the stage change
-        const user = await User.findByPk(req.userId || 1);
-        const userName = user ? user.name : 'System';
-        
         await LeadComments.create({
             lead_id: lead.id,
-            user_id: req.userId || 1,
-            user_name: userName,
+            user_id: req.userId,
+            user_name: req.userName,
             message: `Stage changed from ${oldStage} to ${stage}`,
         }, { transaction });
 
@@ -825,7 +819,7 @@ export const addLeadComment = async (req, res) => {
         // Cek apakah id adalah kode atau ID numerik
         const whereCondition = isNaN(id) ? { code: id } : { id: parseInt(id) };
 
-        const { message, user_id, user_name, parent_id } = req.body;
+        const { message, parent_id } = req.body;
 
         if (!message || !message.trim()) {
             await transaction.rollback();
@@ -873,8 +867,8 @@ export const addLeadComment = async (req, res) => {
             lead_id: lead.id,
             parent_id: parent_id || null,
             reply_level,
-            user_id,
-            user_name,
+            user_id: req.userId,
+            user_name: req.userName,
             message: message.trim()
         }, { transaction });
 

@@ -509,8 +509,8 @@ export const updateDeal = async (req, res) => {
 
         const changes = [];
         for (const key in updateData) {
-            if (deal[key] !== updateData[key] && key !== 'stage') {
-                changes.push(`- ${key} from "${deal[key]}" to "${updateData[key]}"`);
+            if (deal[key] !== updateData[key] && key !== 'stage' && key !== 'updated_at') {
+                changes.push(`- ${key} has been updated`);
             }
         }
 
@@ -520,14 +520,11 @@ export const updateDeal = async (req, res) => {
 
         await deal.update(updateData, { transaction });
 
-        const user = await User.findByPk(req.userId || 1);
-        const userName = user ? user.name : 'System';
-
         if (changes.length > 0) {
             await DealComments.create({
                 deal_id: deal.id,
-                user_id: req.userId || 1,
-                user_name: userName,
+                user_id: req.userId,
+                user_name: req.userName,
                 message: `Deal details updated:\n${changes.join('\n')}`,
             }, { transaction });
         }
@@ -636,13 +633,10 @@ export const updateDealStage = async (req, res) => {
         }, { transaction });
 
         // Add a comment for the stage change
-        const user = await User.findByPk(req.userId || 1);
-        const userName = user ? user.name : 'System';
-
         await DealComments.create({
             deal_id: deal.id,
-            user_id: req.userId || 1,
-            user_name: userName,
+            user_id: req.userId,
+            user_name: req.userName,
             message: `Stage changed from ${oldStage} to ${stage}`,
         }, { transaction });
 
@@ -937,7 +931,7 @@ export const addDealComment = async (req, res) => {
             }
         }
 
-        const { message, user_id, user_name, parent_id } = req.body;
+        const { message, parent_id } = req.body;
 
         if (!message || !message.trim()) {
             await transaction.rollback();
@@ -981,8 +975,8 @@ export const addDealComment = async (req, res) => {
             deal_id: dealId,
             parent_id: parent_id || null,
             reply_level,
-            user_id: user_id || 1,
-            user_name: user_name || 'Test User',
+            user_id: req.userId,
+            user_name: req.userName,
             message: message.trim()
         }, { transaction });
 

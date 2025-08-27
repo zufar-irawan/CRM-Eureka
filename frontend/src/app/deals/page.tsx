@@ -73,7 +73,6 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 10000,
-  withCredentials: true,
 });
 
 // Helper function to get stage colors (matching leads style)

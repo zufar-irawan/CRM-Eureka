@@ -34,7 +34,7 @@ export default function TaskHeader({
   const [assignedUser, setAssignedUser] = useState<UserType | null>(null);
   const [showAddResultModal, setShowAddResultModal] = useState(false);
   const [pendingCompletion, setPendingCompletion] = useState(false);
-  
+
   const { users, isLoading: isLoadingUsers } = useUsers();
   const { leadUser, isLoading: isLoadingLeadUser } = useLeadUser(task?.lead_id || null);
 
@@ -77,14 +77,14 @@ export default function TaskHeader({
           setPendingCompletion(true);
           setShowAddResultModal(true);
           setIsStatusDropdownOpen(false);
-          
-          Swal.fire({
-            icon: 'info',
-            title: 'Task Completed',
-            text: 'Please add the task result and any attachments to complete the process.',
-            timer: 3000,
-            showConfirmButton: false
-          });
+
+          // Swal.fire({
+          //   icon: 'info',
+          //   title: 'Task Completed',
+          //   text: 'Please add the task result and any attachments to complete the process.',
+          //   timer: 3000,
+          //   showConfirmButton: false
+          // });
         } else {
           // Untuk status selain completed, update langsung
           await onStatusChange(task.id, newStatus);
@@ -113,7 +113,7 @@ export default function TaskHeader({
 
   const handleResultAdded = async () => {
     if (!task) return;
-    
+
     try {
       if (pendingCompletion) {
         await onStatusChange(task.id, 'completed');
@@ -121,7 +121,7 @@ export default function TaskHeader({
       setShowAddResultModal(false);
       setPendingCompletion(false);
       onTaskUpdate();
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Success!',
@@ -142,7 +142,7 @@ export default function TaskHeader({
   const handleCancelAddResult = () => {
     setShowAddResultModal(false);
     setPendingCompletion(false);
-    
+
     Swal.fire({
       icon: 'info',
       title: 'Cancelled',
@@ -323,7 +323,7 @@ export default function TaskHeader({
                 </div>
               )}
             </div>
-            
+
             <div className="relative">
               {task.status === 'completed' ? (
                 // Completed task - status is locked and cannot be changed

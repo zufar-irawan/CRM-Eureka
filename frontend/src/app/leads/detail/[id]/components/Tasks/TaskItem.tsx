@@ -17,7 +17,8 @@ import {
   Video,
   Music,
   File as FileIcon,
-  X
+  X,
+  ChevronDown
 } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { formatDate, getFirstChar, formatBytes } from '../../../../../tasks/detail/[id]/utils/formatting';
@@ -112,7 +113,8 @@ export default function TaskItem({
   onUpdateStatus,
   onDelete
 }: TaskItemProps) {
-  const [showActions, setShowActions] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showActionsDropdown, setShowActionsDropdown] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [resultText, setResultText] = useState('');
@@ -247,6 +249,15 @@ export default function TaskItem({
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   const getFileTypeIcon = (fileType: TaskAttachment["file_type"]) => {
     switch (fileType) {
       case "image": return Image;
@@ -319,10 +330,11 @@ export default function TaskItem({
     }
   };
 
-  const handleStatusToggle = async () => {
+  const handleStatusChange = async (newStatus: 'pending' | 'completed' | 'cancelled') => {
     setIsUpdating(true);
+    setShowStatusDropdown(false);
+    
     try {
-      const newStatus: 'pending' | 'completed' = isCompleted ? 'pending' : 'completed';
       await onUpdateStatus(task.id, newStatus);
 
       if (newStatus === 'completed' && !result) {
@@ -334,6 +346,8 @@ export default function TaskItem({
   };
 
   const handleDelete = async () => {
+    setShowActionsDropdown(false);
+    
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -524,46 +538,95 @@ export default function TaskItem({
             </div>
 
             {canEditTask && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowActions(!showActions)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
+              <div className="flex items-center space-x-2">
+                {/* Status Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                    disabled={isUpdating}
+                    className={`flex items-center space-x-1 px-3 py-2 text-xs font-medium rounded-full border transition-colors ${
+                      getStatusColor(task.status)
+                    } hover:bg-opacity-80 disabled:opacity-50`}
+                  >
+                    {isUpdating ? (
+                      <>
+                        <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="capitalize">{task.status}</span>
+                        <ChevronDown className="w-3 h-3" />
+                      </>
+                    )}
+                  </button>
 
-                {showActions && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowActions(false)} />
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                      <div className="py-1">
-                        <button
-                          onClick={() => {
-                            setShowActions(false);
-                            handleStatusToggle();
-                          }}
-                          className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>{isCompleted ? 'Mark Pending' : 'Mark Complete'}</span>
-                        </button>
+                  {showStatusDropdown && !isUpdating && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)} />
+                      <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                        <div className="py-1">
+                          <button
+                            onClick={() => handleStatusChange('pending')}
+                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${
+                              task.status === 'pending' ? 'bg-yellow-50 text-yellow-800' : 'text-gray-700'
+                            }`}
+                          >
+                            <Circle className="w-3 h-3" />
+                            <span>Pending</span>
+                          </button>
 
-                        <div className="border-t border-gray-200 my-1"></div>
+                          <button
+                            onClick={() => handleStatusChange('completed')}
+                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${
+                              task.status === 'completed' ? 'bg-green-50 text-green-800' : 'text-gray-700'
+                            }`}
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Completed</span>
+                          </button>
 
-                        <button
-                          onClick={() => {
-                            setShowActions(false);
-                            handleDelete();
-                          }}
-                          className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span>Delete</span>
-                        </button>
+                          <button
+                            onClick={() => handleStatusChange('cancelled')}
+                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${
+                              task.status === 'cancelled' ? 'bg-red-50 text-red-800' : 'text-gray-700'
+                            }`}
+                          >
+                            <X className="w-3 h-3" />
+                            <span>Cancelled</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
+
+                {/* Actions Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowActionsDropdown(!showActionsDropdown)}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+
+                  {showActionsDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowActionsDropdown(false)} />
+                      <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                        <div className="py-1">
+                          <button
+                            onClick={handleDelete}
+                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -685,7 +748,7 @@ export default function TaskItem({
               setResultText('');
               setFiles([]);
               setResultType('note');
-              handleStatusToggle();
+              handleStatusChange('pending');
             }}
           />
 
@@ -699,7 +762,7 @@ export default function TaskItem({
                     setResultText('');
                     setFiles([]);
                     setResultType('note');
-                    handleStatusToggle();
+                    handleStatusChange('pending');
                   }}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
@@ -791,7 +854,7 @@ export default function TaskItem({
                     setResultText('');
                     setFiles([]);
                     setResultType('note');
-                    handleStatusToggle();
+                    handleStatusChange('pending');
                   }}
                   disabled={isUploading}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"

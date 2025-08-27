@@ -29,6 +29,7 @@ app.use(session({
     saveUninitialized: true,
     cookie: {
         secure: 'auto',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     }
 }))
 
@@ -38,7 +39,7 @@ app.use(cors({
 }))
 app.use(cookieParser());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads' )));
 await ensureUploadDir();
 
 setupAssociations();

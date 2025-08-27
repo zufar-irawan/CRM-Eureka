@@ -15,11 +15,9 @@ export const login = async (req, res) => {
                 through: { attributes: [] }
             }]
         });
-
         if (!user) {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
-
         const md5Hash = crypto.createHash('md5').update(password).digest('hex');
         if (user.password !== md5Hash) {
             return res.status(401).json({ message: "Password salah" });
@@ -44,13 +42,14 @@ export const login = async (req, res) => {
 
         const token = jwt.sign(
             { 
-                userId: user.id, 
+                userId: user.id,
+                name: user.name,
                 email: user.email,
                 roles: roles.map(role => role.name),
                 primaryRole: primaryRole
             },
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '7d' }
         );
 
         // simpan token ke cookie HttpOnly
@@ -58,7 +57,7 @@ export const login = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000 // 1 hari
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.status(200).json({
@@ -146,11 +145,12 @@ export const refreshUser = async (req, res) => {
             { 
                 userId: user.id, 
                 email: user.email,
+                name: user.name,
                 roles: roles.map(role => role.name),
                 primaryRole: primaryRole
             },
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '7d' }
         );
 
         // update cookie
@@ -158,7 +158,7 @@ export const refreshUser = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.status(200).json({

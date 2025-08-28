@@ -28,16 +28,16 @@ const router = Router();
 router.get("/", getTasks);                          
 router.post("/", authMiddleware, createTask);     
 router.get("/:id", getTaskById);                   
-router.put("/:id", updateTask);                     
-router.delete("/:id", deleteTask);                   
-router.put('/:id/updateStatus', updateTaskStatus);  
-router.get("/:id/comments", getTaskComments);       
-router.post("/:id/comments", addTaskComment);      
-router.put("/task-comments/:commentId", updateTaskComment);   
-router.delete("/task-comments/:commentId", deleteTaskComment);
-router.get("/:id/results", getTaskResults);         
-router.put("/task-results/:resultId", updateTaskResult);
-router.delete("/task-results/:resultId", deleteTaskResult);
+router.put("/:id", authMiddleware, updateTask);
+router.delete("/:id", authMiddleware, deleteTask);
+router.put('/:id/updateStatus', authMiddleware, updateTaskStatus);
+router.get("/:id/comments", getTaskComments);
+router.post("/:id/comments", authMiddleware, addTaskComment);
+router.put("/task-comments/:commentId", authMiddleware, updateTaskComment);
+router.delete("/task-comments/:commentId", authMiddleware, deleteTaskComment);
+router.get("/:id/results", getTaskResults);
+router.put("/task-results/:resultId", authMiddleware, updateTaskResult);
+router.delete("/task-results/:resultId", authMiddleware, deleteTaskResult);
 router.post(
   "/:id/results/with-attachments",
   authMiddleware,

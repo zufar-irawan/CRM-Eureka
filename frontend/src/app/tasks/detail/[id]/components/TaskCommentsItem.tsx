@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { TaskComment, CurrentUser } from '../types';
 import { formatDate, getFirstChar } from '../utils/formatting';
 import { makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
+import Swal from 'sweetalert2';
 
 interface TaskCommentItemProps {
   comment: TaskComment;
@@ -53,6 +54,7 @@ export default function TaskCommentItem({
           body: JSON.stringify({
             comment_text: editText.trim()
           }),
+          credentials: 'include',
         }
       );
 
@@ -81,6 +83,7 @@ export default function TaskCommentItem({
         TASK_API_ENDPOINTS.COMMENT_UPDATE(String(comment.id)),
         {
           method: 'DELETE',
+          credentials: 'include',
         }
       );
 
@@ -103,7 +106,7 @@ export default function TaskCommentItem({
         {/* Avatar */}
         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
           <span className="text-xs font-medium text-blue-700">
-            {getFirstChar(comment.commented_by_name || 'U')}
+            {getFirstChar(comment.commentedByUser?.name || 'U')}
           </span>
         </div>
 
@@ -112,7 +115,7 @@ export default function TaskCommentItem({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <span className="font-medium text-gray-900 text-sm">
-                {comment.commented_by_name || 'Unknown User'}
+                {comment.commentedByUser?.name || 'Unknown User'}
               </span>
               <span className="text-xs text-gray-500">
                 {formatDate(comment.commented_at)}

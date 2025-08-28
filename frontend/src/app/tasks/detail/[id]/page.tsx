@@ -56,6 +56,7 @@ export default function TaskDetailPage() {
     updateTaskStatus,
     updateTaskAssignment,
     setTask,
+    refreshComments,
   } = useTaskDetail(id);
 
   useEffect(() => {
@@ -69,11 +70,13 @@ export default function TaskDetailPage() {
 
     switch (activeTab) {
       case "Comments":
-        return <TaskCommentsTab taskId={id} currentUser={currentUser} />;
+        return <TaskCommentsTab taskId={id} currentUser={currentUser} refreshComments={refreshComments} />;
       case "Results":
-        return <TaskResultsTab taskId={id as string} currentUser={currentUser} />;
+        return (
+          <TaskResultsTab taskId={id as string} currentUser={currentUser} refreshComments={refreshComments} />
+        );
       case "Attachments":
-        return <TaskAttachmentsList taskId={id as string} />;
+        return <TaskAttachmentsList taskId={id as string} currentUser={currentUser} />;
       default:
         return (
           <div className="p-6">

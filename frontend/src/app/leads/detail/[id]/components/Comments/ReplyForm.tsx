@@ -5,6 +5,7 @@ import { Reply, X, Send, Smile, Paperclip, ChevronDown, ChevronUp, AtSign, Users
 import type { Comment, CurrentUser, User } from '../../types';
 import { displayValue, getFirstChar } from '../../utils/formatting';
 import UserSelector from './UserSelector';
+import Swal from 'sweetalert2';
 
 interface ReplyFormProps {
   value: string;
@@ -109,7 +110,43 @@ export default function ReplyForm({
     setToField(newToField);
   };
 
-  const handleSubmit = () => {
+  // Enhanced submit handler with SweetAlert2
+  const handleSubmit = async () => {
+    if (!value.trim()) {
+      await Swal.fire({
+        title: 'Empty Reply',
+        text: 'Please write something before sending your reply.',
+        icon: 'warning',
+        confirmButtonColor: '#3b82f6',
+        confirmButtonText: 'OK',
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900',
+          confirmButton: 'rounded-lg font-medium px-4 py-2'
+        }
+      });
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+      return;
+    }
+
+    if (!currentUser) {
+      await Swal.fire({
+        title: 'Authentication Required',
+        text: 'You need to be logged in to send a reply.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'OK',
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900',
+          confirmButton: 'rounded-lg font-medium px-4 py-2'
+        }
+      });
+      return;
+    }
+
     // Ensure at least the original commenter is included if no other recipients
     if (selectedRecipients.length === 0 && originalComment.user_name) {
       const originalUser = {
@@ -121,7 +158,79 @@ export default function ReplyForm({
       setSelectedRecipients([originalUser]);
     }
     
-    onSubmit();
+    try {
+      await onSubmit();
+      
+      // Success notification
+      Swal.fire({
+        title: 'Reply Sent!',
+        text: `Your reply has been sent to ${selectedRecipients.length} recipient${selectedRecipients.length !== 1 ? 's' : ''}.`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900'
+        }
+      });
+    } catch (error) {
+      // Error notification
+      Swal.fire({
+        title: 'Failed to Send Reply',
+        text: 'There was an error sending your reply. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'OK',
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900',
+          confirmButton: 'rounded-lg font-medium px-4 py-2'
+        }
+      });
+    }
+  };
+
+  // Enhanced cancel handler with SweetAlert2
+  const handleCancel = async () => {
+    if (value.trim() || selectedRecipients.length > 1) {
+      const result = await Swal.fire({
+        title: 'Cancel Reply?',
+        html: `
+          <div class="text-left">
+            <p class="text-gray-600 mb-3">Are you sure you want to cancel this reply?</p>
+            ${value.trim() ? `
+              <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-orange-400 mb-3 max-h-20 overflow-y-auto">
+                <p class="text-sm text-gray-700">"${value.substring(0, 150)}${value.length > 150 ? '...' : ''}"</p>
+              </div>
+            ` : ''}
+            ${selectedRecipients.length > 1 ? `
+              <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                <p class="text-sm text-blue-700">You have selected ${selectedRecipients.length} recipients for this reply.</p>
+              </div>
+            ` : ''}
+          </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Cancel',
+        cancelButtonText: 'Keep Writing',
+        focusCancel: true,
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900',
+          confirmButton: 'rounded-lg font-medium px-4 py-2',
+          cancelButton: 'rounded-lg font-medium px-4 py-2'
+        }
+      });
+
+      if (result.isConfirmed) {
+        onCancel();
+      }
+    } else {
+      onCancel();
+    }
   };
 
   const getRoleColor = (role?: string) => {
@@ -172,7 +281,7 @@ export default function ReplyForm({
             </div>
           </div>
           <button
-            onClick={onCancel}
+            onClick={handleCancel}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white hover:shadow-sm rounded-lg transition-all duration-200"
           >
             <X className="w-4 h-4" />
@@ -276,14 +385,6 @@ export default function ReplyForm({
               )}
             </div>
           </div>
-          {/*<div className="flex items-center space-x-3">
-            <span className="text-gray-700 font-medium min-w-0 flex items-center space-x-1">
-              <span>SUBJECT:</span>
-            </span>
-            <span className="text-gray-900 text-xs bg-white border border-gray-200 px-3 py-1.5 rounded-full shadow-sm">
-              Re: Comment on Lead (#CRM-LEAD-{originalComment.lead_id})
-            </span>
-          </div>*/}
         </div>
       </div>
 
@@ -367,7 +468,7 @@ export default function ReplyForm({
         
         <div className="flex items-center space-x-3">
           <button
-            onClick={onCancel}
+            onClick={handleCancel}
             className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-all duration-200 font-medium"
           >
             Cancel

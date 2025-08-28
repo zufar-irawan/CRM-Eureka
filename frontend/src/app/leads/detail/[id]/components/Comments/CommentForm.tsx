@@ -5,6 +5,7 @@ import { Send, Smile, Paperclip, AtSign, Users } from 'lucide-react';
 import type { CurrentUser, User } from '../../types';
 import { getFirstChar } from '../../utils/formatting';
 import UserSelector from './UserSelector';
+import Swal from 'sweetalert2';
 
 interface CommentFormProps {
   value: string;
@@ -111,6 +112,127 @@ export default function CommentForm({
 
     // Original key press handler
     onKeyPress(e);
+  };
+
+  // Enhanced submit handler with SweetAlert2
+  const handleSubmit = async () => {
+    if (!value.trim()) {
+      await Swal.fire({
+        title: 'Empty Comment',
+        text: 'Please write something before posting your comment.',
+        icon: 'warning',
+        confirmButtonColor: '#3b82f6',
+        confirmButtonText: 'OK',
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900',
+          confirmButton: 'rounded-lg font-medium px-4 py-2'
+        }
+      });
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+      return;
+    }
+
+    if (!currentUser) {
+      await Swal.fire({
+        title: 'Authentication Required',
+        text: 'You need to be logged in to post a comment.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'OK',
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900',
+          confirmButton: 'rounded-lg font-medium px-4 py-2'
+        }
+      });
+      return;
+    }
+
+    try {
+      await onSubmit();
+      
+      // Success notification
+      const mentionText = mentionedUsers.length > 0 
+        ? ` ${mentionedUsers.length} user${mentionedUsers.length !== 1 ? 's' : ''} will be notified.`
+        : '';
+      
+      Swal.fire({
+        title: 'Comment Posted!',
+        text: `Your comment has been added successfully.${mentionText}`,
+        icon: 'success',
+        timer: 2500,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900'
+        }
+      });
+      
+      // Clear mentioned users after successful post
+      setMentionedUsers([]);
+    } catch (error) {
+      // Error notification
+      Swal.fire({
+        title: 'Failed to Post Comment',
+        text: 'There was an error posting your comment. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'OK',
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900',
+          confirmButton: 'rounded-lg font-medium px-4 py-2'
+        }
+      });
+    }
+  };
+
+  // Enhanced cancel handler with SweetAlert2
+  const handleCancel = async () => {
+    if (value.trim() || mentionedUsers.length > 0) {
+      const result = await Swal.fire({
+        title: 'Discard Comment?',
+        html: `
+          <div class="text-left">
+            <p class="text-gray-600 mb-3">Are you sure you want to discard this comment?</p>
+            ${value.trim() ? `
+              <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-orange-400 mb-3 max-h-20 overflow-y-auto">
+                <p class="text-sm text-gray-700">"${value.substring(0, 150)}${value.length > 150 ? '...' : ''}"</p>
+              </div>
+            ` : ''}
+            ${mentionedUsers.length > 0 ? `
+              <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                <p class="text-sm text-blue-700">You have mentioned ${mentionedUsers.length} user${mentionedUsers.length !== 1 ? 's' : ''} in this comment.</p>
+              </div>
+            ` : ''}
+          </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Discard',
+        cancelButtonText: 'Keep Writing',
+        focusCancel: true,
+        customClass: {
+          popup: 'rounded-lg',
+          title: 'text-lg font-semibold text-gray-900',
+          confirmButton: 'rounded-lg font-medium px-4 py-2',
+          cancelButton: 'rounded-lg font-medium px-4 py-2'
+        }
+      });
+
+      if (result.isConfirmed) {
+        onCancel();
+        setMentionedUsers([]);
+      }
+    } else {
+      onCancel();
+      setMentionedUsers([]);
+    }
   };
 
   const getRoleColor = (role?: string) => {
@@ -270,13 +392,13 @@ export default function CommentForm({
         </div>
         <div className="flex items-center space-x-3">
           <button
-            onClick={onCancel}
+            onClick={handleCancel}
             className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-all duration-200 font-medium"
           >
             Discard
           </button>
           <button
-            onClick={onSubmit}
+            onClick={handleSubmit}
             disabled={!value.trim() || submitting}
             className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-600 disabled:hover:to-indigo-600 flex items-center space-x-2 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
           >

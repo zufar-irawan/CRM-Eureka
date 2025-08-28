@@ -4,9 +4,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { makeAuthenticatedRequest } from '../utils/auth';
 import { TASK_API_ENDPOINTS } from '../utils/constants';
-import type { TaskComment } from '../types';
+import type { CurrentUser, TaskComment } from '../types';
 
-export function useTaskComments(taskId: string | string[] | undefined) {
+export function useTaskComments(taskId: string | string[] | undefined, currentUser: CurrentUser | null) {
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsError, setCommentsError] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export function useTaskComments(taskId: string | string[] | undefined) {
         TASK_API_ENDPOINTS.TASK_COMMENTS(normalizedTaskId),
         {
           method: 'POST',
-          body: JSON.stringify({ comment_text: content }),
+          body: JSON.stringify({ comment_text: content, commented_by: currentUser?.id }),
         }
       );
 

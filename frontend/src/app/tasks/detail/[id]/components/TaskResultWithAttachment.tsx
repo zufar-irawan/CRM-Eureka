@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 interface TaskResultWithAttachmentProps {
   taskId: string;
   onSuccess: () => void;
+  currentUser: CurrentUser | null;
 }
 
 const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ taskId, onSuccess }) => {
@@ -120,7 +121,7 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/results/with-attachments`, {
         method: 'POST',
         body: formData,
-        credentials: 'include',
+        credentials: 'include', // Ensure cookies are sent
       });
 
       const result = await response.json();

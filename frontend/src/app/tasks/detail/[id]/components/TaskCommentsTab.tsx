@@ -10,9 +10,10 @@ import AddTaskComment from './AddTaskComments';
 interface TaskCommentsTabProps {
   taskId: string | string[] | undefined;
   currentUser: CurrentUser | null;
+  refreshComments: () => void;
 }
 
-export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTabProps) {
+export default function TaskCommentsTab({ taskId, currentUser, refreshComments }: TaskCommentsTabProps) {
   const [showAddComment, setShowAddComment] = useState(false);
 
   const {
@@ -23,7 +24,7 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
     addComment,
     updateComment,
     deleteComment,
-  } = useTaskComments(taskId);
+  } = useTaskComments(taskId, currentUser);
 
   const handleCommentAdded = () => {
     fetchComments();
@@ -53,8 +54,8 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <MessageSquare className="h-5 w-5 text-gray-500" />
-          <h2 className="text-lg font-medium">Comments</h2>
+          {/* <MessageSquare className="h-5 w-5 text-gray-500" /> */}
+          <h2 className="text-xl font-semibold text-gray-900">Comments</h2>
           <span className="text-sm text-gray-500">({commentsArray.length})</span>
         </div>
         <button

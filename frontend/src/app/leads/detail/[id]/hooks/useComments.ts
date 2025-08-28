@@ -158,9 +158,6 @@ export const useComments = (leadId: string | string[] | undefined) => {
 
   // Delete comment (handles nested deletion)
   const handleDeleteComment = useCallback(async (commentId: number) => {
-    if (!window.confirm('Are you sure you want to delete this comment and all its replies?')) {
-      return;
-    }
 
     try {
       const response = await makeAuthenticatedRequest(

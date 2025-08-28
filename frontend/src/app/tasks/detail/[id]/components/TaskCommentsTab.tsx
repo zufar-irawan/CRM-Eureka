@@ -1,7 +1,7 @@
 "use client";
 
 import { MessageSquare, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CurrentUser } from '../types';
 import { useTaskComments } from '../hooks/useTaskComments';
 import TaskCommentItem from './TaskCommentsItem';
@@ -39,6 +39,16 @@ export default function TaskCommentsTab({ taskId, currentUser, refreshComments }
   const handleCommentDeleted = () => {
     fetchComments();
   };
+
+  useEffect(() => {
+    const refreshHandler = () => {
+      fetchComments()
+    }
+
+    window.addEventListener("task-result", refreshHandler)
+
+    return () => window.removeEventListener("task-result", refreshHandler)
+  }, [])
 
   // Ensure comments is always an array
   const commentsArray = Array.isArray(comments) ? comments : [];

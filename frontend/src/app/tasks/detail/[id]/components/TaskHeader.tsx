@@ -122,6 +122,8 @@ export default function TaskHeader({
       setPendingCompletion(false);
       onTaskUpdate();
 
+      window.dispatchEvent(new Event("task-result"))
+
       Swal.fire({
         icon: 'success',
         title: 'Success!',

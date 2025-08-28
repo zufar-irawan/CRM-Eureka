@@ -79,6 +79,8 @@ export default function DesktopTable({
   selectedCategory,
   selectedPriority,
   searchTerm,
+  rows,
+  indexOffset = 0,
 }: {
   pathname: string;
   columns: Column[];
@@ -90,6 +92,8 @@ export default function DesktopTable({
   searchTerm?: string;
   selectedCategory?: string | null;
   selectedPriority?: string | null;
+  rows?: any[];
+  indexOffset?: number;
 }) {
   const [data, setData] = useState<any[]>([]);
   const [originalData, setOriginalData] = useState<any[]>([]);
@@ -99,6 +103,8 @@ export default function DesktopTable({
   const router = useRouter();
 
   useEffect(() => {
+    if (rows) return
+
     const refresh = () => {
       fetchData({
         setData: (newData) => {
@@ -130,7 +136,7 @@ export default function DesktopTable({
     window.addEventListener("create", refresh);
 
     return () => window.removeEventListener("create", refresh);
-  }, [selectedStatus, selectedCategory, selectedPriority, searchTerm]);
+  }, [rows, selectedStatus, selectedCategory, selectedPriority, searchTerm]);
 
   // Apply sorting when sortConfig or originalData changes
   useEffect(() => {
@@ -139,6 +145,14 @@ export default function DesktopTable({
       setData(sortedData);
     }
   }, [sortConfig, originalData]);
+
+  useEffect(() => {
+    if (rows) {
+      setOriginalData(rows);
+      setData(sortData(rows, sortConfig));
+    }
+  }, [rows, sortConfig]);
+
 
   const handleSort = (columnKey: string) => {
     setSortConfig((prevConfig) => {
@@ -270,7 +284,9 @@ export default function DesktopTable({
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
                 onClick={() => handleRowClick(row.id)}
               >
-                <td className="px-6 py-4 text-sm text-center">{index + 1}</td>
+                <td className="px-6 py-4 text-sm text-center">
+                  {indexOffset + index + 1}
+                </td>
 
                 {columns
                   .filter((col) => visibleColumns.includes(col.key))

@@ -183,6 +183,16 @@ export default function MainLeads() {
   const [userMap, setUserMap] = useState<Map<number, string>>(new Map());
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+  const [paginatedLeads, setPaginatedLeads] = useState<any[]>([]);
+
+  // Hitung total halaman
+  const totalPages = Math.ceil(leads.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, leads.length);
+
   // Initialize visible columns with defaults
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
     return Object.entries(ALL_COLUMNS)
@@ -303,6 +313,12 @@ export default function MainLeads() {
       setLeads([...originalLeads]);
     }
   };
+
+  useEffect(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    setPaginatedLeads(leads.slice(start, end));
+  }, [leads, currentPage]);
 
   useEffect(() => {
     if (sortConfig) {
@@ -680,11 +696,11 @@ export default function MainLeads() {
                 </div>
 
                 <div className="px-4 py-3">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">Lead Owner</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">Search</p>
                   <div className="relative mt-2">
                     <input
                       type="text"
-                      placeholder="Search by owner"
+                      placeholder="Search by leads name"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"
@@ -829,7 +845,7 @@ export default function MainLeads() {
                     No unconverted leads found
                   </td>
                 </tr>
-              ) : leads.map((lead, index) => (
+              ) : paginatedLeads.map((lead, index) => (
                 <tr
                   key={lead.id}
                   className="hover:bg-gray-50 transition-colors cursor-pointer"
@@ -1015,25 +1031,41 @@ export default function MainLeads() {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
         <div className="text-sm text-gray-700">
-          Showing <span className="font-medium">1</span> to <span className="font-medium">{leads.length}</span> of{" "}
+          Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+          <span className="font-medium">{endIndex}</span> of{" "}
           <span className="font-medium">{leads.length}</span> results
-          {sortConfig && (
-            <span className="ml-2 text-xs text-blue-600">
-              (sorted by {ALL_COLUMNS[sortConfig.key as keyof typeof ALL_COLUMNS]?.label} {sortConfig.direction === 'asc' ? '↑' : '↓'})
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Previous
           </button>
-          <button className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
-            1
-          </button>
-          <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-2 text-sm rounded-md ${currentPage === page
+                ? "bg-blue-600 text-white"
+                : "border border-gray-300 bg-white hover:bg-gray-50"
+                }`}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Next
           </button>
         </div>
+
       </div>
 
       {/* Edit Lead Modal */}

@@ -168,6 +168,16 @@ export default function Deals() {
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
   const openEditModal = useDealEditStore((state) => state.openModal)
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+  const [paginatedDeals, setPaginatedDeals] = useState<any[]>([]);
+
+  // Hitung total halaman
+  const totalPages = Math.ceil(deals.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, deals.length);
+
   const stages = ["proposal", "negotiation", "won", "lost"];
 
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
@@ -235,6 +245,12 @@ export default function Deals() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    setPaginatedDeals(deals.slice(start, end));
+  }, [deals, currentPage]);
 
   const handleRowClick = (id: string) => {
     router.push(`/deals/detail/${id}`);
@@ -569,7 +585,7 @@ export default function Deals() {
                       <div className="relative mt-2">
                         <input
                           type="text"
-                          placeholder="Search deals by title and code"
+                          placeholder="Search deals by title & code"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"
@@ -716,7 +732,7 @@ export default function Deals() {
                       </td>
                     </tr>
                   ) : (
-                    deals.map((deal, index) => (
+                    paginatedDeals.map((deal, index) => (
                       <tr
                         key={deal.id}
                         className="hover:bg-gray-50 transition-colors cursor-pointer"
@@ -914,21 +930,41 @@ export default function Deals() {
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
               <div className="text-sm text-gray-700">
-                Showing <span className="font-medium">1</span> to{" "}
-                <span className="font-medium">{deals.length}</span> of{" "}
+                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+                <span className="font-medium">{endIndex}</span> of{" "}
                 <span className="font-medium">{deals.length}</span> results
               </div>
               <div className="flex items-center gap-2">
-                <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Previous
                 </button>
-                <button className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  1
-                </button>
-                <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-2 text-sm rounded-md ${currentPage === page
+                      ? "bg-blue-600 text-white"
+                      : "border border-gray-300 bg-white hover:bg-gray-50"
+                      }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Next
                 </button>
               </div>
+
             </div>
 
             {/* Edit Deal Modal */}

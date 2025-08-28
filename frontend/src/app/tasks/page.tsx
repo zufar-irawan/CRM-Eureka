@@ -6,6 +6,8 @@ import {
   Filter,
   Columns,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import EditLeadModal from "../leads/components/EditLeadModal";
 import DesktopTable, { Column } from "@/components/ListTable/DesktopTable";
@@ -16,6 +18,7 @@ import { useTaskModalStore } from "@/Store/taskModalStore";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { checkAuthStatus } from "../../../utils/auth";
+import React from "react";
 
 const allColumns: Column[] = [
   { key: "title", label: "Title" },
@@ -107,6 +110,7 @@ export default function TasksList() {
   }, [router]);
 
   const [data, setData] = useState<any[]>([]);
+  const [filteredData, setFilteredData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -116,7 +120,12 @@ export default function TasksList() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+
+  // Pagination states
+  const [paginatedData, setPaginatedData] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
 
   const status = ["new", "pending", "completed", "overdue", "cancelled"];
   const categories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
@@ -131,6 +140,92 @@ export default function TasksList() {
   const [visiblieFields, setVisibleFields] = useState<string[]>(
     allFields.map(col => col.key)
   )
+
+  // Calculate pagination info
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+
+  // Filter and paginate data
+  useEffect(() => {
+    let filtered = data;
+
+    // Apply filters
+    if (selectedStatus) {
+      filtered = filtered.filter(item =>
+        item.status?.toLowerCase() === selectedStatus.toLowerCase()
+      );
+    }
+
+    if (selectedCategory) {
+      filtered = filtered.filter(item =>
+        item.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    if (selectedPriority) {
+      filtered = filtered.filter(item =>
+        item.priority?.toLowerCase() === selectedPriority.toLowerCase()
+      );
+    }
+
+    if (debouncedSearch) {
+      filtered = filtered.filter(item =>
+        item.title?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        item.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
+      );
+    }
+
+    setFilteredData(filtered);
+
+    // Reset to first page when filters change
+    setCurrentPage(1);
+  }, [data, selectedStatus, selectedCategory, selectedPriority, debouncedSearch]);
+
+  // Update paginated data when filteredData or currentPage changes
+  useEffect(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const endIdx = startIdx + itemsPerPage;
+    setPaginatedData(filteredData.slice(startIdx, endIdx));
+  }, [filteredData, currentPage, itemsPerPage]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const start = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPages, start + maxVisiblePages - 1);
+
+      if (start > 1) {
+        pages.push(1);
+        if (start > 2) pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages) {
+        if (end < totalPages - 1) pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
 
   // Fungsi untuk mendapatkan warna status yang sesuai dengan kanban
   const getStatusColor = (status: string) => {
@@ -221,7 +316,7 @@ export default function TasksList() {
 
   const handleRefresh = async () => {
     await fetchData({
-      setData, setLoading, url: "/tasks/", selectedStatus, searchTerm
+      setData, setLoading, url: "/tasks/"
     });
   }
 
@@ -233,10 +328,35 @@ export default function TasksList() {
   }
 
   useEffect(() => {
+    handleRefresh(); // fetch sekali, sisanya slicing di frontend
+  }, []);
+
+  useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500)
 
     return () => clearTimeout(handler)
-  }, [searchTerm]); // Dependency array untuk memantau perubahan filter
+  }, [searchTerm]);
+
+  // Custom DesktopTable component that uses paginatedData
+  // const PaginatedDesktopTable = () => {
+  //   return (
+  //     <DesktopTable
+  //       pathname="/tasks/"
+  //       columns={allColumns.map(col => ({
+  //         ...col,
+  //         render: col.key === 'status' ? (value) => renderStatusBadge(value) :
+  //           col.key === 'priority' ? (value) => renderPriorityBadge(value) :
+  //             col.render
+  //       }))}
+  //       visibleColumns={visibleColumns}
+  //       loading={loading}
+  //       setLoading={setLoading}
+  //       onEdit={(row) => openModal(row)}
+  //       data={paginatedData}
+  //       totalData={filteredData.length}
+  //     />
+  //   );
+  // };
 
   return (
     <main className="p-4 overflow-visible lg:p-6 bg-white pb-6 relative">
@@ -418,6 +538,8 @@ export default function TasksList() {
           selectedCategory={selectedCategory}
           selectedPriority={selectedPriority}
           searchTerm={debouncedSearch}
+          rows={paginatedData}
+          indexOffset={startIndex}
         />
 
         <MobileCards
@@ -431,22 +553,58 @@ export default function TasksList() {
           visibleFields={visibleColumns}
         />
 
+        {/* Updated Pagination Component */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
           <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">{data.length}</span> of{" "}
-            <span className="font-medium">{data.length}</span> results
+            Showing <span className="font-medium">{filteredData.length > 0 ? startIndex + 1 : 0}</span> to{" "}
+            <span className="font-medium">{endIndex}</span> of{" "}
+            <span className="font-medium">{filteredData.length}</span> results
           </div>
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              Previous
-            </button>
-            <button className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              1
-            </button>
-            <button className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              Next
-            </button>
-          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              {/* Previous Button */}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Previous</span>
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1">
+                {getPageNumbers().map((page, index) => (
+                  <React.Fragment key={index}>
+                    {page === '...' ? (
+                      <span className="px-3 py-2 text-sm text-gray-500">...</span>
+                    ) : (
+                      <button
+                        onClick={() => handlePageChange(page as number)}
+                        className={`px-3 py-2 text-sm rounded-md transition-colors ${currentPage === page
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'border border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              {/* Next Button */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+              >
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </main>

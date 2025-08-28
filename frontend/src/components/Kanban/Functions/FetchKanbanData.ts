@@ -6,7 +6,7 @@ type fetchDataProps = {
   url: string;
   setData: React.Dispatch<React.SetStateAction<any[]>>;
   setContainers: React.Dispatch<React.SetStateAction<DNDType[]>>;
-  groupBy: string; // misal "stage", "status", dll
+  groupBy: string; 
   mapItem: (item: any) => {
     id: string;
     itemId: number;
@@ -15,8 +15,8 @@ type fetchDataProps = {
     email: string;
     mobileno: string;
   };
-  filterBy?: string; // field yang akan difilter
-  searchTerm?: string; // kata kunci pencarian
+  filterBy?: string; 
+  searchTerm?: string; 
 };
 
 export default async function fetchKanbanData({
@@ -31,7 +31,9 @@ export default async function fetchKanbanData({
   try {
     console.log("Url: ", url)
 
-    const response = await axios.get(url);
+    const response = await axios.get(url, {
+      withCredentials: true,
+    });
     let rawData 
     if(url === "http://localhost:5000/api/leads"){
       rawData = response.data.leads

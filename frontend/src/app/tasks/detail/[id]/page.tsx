@@ -63,6 +63,15 @@ export default function TaskDetailPage() {
     if (!userLoading) {
       fetchTask();
     }
+
+    const handleRefresh = () => {
+      fetchTask()
+    }
+
+    window.addEventListener("task-result", handleRefresh)
+
+    return () => window.removeEventListener("task-result", handleRefresh)
+
   }, [id, userLoading, fetchTask]);
 
   const renderTabContent = () => {

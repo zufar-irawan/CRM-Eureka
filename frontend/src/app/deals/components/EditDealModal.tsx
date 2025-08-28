@@ -44,7 +44,9 @@ export default function EditDealModal() {
     if (id && isOpen) {
       const fetchDeal = async () => {
         try {
-          const res = await fetch(`http://localhost:3000/api/deals/${id}`);
+          const res = await fetch(`http://localhost:3000/api/deals/${id}`, {
+            credentials: 'include',
+          });
           const result = await res.json();
           const data = result.data;
 
@@ -67,7 +69,9 @@ export default function EditDealModal() {
 
     const fetchCompanies = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/companies")
+        const res = await fetch("http://localhost:3000/api/companies", {
+          credentials: 'include',
+        })
         const result = await res.json()
         const data = result.data
 
@@ -84,7 +88,9 @@ export default function EditDealModal() {
 
     const fetchContact = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/contacts")
+        const res = await fetch("http://localhost:3000/api/contacts", {
+          credentials: 'include',
+        })
         const result = await res.json()
         const data = result.data
 

@@ -127,6 +127,7 @@ export const makeAuthenticatedRequest = async (url: string, options: RequestInit
     ...options,
     headers,
     mode: 'cors',
+    credentials: 'include',
   });
 };
 

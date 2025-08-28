@@ -78,7 +78,9 @@ const CompanyDetailPage = () => {
     const fetchCompany = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/companies/${companyId}`);
+        const response = await fetch(`/api/companies/${companyId}`, {
+          credentials: 'include',
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch company');
         }
@@ -113,6 +115,7 @@ const CompanyDetailPage = () => {
       try {
         const response = await fetch(`/api/companies/${companyId}`, {
           method: 'DELETE',
+          credentials: 'include',
         });
 
         if (!response.ok) {

@@ -1,4 +1,6 @@
 // hooks/useLeadUser.ts - Simple Fix
+"use client";
+
 import { useState, useEffect, useCallback } from 'react';
 import { makeAuthenticatedRequest } from '../utils/constants';
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback } from 'react';
 import { makeAuthenticatedRequest } from '../utils/auth';
 import { TASK_API_ENDPOINTS } from '../utils/constants';

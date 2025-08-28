@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { TaskComment, CurrentUser } from '../types';
 import { formatDate, getFirstChar } from '../utils/formatting';
 import { makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
+import Swal from 'sweetalert2';
 
 interface TaskCommentItemProps {
   comment: TaskComment;

@@ -10,33 +10,33 @@ import { sequelize } from '../config/db.js';
 import { autoUpdateKPI } from "./kpiContoller.js";
 import path from 'path';
 import fs from 'fs';
-import { 
-  upload, 
-  handleUploadError, 
-  getFileType, 
-  calculateCompressionRatio, 
+import {
+  upload,
+  handleUploadError,
+  getFileType,
+  calculateCompressionRatio,
   deleteFile,
-  UPLOAD_CONFIG 
+  UPLOAD_CONFIG
 } from '../utils/uploadUtils.js';
 
 const generateTaskCode = async (transaction) => {
-    const lastTask = await Tasks.findOne({
-        where: {
-            code: {
-                [Op.like]: 'TK-%'
-            }
-        },
-        order: [['id', 'DESC']],
-        transaction
-    });
+  const lastTask = await Tasks.findOne({
+    where: {
+      code: {
+        [Op.like]: 'TK-%'
+      }
+    },
+    order: [['id', 'DESC']],
+    transaction
+  });
 
-    let nextNumber = 1;
-    if (lastTask && lastTask.code) {
-        const lastNumber = parseInt(lastTask.code.split('-')[1]);
-        nextNumber = lastNumber + 1;
-    }
+  let nextNumber = 1;
+  if (lastTask && lastTask.code) {
+    const lastNumber = parseInt(lastTask.code.split('-')[1]);
+    nextNumber = lastNumber + 1;
+  }
 
-    return `TK-${nextNumber.toString().padStart(3, '0')}`;
+  return `TK-${nextNumber.toString().padStart(3, '0')}`;
 };
 
 export const getTasks = async (req, res) => {
@@ -93,12 +93,23 @@ export const getTasks = async (req, res) => {
           code: {
             [Op.like]: `%${search}%`
           }
-        }
+        },
       ];
     }
 
     const tasks = await Tasks.findAll({
-      where: whereClause,
+      where: search
+        ? {
+          [Op.or]: [
+            { title: { [Op.like]: `%${search}%` } },
+            { category: { [Op.like]: `%${search}%` } },
+            { code: { [Op.like]: `%${search}%` } },
+            sequelize.where(sequelize.col('assignee.name'), {
+              [Op.like]: `%${search}%`
+            })
+          ]
+        }
+        : whereClause,
       include: [
         {
           model: User,
@@ -129,7 +140,8 @@ export const getTasks = async (req, res) => {
           required: false
         }
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at', 'DESC']],
+      subQuery: false,
     });
 
     // Transform data untuk menambahkan assigned_user_name
@@ -161,7 +173,7 @@ export const getTasks = async (req, res) => {
 // POST /api/tasks - Create task
 export const createTask = async (req, res) => {
   const transaction = await sequelize.transaction();
-  
+
   try {
     const {
       lead_id,
@@ -999,7 +1011,7 @@ export const deleteTaskResult = async (req, res) => {
 
 export const addTaskResultWithAttachments = async (req, res) => {
   const transaction = await sequelize.transaction();
-  
+
   try {
     const { id } = req.params;
     const { result_text, result_type } = req.body;
@@ -1082,24 +1094,24 @@ export const addTaskResultWithAttachments = async (req, res) => {
       for (const file of files) {
         const fileType = getFileType(file.mimetype);
         const originalSize = file.size;
-        
+
         if (originalSize <= 0) {
           console.warn(`⚠️ Invalid file size for ${file.originalname}: ${originalSize}`);
           continue;
         }
-        
+
         const compressedSize = originalSize;
-        
+
         let compressionRatio;
         if (compressedSize >= originalSize) {
           compressionRatio = 1.0;
         } else {
           compressionRatio = compressedSize / originalSize;
         }
-        
+
         const finalCompressedSize = Math.max(compressedSize, 1);
         const finalCompressionRatio = Math.max(compressionRatio, 0.01);
-        
+
         // ✅ DEBUG: Log what we're storing
         console.log(`💾 Storing attachment:`, {
           original_filename: file.originalname,
@@ -1111,7 +1123,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
           compressed_size: finalCompressedSize,
           compression_ratio: finalCompressionRatio.toFixed(2)
         });
-        
+
         const attachment = await TaskAttachments.create({
           task_result_id: newResult.id,
           original_filename: file.originalname, // ✅ This should contain the real filename
@@ -1124,7 +1136,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
           compression_ratio: finalCompressionRatio.toFixed(2),
           upload_by: created_by
         }, { transaction });
-        
+
         attachments.push(attachment);
       }
     }
@@ -1168,7 +1180,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
   } catch (error) {
     await transaction.rollback();
     console.error('❌ Error adding task result with attachments:', error);
-    
+
     if (req.files) {
       req.files.forEach(file => {
         if (fs.existsSync(file.path)) {
@@ -1176,7 +1188,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
         }
       });
     }
-    
+
     res.status(500).json({
       success: false,
       message: "Error adding task result with attachments",
@@ -1219,7 +1231,7 @@ export const downloadAttachment = async (req, res) => {
     }
 
     const filePath = path.resolve(attachment.file_path);
-    
+
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
@@ -1274,7 +1286,7 @@ export const viewAttachment = async (req, res) => {
     }
 
     const filePath = path.resolve(attachment.file_path);
-    
+
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
@@ -1317,7 +1329,7 @@ export const viewAttachment = async (req, res) => {
 // ===== NEW: DELETE /api/tasks/attachments/:attachmentId - Delete attachment =====
 export const deleteAttachment = async (req, res) => {
   const transaction = await sequelize.transaction();
-  
+
   try {
     const { attachmentId } = req.params;
 
@@ -1332,12 +1344,12 @@ export const deleteAttachment = async (req, res) => {
     }
 
     const filePath = attachment.file_path;
-    
+
     // Delete from database
     await attachment.destroy({ transaction });
-    
+
     await transaction.commit();
-    
+
     // Delete physical file
     await deleteFile(filePath);
 

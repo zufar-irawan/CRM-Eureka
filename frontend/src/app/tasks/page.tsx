@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { checkAuthStatus } from "../../../utils/auth";
 import React from "react";
+import useUser from "../../../hooks/useUser";
 
 const allColumns: Column[] = [
   { key: "title", label: "Title" },
@@ -36,6 +37,12 @@ const allColumns: Column[] = [
   },
   { key: "status", label: "Status" },
   { key: "priority", label: "Priority" },
+  {
+    key: "assignee_name",
+    label: "Assigned To",
+    render: (_: any, row: any) => row.assignee?.name || "-"
+  },
+
   { key: "created_by_name", label: "Created By" },
   {
     key: "updated_at",
@@ -47,7 +54,8 @@ const allColumns: Column[] = [
         day: 'numeric',
       }),
   },
-]
+];
+
 
 const allFields: Field[] = [
   { key: "description", label: "Description" },
@@ -61,10 +69,13 @@ const allFields: Field[] = [
       day: 'numeric',
     }),
   },
+  {
+    key: "assignee_name",
+    label: "Assigned To",
+    render: (_: any, row: any) => row.assignee?.name || "-"
+  },
+
   { key: "created_by_name", label: "Created By" },
-  // { key: "status", label: "Status" },
-  // { key: "priority", label: "Priority" },
-  // { key: "assigned_to", label: "Assigned To" },
   {
     key: "created_at",
     label: "Created At",
@@ -109,6 +120,9 @@ export default function TasksList() {
     checkAuth();
   }, [router]);
 
+  const { user } = useUser();
+
+  const [showMyTask, setShowMyTask] = useState(false);
   const [data, setData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,9 +184,11 @@ export default function TasksList() {
     }
 
     if (debouncedSearch) {
+      const search = debouncedSearch.toLowerCase();
       filtered = filtered.filter(item =>
-        item.title?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        item.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
+        item.title?.toLowerCase().includes(search) ||
+        item.category?.toLowerCase().includes(search) ||
+        item.assignee?.name?.toLowerCase().includes(search)
       );
     }
 
@@ -316,47 +332,19 @@ export default function TasksList() {
 
   const handleRefresh = async () => {
     await fetchData({
-      setData, setLoading, url: "/tasks/"
+      setData, setLoading, url: "/tasks/", assignedTo: showMyTask && user ? user.id : undefined,
     });
-  }
-
-  const handleSaveLead = (updatedLead: any) => {
-    setData(prev => prev.map(lead =>
-      lead.id === updatedLead.id ? updatedLead : lead
-    ));
-    setEditModalOpen(false);
   }
 
   useEffect(() => {
     handleRefresh(); // fetch sekali, sisanya slicing di frontend
-  }, []);
+  }, [showMyTask]);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500)
 
     return () => clearTimeout(handler)
   }, [searchTerm]);
-
-  // Custom DesktopTable component that uses paginatedData
-  // const PaginatedDesktopTable = () => {
-  //   return (
-  //     <DesktopTable
-  //       pathname="/tasks/"
-  //       columns={allColumns.map(col => ({
-  //         ...col,
-  //         render: col.key === 'status' ? (value) => renderStatusBadge(value) :
-  //           col.key === 'priority' ? (value) => renderPriorityBadge(value) :
-  //             col.render
-  //       }))}
-  //       visibleColumns={visibleColumns}
-  //       loading={loading}
-  //       setLoading={setLoading}
-  //       onEdit={(row) => openModal(row)}
-  //       data={paginatedData}
-  //       totalData={filteredData.length}
-  //     />
-  //   );
-  // };
 
   return (
     <main className="p-4 overflow-visible lg:p-6 bg-white pb-6 relative">
@@ -445,7 +433,7 @@ export default function TasksList() {
                     <div className="relative mt-2">
                       <input
                         type="text"
-                        placeholder="Search Tasks by Title and Category"
+                        placeholder="Search Tasks by Title, Category, and Assigned users"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"
@@ -518,6 +506,16 @@ export default function TasksList() {
                 </div>
               )}
             </div>
+
+            <button
+              onClick={() => setShowMyTask((prev) => !prev)}
+              className={`px-3 py-2 text-sm rounded-md border transition-colors ${showMyTask
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+            >
+              My Task
+            </button>
 
           </div>
         </div>

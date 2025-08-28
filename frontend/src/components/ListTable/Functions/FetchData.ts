@@ -19,10 +19,11 @@ type fetchDataProps = {
     selectedCategory?:string | null
     selectedPriority?:string | null
     searchTerm?:string
+    assignedTo?: string | number
 }
 
 const fetchData = async (
-    { setData, setLoading, url, selectedStatus, selectedCategory, selectedPriority, searchTerm }: fetchDataProps
+    { setData, setLoading, url, selectedStatus, selectedCategory, selectedPriority, searchTerm, assignedTo}: fetchDataProps
 ) => {
     try {
         setLoading(true)
@@ -32,6 +33,7 @@ const fetchData = async (
         if (selectedStatus) params.status = selectedStatus
         if (selectedPriority) params.priority = selectedPriority
         if (selectedCategory) params.category = selectedCategory
+        if (assignedTo) params.assigned_to = assignedTo
         if (searchTerm) params.search = searchTerm
 
         const response = await api.get(url, { params })

@@ -14,7 +14,7 @@ import Swal from "sweetalert2";
 import { checkAuthStatus } from "../../../../../utils/auth";
 
 const TASK_TABS = [
-  { name: "Activity", icon: MessageSquare },
+  { name: "Comments", icon: MessageSquare },
   { name: "Results", icon: FileText },
   { name: "Attachments", icon: Paperclip, disabled: false },
 ];
@@ -44,7 +44,7 @@ export default function TaskDetailPage() {
   }, [router]);
 
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState("Activity");
+  const [activeTab, setActiveTab] = useState("Comments");
 
   const { currentUser, userLoading } = useAuth();
   const {
@@ -56,6 +56,7 @@ export default function TaskDetailPage() {
     updateTaskStatus,
     updateTaskAssignment,
     setTask,
+    refreshComments,
   } = useTaskDetail(id);
 
   useEffect(() => {
@@ -68,11 +69,11 @@ export default function TaskDetailPage() {
     if (!task) return null;
 
     switch (activeTab) {
-      case "Activity":
-        return <TaskCommentsTab taskId={id} currentUser={currentUser} />;
+      case "Comments":
+        return <TaskCommentsTab taskId={id} currentUser={currentUser} refreshComments={refreshComments} />;
       case "Results":
         return (
-          <TaskResultsTab taskId={id as string} currentUser={currentUser} />
+          <TaskResultsTab taskId={id as string} currentUser={currentUser} refreshComments={refreshComments} />
         );
       case "Attachments":
         return <TaskAttachmentsList taskId={id as string} currentUser={currentUser} />;

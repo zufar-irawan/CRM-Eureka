@@ -10,9 +10,10 @@ import AddTaskComment from './AddTaskComments';
 interface TaskCommentsTabProps {
   taskId: string | string[] | undefined;
   currentUser: CurrentUser | null;
+  refreshComments: () => void;
 }
 
-export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTabProps) {
+export default function TaskCommentsTab({ taskId, currentUser, refreshComments }: TaskCommentsTabProps) {
   const [showAddComment, setShowAddComment] = useState(false);
 
   const {
@@ -23,7 +24,7 @@ export default function TaskCommentsTab({ taskId, currentUser }: TaskCommentsTab
     addComment,
     updateComment,
     deleteComment,
-  } = useTaskComments(taskId);
+  } = useTaskComments(taskId, currentUser);
 
   const handleCommentAdded = () => {
     fetchComments();

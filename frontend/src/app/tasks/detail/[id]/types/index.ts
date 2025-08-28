@@ -29,6 +29,11 @@ export interface TaskComment {
   commented_at: string;
   created_at: string;
   updated_at: string;
+  commentedByUser?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
 
 export interface TaskResult {

@@ -10,9 +10,10 @@ import TaskResultWithAttachment from './TaskResultWithAttachment';
 interface TaskResultsTabProps {
   taskId: string | string[] | undefined;
   currentUser: CurrentUser | null;
+  refreshComments: () => void;
 }
 
-export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabProps) {
+export default function TaskResultsTab({ taskId, currentUser, refreshComments }: TaskResultsTabProps) {
   const [showAddResult, setShowAddResult] = useState(false);
 
   const {
@@ -34,6 +35,7 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
   const handleResultAdded = () => {
     fetchResults();
     setShowAddResult(false);
+    refreshComments();
   };
 
   const handleResultUpdated = () => {
@@ -74,6 +76,7 @@ export default function TaskResultsTab({ taskId, currentUser }: TaskResultsTabPr
         <div className="mb-6">
           <TaskResultWithAttachment
             taskId={taskId as string}
+            currentUser={currentUser}
             onSuccess={handleResultAdded}
           />
         </div>

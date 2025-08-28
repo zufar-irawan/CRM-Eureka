@@ -127,6 +127,14 @@ export const useTaskDetail = (id: string | string[] | undefined) => {
     }
   }, [fetchTask]);
 
+  const refreshComments = useCallback(() => {
+    // This will trigger a re-fetch of comments in TaskCommentsTab
+    // by simply causing a re-render of the parent component.
+    // In a more complex scenario, you might have a dedicated state for comments
+    // and a function to update them directly.
+    fetchTask(); // Re-fetch task data which includes comments
+  }, [fetchTask]);
+
   return {
     task,
     error,
@@ -135,6 +143,7 @@ export const useTaskDetail = (id: string | string[] | undefined) => {
     refreshTask,
     updateTaskStatus,
     updateTaskAssignment,
-    setTask
+    setTask,
+    refreshComments,
   };
 };

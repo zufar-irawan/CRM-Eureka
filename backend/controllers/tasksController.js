@@ -278,7 +278,8 @@ export const createTask = async (req, res) => {
 export const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const updateData = { ...req.body };
+    const userId = req.userId;
 
     if (updateData.category) {
       const validCategories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
@@ -300,7 +301,7 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    const oldStatus = task.status;
+    const oldTaskData = task.toJSON();
 
     if (updateData.lead_id) {
       if (isNaN(updateData.lead_id)) {
@@ -326,7 +327,37 @@ export const updateTask = async (req, res) => {
 
     await task.update(updateData);
 
-    if (oldStatus !== 'completed' && updateData.status === 'completed') {
+    const changes = [];
+    for (const key in updateData) {
+      if (oldTaskData[key] !== updateData[key] && key !== 'updated_at') {
+        let oldValue = oldTaskData[key];
+        let newValue = updateData[key];
+
+        if (key === 'assigned_to') {
+          const oldAssignee = await User.findByPk(oldValue);
+          const newAssignee = await User.findByPk(newValue);
+          oldValue = oldAssignee ? oldAssignee.name : 'Unassigned';
+          newValue = newAssignee ? newAssignee.name : 'Unassigned';
+        } else if (key === 'lead_id') {
+          const oldLead = await Leads.findByPk(oldValue);
+          const newLead = await Leads.findByPk(newValue);
+          oldValue = oldLead ? oldLead.fullname || oldLead.company : 'N/A';
+          newValue = newLead ? newLead.fullname || newLead.company : 'N/A';
+        }
+
+        changes.push(`- ${key} changed from "${oldValue}" to "${newValue}"`);
+      }
+    }
+
+    if (changes.length > 0) {
+      await TaskComments.create({
+        task_id: task.id,
+        comment_text: `Task details updated by ${req.userName || 'Unknown User'}:\n${changes.join('\n')}`,
+        commented_by: req.userId || null
+      });
+    }
+
+    if (oldTaskData.status !== 'completed' && updateData.status === 'completed') {
       await autoUpdateKPI(task.id, task.assigned_to);
       console.log(`KPI auto-updated for task ${task.code} completion`);
     }
@@ -481,6 +512,14 @@ export const updateTaskStatus = async (req, res) => {
     const oldStatus = task.status;
     await task.update({ status });
 
+    if (oldStatus !== status) {
+      await TaskComments.create({
+        task_id: task.id,
+        comment_text: `Task status changed from "${oldStatus}" to "${status}" by ${req.userName || 'Unknown User'}`,
+        commented_by: req.userId || null
+      });
+    }
+
     if (oldStatus !== 'completed' && status === 'completed') {
       await autoUpdateKPI(task.id, task.assigned_to);
       console.log(`📊 KPI auto-updated for task ${task.code} status change to completed`);
@@ -579,6 +618,11 @@ export const getTaskComments = async (req, res) => {
 
     const comments = await TaskComments.findAll({
       where: { task_id: taskId },
+      include: [{
+        model: User,
+        as: 'commentedByUser',
+        attributes: ['id', 'name']
+      }],
       order: [['commented_at', 'ASC']]
     });
 
@@ -850,6 +894,12 @@ export const addTaskResult = async (req, res) => {
       result_date: new Date()
     });
 
+    await TaskComments.create({
+      task_id: taskId,
+      comment_text: `Task result added by ${req.userName || 'Unknown User'}: ${result_text}`,
+      commented_by: req.userId || null
+    });
+
     res.status(201).json({
       success: true,
       message: "Task result berhasil ditambahkan",
@@ -1035,10 +1085,10 @@ export const addTaskResultWithAttachments = async (req, res) => {
         
         if (originalSize <= 0) {
           console.warn(`⚠️ Invalid file size for ${file.originalname}: ${originalSize}`);
-          continue; 
+          continue;
         }
         
-        const compressedSize = originalSize; 
+        const compressedSize = originalSize;
         
         let compressionRatio;
         if (compressedSize >= originalSize) {
@@ -1048,7 +1098,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
         }
         
         const finalCompressedSize = Math.max(compressedSize, 1);
-        const finalCompressionRatio = Math.max(compressionRatio, 0.01); 
+        const finalCompressionRatio = Math.max(compressionRatio, 0.01);
         
         // ✅ DEBUG: Log what we're storing
         console.log(`💾 Storing attachment:`, {
@@ -1071,13 +1121,19 @@ export const addTaskResultWithAttachments = async (req, res) => {
           file_type: fileType,
           mime_type: file.mimetype,
           compressed_size: finalCompressedSize,
-          compression_ratio: finalCompressionRatio.toFixed(2), 
+          compression_ratio: finalCompressionRatio.toFixed(2),
           upload_by: created_by
         }, { transaction });
         
         attachments.push(attachment);
       }
     }
+
+    await TaskComments.create({
+      task_id: taskId,
+      comment_text: `Task result added with attachments by ${req.userName || 'Unknown User'}: ${result_text}`,
+      commented_by: req.userId || null
+    }, { transaction });
 
     await transaction.commit();
 

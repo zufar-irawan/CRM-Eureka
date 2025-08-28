@@ -32,5 +32,6 @@ export const makeAuthenticatedRequest = async (url: string, options: RequestInit
     ...options,
     headers,
     mode: 'cors',
+    credentials: 'include', // Important for sending HttpOnly cookies
   });
 };

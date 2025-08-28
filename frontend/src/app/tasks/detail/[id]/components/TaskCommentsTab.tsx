@@ -51,7 +51,21 @@ export default function TaskCommentsTab({ taskId, currentUser, refreshComments }
   }, [])
 
   // Ensure comments is always an array
-  const commentsArray = Array.isArray(comments) ? comments : [];
+  const commentsArray = Array.isArray(comments)
+    ? [...comments].sort((a, b) => {
+      // Kalau ada created_at, pakai itu, kalau tidak fallback ke id
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+
+      if (dateA && dateB) {
+        return dateB - dateA; // terbaru di atas
+      }
+
+      // Fallback pakai id kalau tanggal tidak tersedia
+      return b.id - a.id;
+    })
+    : [];
+
 
   if (commentsLoading) {
     return (
@@ -102,7 +116,7 @@ export default function TaskCommentsTab({ taskId, currentUser, refreshComments }
         </div>
         <button
           onClick={() => setShowAddComment(true)}
-         className="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+          className="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
         >
           <Plus className="h-4 w-4 mr-2" />
           <span>Add Comment</span>

@@ -92,7 +92,7 @@ export default function TaskCommentsTab({ taskId, currentUser, refreshComments }
         </div>
         <button
           onClick={() => setShowAddComment(true)}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+         className="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
         >
           <Plus className="h-4 w-4 mr-2" />
           <span>Add Comment</span>

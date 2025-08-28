@@ -72,10 +72,10 @@ const TaskAttachmentsList: React.FC<TaskAttachmentsListProps> = ({ taskId, curre
         method: 'DELETE'
       });
       const result = await response.json();
-      
+
       if (result.success) {
         setAttachments(prev => prev.filter(att => att.id !== attachmentId));
-        
+
         Swal.fire({
           icon: 'success',
           title: 'Deleted',
@@ -88,7 +88,7 @@ const TaskAttachmentsList: React.FC<TaskAttachmentsListProps> = ({ taskId, curre
       }
     } catch (error) {
       console.error('Error deleting attachment:', error);
-      
+
       Swal.fire({
         icon: 'error',
         title: 'Delete Failed',
@@ -157,8 +157,8 @@ const TaskAttachmentsList: React.FC<TaskAttachmentsListProps> = ({ taskId, curre
   const canDelete = (attachment: TaskAttachment): boolean => {
     // Assuming uploader only has name property, we'll check if current user is admin
     // or if uploader name matches current user name
-    return Boolean(currentUser?.role === 'admin' || 
-           (currentUser?.name && attachment.uploader?.name === currentUser.name));
+    return Boolean(currentUser?.role === 'admin' ||
+      (currentUser?.name && attachment.uploader?.name === currentUser.name));
   };
 
   if (loading) {
@@ -175,7 +175,7 @@ const TaskAttachmentsList: React.FC<TaskAttachmentsListProps> = ({ taskId, curre
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 px-5 py-2">
         <Paperclip className="w-4 h-4 text-gray-600" />
         <h4 className="font-medium text-gray-900">Attachments ({attachments.length})</h4>
       </div>
@@ -253,7 +253,7 @@ const TaskAttachmentsList: React.FC<TaskAttachmentsListProps> = ({ taskId, curre
                                     <span>View</span>
                                   </button>
                                 )}
-                                
+
                                 <button
                                   onClick={() => {
                                     handleDownload(attachment.id, attachment.original_filename);

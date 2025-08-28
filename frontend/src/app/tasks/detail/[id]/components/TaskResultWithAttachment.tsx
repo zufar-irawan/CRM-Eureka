@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { compressImage } from '../utils/imageCompression';
 import { CurrentUser } from '../types';

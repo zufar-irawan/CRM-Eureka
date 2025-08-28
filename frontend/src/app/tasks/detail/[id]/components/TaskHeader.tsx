@@ -397,6 +397,7 @@ export default function TaskHeader({
               <TaskResultWithAttachment
                 taskId={task.id.toString()}
                 onSuccess={handleResultAdded}
+                currentUser={currentUser}
               />
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <button

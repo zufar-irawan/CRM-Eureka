@@ -102,7 +102,7 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                     mobileno: deal.lead?.phone || "-",
                 }),
             })
-        } else {
+        } else if (pathname === "Tasks") {
             fetchKanbanData({
                 url: "http://localhost:5000/api/tasks",
                 setData: setData,
@@ -222,6 +222,8 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                         setSelectedTaskId(null);
                         setPendingDrag(null);
                         setDraggedItem(null);
+
+                        refreshKanbanData()
                     }}
                     onClose={() => {
                         // Modal canceled → rollback the drag

@@ -170,14 +170,14 @@ export default function TaskSidebar({ task, currentUser }: TaskSidebarProps) {
         </div>
 
         {/* Action icons */}
-        <div className="flex items-center space-x-4">
+        {/* <div className="flex items-center space-x-4">
           <button
             className="p-2 text-gray-400 hover:text-gray-600"
             onClick={() => console.log("Edit task")}
           >
             <Edit className="w-5 h-5" />
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Task Details section */}

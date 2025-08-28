@@ -174,6 +174,7 @@ useEffect(() => {
           body: JSON.stringify({
             result_text: editText.trim(),
             result_type: editType,
+            credentials: "include",
           }),
         }
       );
@@ -225,6 +226,7 @@ useEffect(() => {
         TASK_API_ENDPOINTS.RESULT_UPDATE(String(result.id)),
         {
           method: "DELETE",
+          credentials: "include",
         }
       );
 

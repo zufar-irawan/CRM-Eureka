@@ -14,7 +14,7 @@ interface TaskResultWithAttachmentProps {
 const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ taskId, onSuccess }) => {
   const [resultText, setResultText] = useState('');
   const [resultType, setResultType] = useState('note');
-  const [files, setFiles] = useState<File[]>([]); 
+  const [files, setFiles] = useState<File[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -32,24 +32,24 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
               maxWidthOrHeight: 1920,
               useWebWorker: true
             });
-            
+
             // ✅ FIXED: Preserve original filename after compression
             const preservedFile = new File(
-              [compressed], 
+              [compressed],
               file.name, // Use original filename
-              { 
+              {
                 type: compressed.type || file.type,
                 lastModified: Date.now()
               }
             );
-            
+
             console.log('✅ Image compressed:', {
               original: file.name,
               preserved: preservedFile.name,
               originalSize: file.size,
               compressedSize: preservedFile.size
             });
-            
+
             return preservedFile;
           }
           // Return non-image files as-is
@@ -74,7 +74,7 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!resultText.trim()) {
       Swal.fire({
         icon: 'warning',
@@ -138,7 +138,7 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
           showConfirmButton: false,
           timerProgressBar: true,
         });
-        
+
         // Reset form and notify parent
         setResultText('');
         setFiles([]);
@@ -174,7 +174,7 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
         <textarea
           value={resultText}
           onChange={(e) => setResultText(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           rows={3}
           required
           disabled={isUploading}
@@ -188,7 +188,7 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
         <select
           value={resultType}
           onChange={(e) => setResultType(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           disabled={isUploading}
         >
           <option value="note">Note</option>
@@ -207,11 +207,11 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
           type="file"
           multiple
           onChange={handleFileSelect}
-          className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          className="py-2 mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
           disabled={isCompressing || isUploading}
         />
-        
+
         {isCompressing && (
           <div className="text-sm text-blue-600 mt-1 flex items-center">
             <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2 inline-block"></span>

@@ -96,6 +96,9 @@ export default function TaskHeader({
             timer: 2000,
             showConfirmButton: false
           });
+
+          window.dispatchEvent(new Event("task-result"))
+
         }
       } catch (error) {
         console.error('Error updating status:', error);
@@ -176,6 +179,8 @@ export default function TaskHeader({
         timer: 2000,
         showConfirmButton: false
       });
+
+      window.dispatchEvent(new Event("task-result"))
     } catch (error) {
       console.error('Error assigning user:', error);
       Swal.fire({

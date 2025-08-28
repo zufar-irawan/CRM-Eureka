@@ -16,25 +16,25 @@ interface DealHeaderProps {
   onDealUpdate?: (updatedDeal: Deal) => void;
 }
 
-export default function DealHeader({ 
-  deal, 
-  isDropdownOpen, 
-  setIsDropdownOpen, 
+export default function DealHeader({
+  deal,
+  isDropdownOpen,
+  setIsDropdownOpen,
   displayValue,
-  onDealUpdate 
+  onDealUpdate
 }: DealHeaderProps) {
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [isAssignDropdownOpen, setIsAssignDropdownOpen] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignedUser, setAssignedUser] = useState<UserType | null>(null);
-  
+
   // Use the users hook
   const { users, isLoading: isLoadingUsers } = useUsers();
 
   // Update assigned user when deal or users change
   useEffect(() => {
     if (deal?.owner && users.length > 0) {
-      const currentUser = users.find(user => 
+      const currentUser = users.find(user =>
         user.id.toString() === deal.owner?.toString()
       );
       setAssignedUser(currentUser || null);
@@ -42,7 +42,7 @@ export default function DealHeader({
   }, [deal?.owner, users]);
 
   const getCurrentStageConfig = () => {
-    return DEAL_STAGES.find(stage => 
+    return DEAL_STAGES.find(stage =>
       stage.backendStage.toLowerCase() === deal.stage?.toLowerCase()
     ) || DEAL_STAGES[0];
   };
@@ -66,7 +66,7 @@ export default function DealHeader({
   // Handle user assignment
   const handleAssignToUser = async (userId: number) => {
     if (!deal || isAssigning) return;
-    
+
     if (userId.toString() === deal.owner?.toString()) {
       setIsAssignDropdownOpen(false);
       return;
@@ -87,15 +87,15 @@ export default function DealHeader({
         const { data } = await response.json();
         const selectedUser = users.find(user => user.id === userId);
         setAssignedUser(selectedUser || null);
-        
+
         // Update the deal object with new owner
         const updatedDeal = { ...deal, owner: userId, updated_at: new Date().toISOString() };
-        
+
         // Call parent callback to update the deal state
         if (onDealUpdate) {
           onDealUpdate(updatedDeal);
         }
-        
+
         Swal.fire({
           icon: 'success',
           title: 'Success',
@@ -103,7 +103,9 @@ export default function DealHeader({
           timer: 2000,
           showConfirmButton: false
         });
-        
+
+        window.dispatchEvent(new Event("deal"))
+
         console.log(`✅ Deal ${deal.id} assigned to user ${userId}`);
       } else {
         const errorData = await response.json().catch(() => null);
@@ -157,22 +159,23 @@ export default function DealHeader({
 
       if (response.ok) {
         const { data } = await response.json();
-        
+
         // Update the deal object with new stage
         const updatedDeal = { ...deal, stage: newStage, updated_at: new Date().toISOString() };
-        
+
         // Call parent callback to update the deal state
         if (onDealUpdate) {
           onDealUpdate(updatedDeal);
         }
-        
+
         setIsDropdownOpen(false);
-        
+
         // Find the stage name for the success message
-        const updatedStageConfig = DEAL_STAGES.find(stage => 
+        const updatedStageConfig = DEAL_STAGES.find(stage =>
           stage.backendStage.toLowerCase() === newStage.toLowerCase()
         );
-        
+
+        window.dispatchEvent(new Event("deal"))
         // Show simple SweetAlert success notification like TaskHeader
         Swal.fire({
           icon: 'success',
@@ -181,7 +184,7 @@ export default function DealHeader({
           timer: 2000,
           showConfirmButton: false
         });
-        
+
       } else {
         const errorData = await response.json().catch(() => null);
         const errorMsg = errorData?.message || `Failed to update deal stage`;
@@ -189,7 +192,7 @@ export default function DealHeader({
       }
     } catch (error) {
       console.error('Error updating deal stage:', error);
-      
+
       // Show simple SweetAlert error notification like TaskHeader
       Swal.fire({
         icon: 'error',
@@ -230,7 +233,7 @@ export default function DealHeader({
               </a>
             )}
             {(deal.lead?.website || deal.company?.website) && (
-              <a 
+              <a
                 href={deal.lead?.website || deal.company?.website || `https://${(deal.lead?.company || deal.company?.name)?.toLowerCase().replace(/\s+/g, '')}.com`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -241,7 +244,7 @@ export default function DealHeader({
             <Paperclip className="w-5 h-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-3">
           {/* Assign To Dropdown */}
           <div className="relative" data-dropdown>
@@ -297,18 +300,17 @@ export default function DealHeader({
                           <Check className="w-4 h-4 text-blue-600" />
                         )}
                       </button>
-                      
+
                       <div className="border-t border-gray-100 my-1"></div>
-                      
+
                       {users.map((user) => (
                         <button
                           key={user.id}
                           onClick={() => handleAssignToUser(user.id)}
-                          className={`w-full flex items-center space-x-3 px-3 py-2 text-sm transition-colors ${
-                            assignedUser?.id === user.id 
-                              ? 'bg-blue-50 text-blue-700' 
-                              : 'text-gray-700 hover:bg-gray-50'
-                          }`}
+                          className={`w-full flex items-center space-x-3 px-3 py-2 text-sm transition-colors ${assignedUser?.id === user.id
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-50'
+                            }`}
                         >
                           <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                             <span className="text-xs font-medium text-blue-700">
@@ -335,25 +337,23 @@ export default function DealHeader({
               </div>
             )}
           </div>
-          
+
           {/* Stage Update Dropdown */}
           <div className="relative" data-dropdown>
-            <button 
+            <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               disabled={isUpdatingStage}
-              className={`border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] transition-colors ${
-                isUpdatingStage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-              }`}
+              className={`border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] transition-colors ${isUpdatingStage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
             >
               <div className={`w-2 h-2 rounded-full ${currentStage.color}`}></div>
               <span className="flex-1 text-left">
                 {isUpdatingStage ? 'Updating...' : currentStage.name}
               </span>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                isDropdownOpen ? 'rotate-180' : ''
-              }`} />
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''
+                }`} />
             </button>
-            
+
             {isDropdownOpen && !isUpdatingStage && (
               <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 animate-in fade-in duration-200">
                 <div className="py-1">
@@ -362,17 +362,16 @@ export default function DealHeader({
                   </div>
                   {DEAL_STAGES.map((stageOption) => {
                     const isCurrentStage = stageOption.backendStage.toLowerCase() === deal.stage?.toLowerCase();
-                    
+
                     return (
                       <button
                         key={stageOption.backendStage}
                         onClick={() => updateDealStage(stageOption.backendStage)}
                         disabled={isCurrentStage}
-                        className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${
-                          isCurrentStage 
-                            ? 'bg-blue-50 text-blue-700 cursor-default' 
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
+                        className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${isCurrentStage
+                          ? 'bg-blue-50 text-blue-700 cursor-default'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div className={`w-2 h-2 rounded-full ${stageOption.color}`}></div>

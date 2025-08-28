@@ -43,6 +43,12 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
     if (leadId) {
       fetchComments();
     }
+    const handle = () => {
+      fetchComments()
+    }
+    window.addEventListener("lead", handle)
+    return () => window.removeEventListener("lead", handle)
+
   }, [leadId, fetchComments]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -88,7 +94,7 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
 
     try {
       await handleAddComment(currentUser);
-      
+
       // Success notification
       Swal.fire({
         title: 'Comment Posted!',
@@ -181,7 +187,7 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
             </div>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-3">
           {/* New Comment Button */}
           <button
@@ -217,7 +223,7 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
             <div className="flex-1">
               <h3 className="text-sm font-medium text-red-800 mb-1">Error Loading Comments</h3>
               <p className="text-sm text-red-700 mb-3">{commentsError}</p>
-              <button 
+              <button
                 onClick={fetchComments}
                 className="text-sm text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-md transition-colors duration-150 font-medium"
               >
@@ -296,7 +302,7 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
             <MessageSquare className="w-4 h-4" />
             <span>Add Comment</span>
           </button>
-          
+
           {comments.length > 0 && (
             <button
               onClick={() => handleStartReply(comments[0].id)}

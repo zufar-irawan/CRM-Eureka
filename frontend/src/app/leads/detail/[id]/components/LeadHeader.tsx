@@ -32,14 +32,14 @@ export default function LeadHeader({
   const [isAssignDropdownOpen, setIsAssignDropdownOpen] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignedUser, setAssignedUser] = useState<UserType | null>(null);
-  
+
   // Use the users hook
   const { users, isLoading: isLoadingUsers } = useUsers();
 
   // Update assigned user when lead or users change
   useEffect(() => {
     if (lead?.owner && users.length > 0) {
-      const currentUser = users.find(user => 
+      const currentUser = users.find(user =>
         user.id.toString() === lead.owner?.toString()
       );
       setAssignedUser(currentUser || null);
@@ -52,7 +52,7 @@ export default function LeadHeader({
       setIsDropdownOpen(false);
       return;
     }
-    
+
     await onStatusChange(newStatus);
     setIsDropdownOpen(false);
   };
@@ -60,7 +60,7 @@ export default function LeadHeader({
   // Handle user assignment
   const handleAssignToUser = async (userId: number) => {
     if (!lead || isAssigning) return;
-    
+
     if (userId.toString() === lead.owner?.toString()) {
       setIsAssignDropdownOpen(false);
       return;
@@ -79,12 +79,12 @@ export default function LeadHeader({
       if (response.ok) {
         const selectedUser = users.find(user => user.id === userId);
         setAssignedUser(selectedUser || null);
-        
+
         // Call refresh callback if provided
         if (onLeadUpdate) {
           onLeadUpdate();
         }
-        
+
         Swal.fire({
           icon: 'success',
           title: 'Success',
@@ -92,7 +92,9 @@ export default function LeadHeader({
           timer: 2000,
           showConfirmButton: false
         });
-        
+
+        window.dispatchEvent(new Event("lead"))
+
         console.log(`✅ Lead ${lead.id} assigned to user ${userId}`);
       } else {
         throw new Error('Failed to assign user');
@@ -167,8 +169,8 @@ export default function LeadHeader({
               )}
               {safeString(lead.website) && (
                 <a
-                  href={safeString(lead.website).startsWith('http') 
-                    ? safeString(lead.website) 
+                  href={safeString(lead.website).startsWith('http')
+                    ? safeString(lead.website)
                     : `https://${safeString(lead.website)}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -231,16 +233,15 @@ export default function LeadHeader({
                             <span className="ml-auto text-blue-600">✓</span>
                           )}
                         </button>
-                        
+
                         <div className="border-t border-gray-100 my-1"></div>
-                        
+
                         {users.map((user) => (
                           <button
                             key={user.id}
                             onClick={() => handleAssignToUser(user.id)}
-                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${
-                              assignedUser?.id === user.id ? 'bg-gray-50 font-medium' : ''
-                            }`}
+                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${assignedUser?.id === user.id ? 'bg-gray-50 font-medium' : ''
+                              }`}
                           >
                             <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                               <span className="text-xs font-medium text-blue-700">
@@ -267,7 +268,7 @@ export default function LeadHeader({
                 </div>
               )}
             </div>
-            
+
             {/* Status Dropdown */}
             <div className="relative">
               <button
@@ -296,9 +297,8 @@ export default function LeadHeader({
                       <button
                         key={status.name}
                         onClick={() => handleStatusChange(status.name)}
-                        className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${
-                          status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
-                        }`}
+                        className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
+                          }`}
                       >
                         <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
                         <span>{status.name}</span>
@@ -311,7 +311,7 @@ export default function LeadHeader({
                 </div>
               )}
             </div>
-            
+
             {/* Convert to Deal Button */}
             <button
               onClick={handleConvertClick}

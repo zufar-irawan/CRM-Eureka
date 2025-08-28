@@ -434,6 +434,15 @@ export default function DealDetailPage() {
     }
     fetchDeal();
     fetchComments();
+
+    const handleRefresh = () => {
+      fetchDeal();
+      fetchComments();
+    }
+
+    window.addEventListener("deal", handleRefresh)
+
+    return () => window.removeEventListener("deal", handleRefresh)
   }, [id]);
 
   useEffect(() => {

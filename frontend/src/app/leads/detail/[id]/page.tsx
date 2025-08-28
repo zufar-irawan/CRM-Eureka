@@ -95,6 +95,14 @@ export default function LeadDetailPage() {
     if (!userLoading) {
       fetchLead();
     }
+
+    const handle = () => {
+      fetchLead()
+    }
+
+    window.addEventListener("lead", handle)
+
+    return () => window.removeEventListener("lead", handle)
   }, [id, userLoading]);
 
   useEffect(() => {
@@ -158,6 +166,8 @@ export default function LeadDetailPage() {
         timer: 2000,
         showConfirmButton: false
       });
+
+      window.dispatchEvent(new Event("lead"))
 
     } catch (error: unknown) {
       console.error('[ERROR] Failed to update lead stage:', error);

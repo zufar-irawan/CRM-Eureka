@@ -116,9 +116,9 @@ export default async function fetchKanbanData({
             case 'title':
               fieldValue = item.title || item.data?.title || '';
               break;
-            // case 'fullname':
-            //   fieldValue = item.lead?.fullname || "";
-            //   break;
+            case 'assigned__to':
+              fieldValue = item.assignee.name || "";
+              break;
             default:
               fieldValue = item[filterBy] || '';
           }

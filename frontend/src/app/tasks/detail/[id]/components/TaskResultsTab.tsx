@@ -32,18 +32,49 @@ export default function TaskResultsTab({ taskId, currentUser, refreshComments }:
     }
   }, [taskId, fetchResults]);
 
-  const handleResultAdded = () => {
-    fetchResults();
+  const handleResultAdded = async () => {
+    try {
+      // Refresh results first
+      await fetchResults();
+      
+      // Hide the add result form
+      setShowAddResult(false);
+      
+      // Refresh comments in parent component
+      if (refreshComments) {
+        refreshComments();
+      }
+      
+      console.log('✅ Auto-refresh completed after adding result');
+    } catch (error) {
+      console.error('Error during auto-refresh:', error);
+    }
+  };
+
+  const handleResultUpdated = async () => {
+    try {
+      await fetchResults();
+      console.log('✅ Auto-refresh completed after updating result');
+    } catch (error) {
+      console.error('Error refreshing after update:', error);
+    }
+  };
+
+  const handleResultDeleted = async () => {
+    try {
+      await fetchResults();
+      console.log('✅ Auto-refresh completed after deleting result');
+    } catch (error) {
+      console.error('Error refreshing after delete:', error);
+    }
+  };
+
+  const handleAddResultClick = () => {
+    setShowAddResult(true);
+  };
+
+  const handleCancelAdd = () => {
     setShowAddResult(false);
-    refreshComments();
-  };
-
-  const handleResultUpdated = () => {
-    fetchResults();
-  };
-
-  const handleResultDeleted = () => {
-    fetchResults();
   };
 
   // Ensure results is always an array
@@ -62,13 +93,16 @@ export default function TaskResultsTab({ taskId, currentUser, refreshComments }:
             </div>
           )}
         </div>
-        <button
-          onClick={() => setShowAddResult(true)}
-          className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Result</span>
-        </button>
+        
+        {!showAddResult && (
+          <button
+            onClick={handleAddResultClick}
+            className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Result</span>
+          </button>
+        )}
       </div>
 
       {/* Add Result Form */}
@@ -111,7 +145,7 @@ export default function TaskResultsTab({ taskId, currentUser, refreshComments }:
           <h3 className="text-lg font-medium text-gray-900 mb-3">No Results Yet</h3>
           <p className="text-gray-600 mb-6">Document the outcomes and results of this task</p>
           <button
-            onClick={() => setShowAddResult(true)}
+            onClick={handleAddResultClick}
             className="text-blue-600 hover:text-blue-700 text-sm font-medium"
           >
             Add the first result

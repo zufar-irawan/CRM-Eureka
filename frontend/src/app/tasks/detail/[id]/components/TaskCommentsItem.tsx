@@ -24,7 +24,6 @@ export default function TaskCommentItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.comment_text);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const canEdit = currentUser?.id === comment.commented_by || currentUser?.role === 'admin';
   const canDelete = currentUser?.id === comment.commented_by || currentUser?.role === 'admin';
@@ -40,7 +39,15 @@ export default function TaskCommentItem({
   };
 
   const handleSaveEdit = async () => {
-    if (!editText.trim()) return;
+    if (!editText.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Comment Required',
+        text: 'Please enter a comment before saving.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
     
     setIsUpdating(true);
     try {
@@ -61,24 +68,61 @@ export default function TaskCommentItem({
       if (response.ok) {
         setIsEditing(false);
         onUpdate();
+        
+        // Show success message
+        Swal.fire({
+          icon: 'success',
+          title: 'Comment Updated!',
+          text: 'Your comment has been successfully updated.',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
       } else {
         throw new Error('Failed to update comment');
       }
     } catch (error) {
       console.error('Error updating comment:', error);
-      alert('Failed to update comment. Please try again.');
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Failed to update comment. Please try again.',
+        confirmButtonColor: '#3b82f6'
+      });
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) {
-      return;
-    }
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Delete Comment',
+      text: 'Are you sure you want to delete this comment? This action cannot be undone.',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
 
-    setIsDeleting(true);
+    if (!result.isConfirmed) return;
+
     try {
+      // Show loading state
+      Swal.fire({
+        title: 'Deleting Comment...',
+        text: 'Please wait while we delete your comment.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       const response = await makeAuthenticatedRequest(
         TASK_API_ENDPOINTS.COMMENT_UPDATE(String(comment.id)),
         {
@@ -89,14 +133,28 @@ export default function TaskCommentItem({
 
       if (response.ok) {
         onDelete();
+        
+        // Show success message
+        Swal.fire({
+          icon: 'success',
+          title: 'Comment Deleted!',
+          text: 'The comment has been successfully deleted.',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
       } else {
         throw new Error('Failed to delete comment');
       }
     } catch (error) {
       console.error('Error deleting comment:', error);
-      alert('Failed to delete comment. Please try again.');
-    } finally {
-      setIsDeleting(false);
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Failed',
+        text: 'Failed to delete comment. Please try again.',
+        confirmButtonColor: '#3b82f6'
+      });
     }
   };
 
@@ -128,7 +186,6 @@ export default function TaskCommentItem({
                 <button
                   onClick={() => setShowActions(!showActions)}
                   className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                  disabled={isDeleting}
                 >
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
@@ -151,20 +208,10 @@ export default function TaskCommentItem({
                         {canDelete && (
                           <button
                             onClick={handleDelete}
-                            disabled={isDeleting}
-                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 disabled:opacity-50"
+                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
                           >
-                            {isDeleting ? (
-                              <>
-                                <div className="w-3 h-3 border border-red-600 border-t-transparent rounded-full animate-spin" />
-                                <span>Deleting...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Trash2 className="w-3 h-3" />
-                                <span>Delete</span>
-                              </>
-                            )}
+                            <Trash2 className="w-3 h-3" />
+                            <span>Delete</span>
                           </button>
                         )}
                       </div>

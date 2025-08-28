@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { CurrentUser } from '../types';
 import { getFirstChar } from '../utils/formatting';
 import { makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
+import Swal from 'sweetalert2';
 
 interface AddTaskCommentProps {
   taskId: string | string[] | undefined;
@@ -20,7 +21,6 @@ export default function AddTaskComment({
 }: AddTaskCommentProps) {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
 
   // Normalize taskId
   const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
@@ -29,17 +29,26 @@ export default function AddTaskComment({
     e.preventDefault();
     
     if (!commentText.trim()) {
-      setError('Comment cannot be empty');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Comment Required',
+        text: 'Please enter a comment before submitting.',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
     if (!normalizedTaskId) {
-      setError('Task ID is required');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Task ID is required to add a comment.',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
     setIsSubmitting(true);
-    setError('');
 
     try {
       const response = await makeAuthenticatedRequest(
@@ -66,9 +75,25 @@ export default function AddTaskComment({
       setCommentText('');
       onCommentAdded();
 
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Comment Added!',
+        text: 'Your comment has been successfully added.',
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      });
+
     } catch (err) {
       console.error('Error adding comment:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add comment');
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to Add Comment',
+        text: err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.',
+        confirmButtonColor: '#3b82f6'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -97,13 +122,6 @@ export default function AddTaskComment({
                 disabled={isSubmitting}
               />
             </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mb-3 text-sm text-red-600">
-                {error}
-              </div>
-            )}
 
             {/* Action Buttons */}
             <div className="flex items-center justify-between">

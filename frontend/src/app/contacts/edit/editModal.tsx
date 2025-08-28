@@ -54,7 +54,9 @@ export default function ContactModal({ onClose, onUpdated, data }: Props) {
     useEffect(() => {
         const fetchCompanies = async () => {
             try {
-                const res = await fetch('http://localhost:3000/api/companies')
+                const res = await fetch('http://localhost:3000/api/companies', {
+                  credentials: 'include',
+                })
                 const result = await res.json()
                 const mappedOptions = result.data.map((company: any) => ({
                     value: company.id,
@@ -90,7 +92,9 @@ export default function ContactModal({ onClose, onUpdated, data }: Props) {
         }
 
         try {
-            const res = await fetch(`http://localhost:3000/api/companies/${form.company_id}`)
+            const res = await fetch(`http://localhost:3000/api/companies/${form.company_id}`, {
+              credentials: 'include',
+            })
 
             if (!res.ok) {
                 throw new Error("Failed to fetch company detail");

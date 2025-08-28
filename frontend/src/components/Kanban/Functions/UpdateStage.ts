@@ -33,6 +33,7 @@ export default async function updateStage(
               "Content-Type": "application/json",
             },
             timeout: 10000,
+            withCredentials: true,
           }
         )
 
@@ -48,6 +49,7 @@ export default async function updateStage(
               "Content-Type": "application/json",
             },
             timeout: 10000,
+            withCredentials: true,
           }
         )
 

@@ -64,7 +64,9 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
         const fetchCompanies = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/companies")
+                const res = await fetch("http://localhost:3000/api/companies", {
+                  credentials: 'include',
+                })
                 const result = await res.json()
                 const data = result.data
 
@@ -81,7 +83,9 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
 
         const fetchContact = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/contacts")
+                const res = await fetch("http://localhost:3000/api/contacts", {
+                  credentials: 'include',
+                })
                 const result = await res.json()
                 const data = result.data
 

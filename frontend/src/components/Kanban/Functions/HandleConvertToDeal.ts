@@ -69,6 +69,7 @@ export default function handleConvertToDeal({
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify(requestBody),
+                    credentials: 'include',
                 }
             );
 

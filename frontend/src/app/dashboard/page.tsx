@@ -69,7 +69,8 @@ export default function Dashboard() {
     const fetchNewLeads = async () => {
         try {
             const response = await axios.get('http://localhost:3000/api/leads', {
-                params: { stage: 'New' }
+                params: { stage: 'New' },
+                withCredentials: true,
             })
 
             return response.data.leads
@@ -82,7 +83,8 @@ export default function Dashboard() {
     const fetchAllDeals = async () => {
         try {
             const response = await axios.get('http://localhost:3000/api/deals', {
-                params: { stage_ne: ['won', 'lost'] }
+                params: { stage_ne: ['won', 'lost'] },
+                withCredentials: true,
             })
 
             const data = response.data.data
@@ -96,7 +98,8 @@ export default function Dashboard() {
     const fetchALlLeads = async () => {
         try {
             const response = await axios.get('http://localhost:3000/api/leads', {
-                params: { status: '' }
+                params: { status: '' },
+                withCredentials: true,
             })
 
             const res = response.data.leads
@@ -109,7 +112,9 @@ export default function Dashboard() {
 
     const fetchAllUnconvertedLeads = async () => {
         try {
-            const response = await axios.get('http://localhost:3000/api/leads')
+            const response = await axios.get('http://localhost:3000/api/leads', {
+              withCredentials: true,
+            })
 
             const res = response.data.leads
             return res.length.toString()

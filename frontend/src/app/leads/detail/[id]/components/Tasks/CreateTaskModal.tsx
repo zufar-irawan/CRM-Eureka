@@ -115,6 +115,7 @@ export default function CreateTaskModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify(submitData),
+          credentials: "include",
         }
       );
 

@@ -40,7 +40,9 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
     useEffect(() => {
         const fetchLeads = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/leads")
+                const res = await fetch("http://localhost:3000/api/leads", {
+                  credentials: 'include',
+                })
                 const result = await res.json()
                 const data = result.leads
 
@@ -57,7 +59,9 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
 
         const fetchUsers = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/users")
+                const res = await fetch("http://localhost:3000/api/users", {
+                  credentials: 'include',
+                })
                 const result = await res.json()
                 console.log("API Result:", result)
 

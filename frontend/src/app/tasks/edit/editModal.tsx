@@ -38,7 +38,9 @@ export default function EditTasksModal({ onClose, onUpdated, data }: Props) {
     useEffect(() => {
         const fetchLeads = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/leads");
+                const res = await fetch("http://localhost:3000/api/leads", {
+                  credentials: 'include',
+                });
                 const result = await res.json();
                 const mappedOptions = result.leads.map((lead: any) => ({
                     value: lead.id,
@@ -52,7 +54,9 @@ export default function EditTasksModal({ onClose, onUpdated, data }: Props) {
 
         const fetchUsers = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/users");
+                const res = await fetch("http://localhost:3000/api/users", {
+                  credentials: 'include',
+                });
                 const result = await res.json();
                 const data = result.data;
                 if (!Array.isArray(data)) throw new Error("Data users is not an array");

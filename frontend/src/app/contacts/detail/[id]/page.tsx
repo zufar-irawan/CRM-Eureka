@@ -115,7 +115,9 @@ const ContactDetailPage = () => {
     const fetchContact = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/contacts/${contactId}`);
+        const response = await fetch(`/api/contacts/${contactId}`, {
+          credentials: 'include',
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch contact');
         }
@@ -139,7 +141,9 @@ const ContactDetailPage = () => {
 
       try {
         setTasksLoading(true);
-        const response = await fetch(`/api/contacts/${contactId}/tasks`);
+        const response = await fetch(`/api/contacts/${contactId}/tasks`, {
+          credentials: 'include',
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch tasks for the contact');
@@ -176,6 +180,7 @@ const ContactDetailPage = () => {
       try {
         const response = await fetch(`/api/contacts/${contactId}`, {
           method: 'DELETE',
+          credentials: 'include',
         });
 
         if (!response.ok) {

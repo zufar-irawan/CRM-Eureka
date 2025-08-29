@@ -249,6 +249,17 @@ export default function ReportsPage() {
     }
   };
 
+  const formatCsvValue = (value: any) => {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    let stringValue = String(value);
+    if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    return stringValue;
+  };
+
   const exportToCSV = () => {
     if (salesData.length === 0) {
       Swal.fire({
@@ -259,38 +270,59 @@ export default function ReportsPage() {
       return;
     }
 
+    const exportDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+
+    const reportTitle = `KPI Report - ${filters.viewType === "BULANAN" ? "Monthly" : "Daily"}`;
+    
+    let metadataRows: string[] = [];
+    metadataRows.push(`Report Title,${formatCsvValue(reportTitle)}`);
+    metadataRows.push(`Report Type,${formatCsvValue(filters.viewType)}`);
+    
+    if (filters.viewType === "BULANAN") {
+      metadataRows.push(`Month/Year,${formatCsvValue(filters.monthYear || "Current Month/Year")}`);
+    } else {
+      metadataRows.push(`Start Date,${formatCsvValue(filters.startDate || "N/A")}`);
+      metadataRows.push(`End Date,${formatCsvValue(filters.endDate || "N/A")}`);
+    }
+    metadataRows.push(`Sales Name,${formatCsvValue(filters.salesName || "All Sales")}`);
+    metadataRows.push(`Export Date,${formatCsvValue(exportDate)}`);
+
+    const metadataHeaders = "Metadata Field,Value";
+    const metadata = metadataHeaders + "\n" + metadataRows.join("\n") + "\n\n"; // Add header for metadata, then two empty lines for separation
+
     const headers = [
       filters.viewType === "BULANAN" ? "Bulan" : "Tanggal",
       "Nama Sales",
-      "KANVASING task",
-      "FOLLOWUP task",
-      "DATABASE PENAWARAN task",
-      "KESEPAKATAN TARIF task",
-      "DEAL DO task",
-      `Status KPI ${filters.viewType === "BULANAN" ? "Bulanan" : "Harian"}`,
+      "KANVASING",
+      "FOLLOWUP",
+      "PENAWARAN",
+      "KESEPAKATAN_TARIF",
+      "DEAL_DO",
+      "STATUS_KPI",
     ];
 
     const csvContent = [
-      headers.join(","),
+      metadata,
+      headers.map(formatCsvValue).join(","),
       ...salesData.map((row) =>
         [
-          filters.viewType === "BULANAN" ? `"${row.bulan}"` : `"${row.tanggal}"`,
-          `"${row.sales_name}"`,
+          filters.viewType === "BULANAN" ? row.bulan : row.tanggal,
+          row.sales_name,
           row.kanvasing_count,
           row.followup_count,
           row.penawaran_count,
           row.kesepakatan_tarif_count,
           row.deal_do_count,
-          `"${row.status_kpi}"`,
-        ].join(",")
+          row.status_kpi,
+        ].map(formatCsvValue).join(",")
       ),
     ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `sales-report-${filters.viewType.toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `sales-report-${filters.viewType.toLowerCase()}-${exportDate}.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -758,3 +790,4 @@ export default function ReportsPage() {
     </main>
   );
 }
+

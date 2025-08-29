@@ -827,6 +827,9 @@ export const deleteDeal = async (req, res) => {
             });
         }
 
+        await DealComments.destroy({
+            where: { deal_id: deal.id }
+        });
         await deal.destroy();
 
         res.json({

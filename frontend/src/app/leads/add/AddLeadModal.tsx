@@ -562,11 +562,11 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">No. of Employees</label>
+                      <label className="block text-sm font-medium text-gray-600">Amount of Employees</label>
                       <input
                         name="number_of_employees"
                         type="number"
-                        placeholder="Enter number of employees"
+                        placeholder="Enter amount of employees"
                         value={form.number_of_employees}
                         onChange={handleChange}
                         onBlur={handleBlur}

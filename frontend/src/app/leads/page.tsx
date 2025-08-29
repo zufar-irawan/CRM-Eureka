@@ -828,7 +828,7 @@ export default function MainLeads() {
                   );
                 })}
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider right-0 bg-gray-50 z-10">
                   Actions
                 </th>
               </tr>
@@ -859,7 +859,7 @@ export default function MainLeads() {
                     </td>
                   ))}
 
-                  <td className="px-6 py-4 text-sm text-gray-500 sticky right-0 bg-white z-10" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-6 py-4 text-sm text-gray-500 right-0 bg-white" onClick={(e) => e.stopPropagation()}>
                     <div className="relative" data-action-menu>
                       <button
                         className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"

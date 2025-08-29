@@ -411,6 +411,12 @@ export default function Deals() {
   const renderCellContent = (deal: any, columnKey: string) => {
     const getSafe = (path: string) => path.split('.').reduce((obj, key) => obj?.[key], deal) ?? '-';
 
+    const getSafeWithFallback = (primary: string, fallback: string) => {
+      const primaryValue = getSafe(primary);
+      return primaryValue && primaryValue !== '-' ? primaryValue : getSafe(fallback);
+    };
+
+
     switch (columnKey) {
       case 'title':
         return <span className="text-xs text-gray-900">{deal.title || '-'}</span>;
@@ -432,11 +438,26 @@ export default function Deals() {
 
       // Lead fields
       case 'lead_fullname':
-        return <span className="text-xs text-gray-900">{getSafe('lead.fullname')}</span>;
+        return (
+          <span className="text-xs text-gray-900">
+            {getSafeWithFallback('lead.fullname', 'contact.name')}
+          </span>
+        );
+
       case 'lead_email':
-        return <span className="text-xs text-blue-600 hover:underline">{getSafe('lead.email')}</span>;
+        return (
+          <span className="text-xs text-blue-600 hover:underline">
+            {getSafeWithFallback('lead.email', 'contact.email')}
+          </span>
+        );
+
       case 'lead_phone':
-        return <span className="text-xs text-gray-900">{getSafe('lead.phone')}</span>;
+        return (
+          <span className="text-xs text-gray-900">
+            {getSafeWithFallback('lead.phone', 'contact.phone')}
+          </span>
+        );
+
 
       // Contact fields
       case 'contact_name':

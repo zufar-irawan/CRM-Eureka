@@ -4,7 +4,7 @@ import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
 import NumericUpDown from "@/components/AddModal/NumericUpDown";
 import TextArea from "@/components/AddModal/TextArea";
-import { X } from "lucide-react";
+import { X, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react"
 import Swal from "sweetalert2";
 import Select from 'react-select';
@@ -16,7 +16,7 @@ interface Props {
 
 export type DealsForm = {
     title: string
-    value: number
+    value: string
     stage: string
     lead_id: number | null
     id_contact: number | null
@@ -36,7 +36,7 @@ export type DealsForm = {
 export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
     const [form, setForm] = useState<DealsForm>({
         title: '',
-        value: 0,
+        value: '',
         stage: 'proposal',
         lead_id: null,
         id_contact: null,
@@ -114,6 +114,13 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
 
+    const handleDealValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (value === "" || /^\d*\.?\d*$/.test(value)) {
+            setForm(prev => ({ ...prev, value: value }));
+        }
+    };
+
     // Handle company select change
     function handleCompanySelectChange(selectedOption: any) {
         setForm({
@@ -177,10 +184,21 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
         setError("");
 
         // Validation
-        if (!form.title || form.value <= 0) {
-            setError("Please fill in title and value correctly");
+        if (!form.title.trim()) {
+            setError("Please enter a deal title");
             setIsSubmitting(false);
             return;
+        }
+
+        let numericValue = 0;
+        if (form.value !== "" && form.value.trim() !== "") {
+            const parsedValue = parseFloat(form.value);
+            if (isNaN(parsedValue) || parsedValue < 0) {
+                setError("Deal value must be a valid positive number");
+                setIsSubmitting(false);
+                return;
+            }
+            numericValue = parsedValue;
         }
 
         // Validate company data
@@ -212,7 +230,7 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
         try {
             const submitData = {
                 title: form.title.trim(),
-                value: Number(form.value),
+                value: numericValue,
                 stage: form.stage || 'proposal',
                 lead_id: form.lead_id,
                 id_contact: useExistingContact ? Number(form.id_contact) : null,
@@ -349,18 +367,25 @@ export default function CreateDealsModal({ onClose, onLeadCreated }: Props) {
                                             maxLength={50}
                                         />
 
-                                        <NumericUpDown
-                                            label="Deals Value"
-                                            isRequired={true}
-                                            name="value"
-                                            placeholder="0"
-                                            value={form.value}
-                                            onChange={handleChange}
-                                            min={1000}
-                                            max={1000000000}
-                                            step={500}
-                                            required
-                                        />
+                                       <div>
+                                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                                              Deals Value (Optional)
+                                          </label>
+                                          <div className="relative">
+                                              <input
+                                                  type="text"
+                                                  name="value"
+                                                  value={form.value}
+                                                  onChange={handleDealValueChange}
+                                                  placeholder="0.00"
+                                                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                              />
+                                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                  <DollarSign className="w-4 h-4 text-gray-400" />
+                                              </div>
+                                          </div>
+                                          <p className="text-xs text-gray-500 mt-1">Leave empty for $0.00</p>
+                                      </div>
 
                                         <Dropdown
                                             label="Stage"

@@ -107,6 +107,16 @@ export default function ReportsPage() {
     monthYear: "",
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+
+  const totalPages = Math.ceil(salesData.length / itemsPerPage);
+  const paginatedData = salesData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+
   useEffect(() => {
     fetchReportsData();
   }, [filters.viewType]);
@@ -564,7 +574,7 @@ export default function ReportsPage() {
                     </div>
                   </td>
                 </tr>
-              ) : salesData.length === 0 ? (
+              ) : paginatedData.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-8 text-gray-500 text-center">
                     <div className="text-center">
@@ -575,7 +585,7 @@ export default function ReportsPage() {
                   </td>
                 </tr>
               ) : (
-                salesData.map((row, index) => (
+                paginatedData.map((row, index) => (
                   <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm text-center font-medium text-gray-900">{index + 1}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -633,14 +643,14 @@ export default function ReportsPage() {
               <Activity className="w-5 h-5 animate-spin mr-2" />
               <span className="text-gray-500">Loading KPI data...</span>
             </div>
-          ) : salesData.length === 0 ? (
+          ) : paginatedData.length === 0 ? (
             <div className="text-center py-8">
               <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
               <p className="text-gray-500 font-medium">No KPI data available</p>
               <p className="text-sm text-gray-400">Try adjusting your filters</p>
             </div>
           ) : (
-            salesData.map((row) => (
+            paginatedData.map((row) => (
               <div key={row.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center">
@@ -702,22 +712,43 @@ export default function ReportsPage() {
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
           <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">{salesData.length}</span> of{" "}
-            <span className="font-medium">{salesData.length}</span> results
+            Showing{" "}
+            <span className="font-medium">
+              {(currentPage - 1) * itemsPerPage + 1}
+            </span>{" "}
+            to{" "}
+            <span className="font-medium">
+              {Math.min(currentPage * itemsPerPage, salesData.length)}
+            </span>{" "}
+            of <span className="font-medium">{salesData.length}</span> results
           </div>
+
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={true}
+              disabled={currentPage === 1}
             >
               Previous
             </button>
-            <button className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              1
-            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-2 text-sm rounded-md ${currentPage === i + 1
+                  ? "bg-blue-600 text-white"
+                  : "border border-gray-300 bg-white hover:bg-gray-50"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
             <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={true}
+              disabled={currentPage === totalPages}
             >
               Next
             </button>

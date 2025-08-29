@@ -298,10 +298,9 @@ export default function ConvertToDealModal({
                 disabled={isLoading}
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <DollarSign className="w-4 h-4 text-gray-400" />
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Leave empty for $0.00</p>
+            <p className="text-xs text-gray-500 mt-1">Leave empty for 0.00</p>
           </div>
 
           <div>

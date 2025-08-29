@@ -332,8 +332,6 @@ const CompanyDetailPage = () => {
               onClick={handleCreateDeal}
               className="flex items-center gap-1 px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" />
-              New Deal
             </button>
           </div>
 
@@ -414,8 +412,6 @@ const CompanyDetailPage = () => {
               onClick={handleCreateContact}
               className="flex items-center gap-1 px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" />
-              New Contact
             </button>
           </div>
 

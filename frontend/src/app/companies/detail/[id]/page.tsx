@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { checkAuthStatus } from '../../../../../utils/auth';
+import CompaniesModal from '../../edit/editModal';
 
 interface Company {
   id: number;
@@ -52,6 +53,7 @@ const CompanyDetailPage = () => {
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State untuk modal edit
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -98,6 +100,21 @@ const CompanyDetailPage = () => {
     }
   }, [companyId]);
 
+  // Function untuk refresh data setelah update
+  const handleCompanyUpdated = async () => {
+    try {
+      const response = await fetch(`/api/companies/${companyId}`, {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCompany(data.data);
+      }
+    } catch (error) {
+      console.error('Error refreshing company data:', error);
+    }
+  };
+
   const handleDeleteCompany = async () => {
     if (!company) return;
 
@@ -142,7 +159,7 @@ const CompanyDetailPage = () => {
   };
 
   const handleEditCompany = () => {
-    router.push(`/companies/${companyId}/edit`);
+    setIsEditModalOpen(true);
   };
 
   const handleCreateDeal = () => {
@@ -243,13 +260,22 @@ const CompanyDetailPage = () => {
                 <p className="text-sm text-slate-600">Company Details</p>
               </div>
             </div>
-            <button
-              onClick={handleDeleteCompany}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleEditCompany}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 text-sm transition-colors"
+              >
+                <Edit className="w-3.5 h-3.5" />
+                Edit
+              </button>
+              <button
+                onClick={handleDeleteCompany}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -306,8 +332,6 @@ const CompanyDetailPage = () => {
               onClick={handleCreateDeal}
               className="flex items-center gap-1 px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" />
-              New Deal
             </button>
           </div>
 
@@ -388,8 +412,6 @@ const CompanyDetailPage = () => {
               onClick={handleCreateContact}
               className="flex items-center gap-1 px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" />
-              New Contact
             </button>
           </div>
 
@@ -464,6 +486,18 @@ const CompanyDetailPage = () => {
         </div>
 
       </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && company && (
+        <CompaniesModal
+          data={company}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdated={() => {
+            handleCompanyUpdated();
+            setIsEditModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };

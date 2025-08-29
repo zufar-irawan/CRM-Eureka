@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { checkAuthStatus } from '../../../../../utils/auth';
+import ContactModal from '../../edit/editModal';
 
 interface Contact {
   id: number;
@@ -89,6 +90,7 @@ const ContactDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -207,7 +209,26 @@ const ContactDetailPage = () => {
   };
 
   const handleEditContact = () => {
-    router.push(`/contacts/${contactId}/edit`);
+    setShowEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+  };
+
+  const handleContactUpdated = async () => {
+    // Refresh the contact data after successful update
+    try {
+      const response = await fetch(`/api/contacts/${contactId}`, {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setContact(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh contact data:', error);
+    }
   };
 
   const handleCreateTask = () => {
@@ -342,13 +363,22 @@ const ContactDetailPage = () => {
                 )}
               </div>
             </div>
-            <button
-              onClick={handleDeleteContact}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleEditContact}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 text-sm transition-colors"
+              >
+                <Edit className="w-3.5 h-3.5" />
+                Edit
+              </button>
+              <button
+                onClick={handleDeleteContact}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -559,6 +589,15 @@ const ContactDetailPage = () => {
         </div>
 
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && contact && (
+        <ContactModal
+          onClose={handleCloseEditModal}
+          onUpdated={handleContactUpdated}
+          data={contact}
+        />
+      )}
     </div>
   );
 };

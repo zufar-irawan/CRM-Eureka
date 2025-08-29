@@ -15,25 +15,25 @@ export default function DealsKanban() {
     const router = useRouter();
 
     useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const isAuthenticated = await checkAuthStatus();
-        if (!isAuthenticated) {
-          Swal.fire({
-            icon: "info",
-            title: "You're not logged in",
-            text: "Make sure to login first!"
-          });
-          router.replace('/login');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        router.replace('/login');
-      }
-    };
+        const checkAuth = async () => {
+            try {
+                const isAuthenticated = await checkAuthStatus();
+                if (!isAuthenticated) {
+                    Swal.fire({
+                        icon: "info",
+                        title: "You're not logged in",
+                        text: "Make sure to login first!"
+                    });
+                    router.replace('/login');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                router.replace('/login');
+            }
+        };
 
-    checkAuth();
-  }, [router]);
+        checkAuth();
+    }, [router]);
 
     const [data, setData] = useState<any[]>([]);
     const [isMinimized, setIsMinimized] = useState(false);
@@ -94,10 +94,10 @@ export default function DealsKanban() {
             mapItem: (deal) => ({
                 id: `item-${deal.id}`,
                 itemId: deal.id,
-                fullname: deal.lead?.fullname || "Unknown",
-                organization: deal.lead?.company || "-",
-                email: deal.lead?.email || "-",
-                mobileno: deal.lead?.phone || "-",
+                fullname: deal.lead?.fullname || deal.contact?.name || "-",
+                organization: deal.lead?.company || deal.company?.name || "-",
+                email: deal.lead?.email || deal.contact?.email || "-",
+                mobileno: deal.lead?.phone || deal.contact?.phone || "-",
             }),
             filterBy: filterOption,
             searchTerm: searchTerm

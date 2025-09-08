@@ -1,12 +1,15 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import Swal from "sweetalert2";
 
 interface Props {
   onClose: () => void;
   onLeadCreated?: () => void;
+  showBackButton?: boolean;    
+  onBack?: () => void;         
+  backButtonText?: string;
 }
 
 interface FormState {
@@ -39,7 +42,13 @@ interface FormErrors {
   [key: string]: string;
 }
 
-export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
+export default function CreateLeadModal({ 
+  onClose, 
+  onLeadCreated, 
+  showBackButton = false, 
+  onBack, 
+  backButtonText = "Back" 
+}: Props) {
   const [form, setForm] = useState<FormState>({
     title: "",
     first_name: "",
@@ -378,7 +387,18 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h2 className="text-2xl font-semibold text-gray-800">Create Lead</h2>
+            <div className="flex items-center gap-3">
+              {showBackButton && onBack && (
+                <button
+                  onClick={onBack}
+                  className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                  title={backButtonText}
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </button>
+              )}
+              <h2 className="text-2xl font-semibold text-gray-800">Create Lead</h2>
+            </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
@@ -620,7 +640,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                         maxLength={100}
                         required
                       />
-                      {errors.work_email && <p className="text-red-500 text-xs mt-1">{errors.work_email}</p>}
+                      {errors.work_email && <p className="textred-500 text-xs mt-1">{errors.work_email}</p>}
                     </div>
                   </div>
                 </div>
@@ -806,16 +826,16 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                 <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4">
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={showBackButton && onBack ? onBack : onClose}
                     disabled={isSubmitting}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors duration-200 font-medium disabled:opacity-50"
                   >
-                    Cancel
+                    {showBackButton && onBack ? backButtonText : 'Cancel'}
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50"
                   >
                     {isSubmitting ? 'Creating...' : 'Create Lead'}
                   </button>

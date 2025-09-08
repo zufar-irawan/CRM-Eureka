@@ -3,6 +3,7 @@
 import { X, ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import Swal from "sweetalert2";
+import useUser from "../../../../hooks/useUser";
 
 interface Props {
   onClose: () => void;
@@ -49,6 +50,8 @@ export default function CreateLeadModal({
   onBack,
   backButtonText = "Back"
 }: Props) {
+  const { user } = useUser()
+
   const [form, setForm] = useState<FormState>({
     title: "",
     first_name: "",
@@ -72,7 +75,7 @@ export default function CreateLeadModal({
     postal_code: "",
     country: "",
     description: "",
-    owner: "",
+    owner: user ? user.id.toString() : "",
   });
 
   const [openSections, setOpenSections] = useState({
@@ -323,7 +326,7 @@ export default function CreateLeadModal({
         country: form.country.trim() || "",
         description: form.description.trim() || "",
         number_of_employees: form.number_of_employees ? parseInt(form.number_of_employees) : null,
-        owner: form.owner ? parseInt(form.owner) : null,
+        owner: user?.id,
       };
 
       // Remove empty string values

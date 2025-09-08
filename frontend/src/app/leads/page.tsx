@@ -22,6 +22,7 @@ import {
 import EditLeadModal from "./components/EditLeadModal";
 import Swal from "sweetalert2";
 import { checkAuthStatus } from "../../../utils/auth";
+import useUser from "../../../hooks/useUser";
 
 interface DeleteLeadModalProps {
   selectedCount: number;
@@ -202,6 +203,8 @@ export default function MainLeads() {
 
   const stages = ["new", "contacted", "qualification", "unqualified"];
 
+  const { user } = useUser()
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm)
@@ -213,7 +216,13 @@ export default function MainLeads() {
   }, [searchTerm])
 
   useEffect(() => {
-    fetchLeads();
+    if (user?.isSales) {
+      fetchLeadsForSales()
+    } else {
+      fetchLeads()
+    }
+
+    // fetchLeadsForSales()
     fetchUsers();
 
     const refreshLeads = () => {
@@ -225,7 +234,7 @@ export default function MainLeads() {
     return () => {
       window.removeEventListener("lead-created", refreshLeads)
     }
-  }, [selectedStage, debouncedSearch]);
+  }, [selectedStage, debouncedSearch, user]);
 
   const fetchLeads = async () => {
     try {
@@ -235,6 +244,30 @@ export default function MainLeads() {
           status: 0,
           ...(selectedStage ? { stage: selectedStage } : {}),
           ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        }
+      });
+      setOriginalLeads(response.data.leads);
+      setLeads(response.data.leads);
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: err.message
+      })
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLeadsForSales = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/leads/", {
+        params: {
+          status: 0,
+          ...(selectedStage ? { stage: selectedStage } : {}),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
+          ...(user?.id ? { owner: user?.id } : {})
         }
       });
       setOriginalLeads(response.data.leads);

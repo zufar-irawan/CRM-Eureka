@@ -28,6 +28,7 @@ import Swal from "sweetalert2";
 import { useDealEditStore } from "@/Store/dealModalStore";
 import axios from "axios";
 import { checkAuthStatus } from "../../../utils/auth";
+import useUser from "../../../hooks/useUser";
 
 interface SortConfig {
   key: string;
@@ -180,6 +181,8 @@ export default function Deals() {
 
   const stages = ["proposal", "negotiation", "won", "lost"];
 
+  const { user } = useUser()
+
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
     return Object.entries(ALL_COLUMNS)
       .filter(([_, column]) => column.default)
@@ -206,7 +209,12 @@ export default function Deals() {
       }
     }
 
-    fetchDeals();
+    if (user?.isSales) {
+      fetchDealsForSales()
+    } else {
+      fetchDeals();
+    }
+
 
     const handleRefresh = () => {
       fetchDeals()
@@ -228,6 +236,32 @@ export default function Deals() {
         params: {
           ...(selectedStage ? { stage: selectedStage } : {}),
           ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        }
+      })
+
+      setOriginalLeads(response.data.data)
+      setDeals(response.data.data)
+    } catch (err: any) {
+      console.error('[ERROR] Failed to load deals:', err);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: "Failed to load deals: " + err.message
+      })
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDealsForSales = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/deals/", {
+        params: {
+          ...(selectedStage ? { stage: selectedStage } : {}),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
+          ...(user?.id ? { owner: user?.id } : {})
         }
       })
 
@@ -706,7 +740,7 @@ export default function Deals() {
             </div>
 
             {/* Desktop Table */}
-            <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+            <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
               <table className="w-full table-auto">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>

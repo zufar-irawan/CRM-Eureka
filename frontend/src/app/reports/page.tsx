@@ -13,6 +13,7 @@ import {
   X,
   RotateCcw,
   Calendar,
+  Info,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,17 @@ interface SalesData {
   year?: number;
   bulan: string;
   tanggal?: string;
+}
+
+interface KPITarget {
+  id: string;
+  type: "daily" | "monthly";
+  kanvasing_target: number;
+  followup_target: number;
+  penawaran_target: number;
+  kesepakatan_tarif_target: number;
+  deal_do_target: number;
+  is_active: boolean;
 }
 
 interface FilterState {
@@ -97,6 +109,7 @@ export default function ReportsPage() {
   }, [router]);
 
   const [salesData, setSalesData] = useState<SalesData[]>([]);
+  const [kpiTarget, setKpiTarget] = useState<KPITarget | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -115,7 +128,6 @@ export default function ReportsPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
 
   useEffect(() => {
     fetchReportsData();
@@ -140,7 +152,7 @@ export default function ReportsPage() {
           params.year = currentDate.getFullYear();
           params.month = currentDate.getMonth() + 1;
         }
-      } else { // HARIAN
+      } else {
         if (filters.startDate) {
           params.start_date = filters.startDate;
         }
@@ -167,6 +179,11 @@ export default function ReportsPage() {
           tanggal: item.date ? new Date(item.date).toLocaleDateString('id-ID') : '',
         }));
         setSalesData(transformedData);
+        
+        if (response.data.target) {
+          setKpiTarget(response.data.target);
+        }
+        
         console.log(`Loaded ${response.data.data.length} KPI records`);
       } else {
         throw new Error(response.data.message || 'Failed to fetch data');
@@ -174,7 +191,6 @@ export default function ReportsPage() {
     } catch (error: any) {
       console.error('Error fetching KPI data:', error);
 
-      // Show user-friendly error message
       let errorMessage = 'Failed to fetch KPI data';
       if (error.response?.status === 404) {
         errorMessage = 'KPI endpoint not found. Please check API configuration.';
@@ -194,8 +210,6 @@ export default function ReportsPage() {
       setLoading(false);
     }
   };
-
-
 
   const handleRefresh = async () => {
     console.log('Manual refresh triggered');
@@ -270,7 +284,7 @@ export default function ReportsPage() {
       return;
     }
 
-    const exportDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    const exportDate = new Date().toLocaleDateString('en-CA');
 
     const reportTitle = `KPI Report - ${filters.viewType === "BULANAN" ? "Monthly" : "Daily"}`;
     
@@ -288,7 +302,7 @@ export default function ReportsPage() {
     metadataRows.push(`Export Date,${formatCsvValue(exportDate)}`);
 
     const metadataHeaders = "Metadata Field,Value";
-    const metadata = metadataHeaders + "\n" + metadataRows.join("\n") + "\n\n"; // Add header for metadata, then two empty lines for separation
+    const metadata = metadataHeaders + "\n" + metadataRows.join("\n") + "\n\n";
 
     const headers = [
       filters.viewType === "BULANAN" ? "Bulan" : "Tanggal",
@@ -363,6 +377,8 @@ export default function ReportsPage() {
   return (
     <main className="p-4 overflow-visible lg:p-6 bg-white pb-6 relative">
       <div className="max-w-7xl mx-auto">
+        
+
         {/* Header Controls */}
         <div className="z-40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex flex-wrap gap-2">
@@ -577,16 +593,16 @@ export default function ReportsPage() {
                   Nama Sales
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Kanvasing Task
+                  Kanvasing
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Followup Task
+                  Followup
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Penawaran Task
+                  Penawaran
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Kesepakatan Tarif
+                  Kesepakatan
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Deal DO
@@ -634,28 +650,53 @@ export default function ReportsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="text-sm text-gray-900">
                         {row.kanvasing_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.kanvasing_count >= kpiTarget.kanvasing_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.kanvasing_target}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="text-sm text-gray-900">
                         {row.followup_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.followup_count >= kpiTarget.followup_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.followup_target}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      <span className="text-sm text-gray-900">
                         {row.penawaran_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.penawaran_count >= kpiTarget.penawaran_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.penawaran_target}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      <span className="text-sm text-gray-900">
                         {row.kesepakatan_tarif_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.kesepakatan_tarif_count >= kpiTarget.kesepakatan_tarif_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.kesepakatan_tarif_target}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                      <span className="text-sm text-gray-900">
                         {row.deal_do_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.deal_do_count >= kpiTarget.deal_do_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.deal_do_target}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -702,36 +743,61 @@ export default function ReportsPage() {
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <p className="text-gray-600 text-xs">Kanvasing</p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="text-sm text-gray-900">
                         {row.kanvasing_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.kanvasing_count >= kpiTarget.kanvasing_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.kanvasing_target}
+                          </span>
+                        )}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <p className="text-gray-600 text-xs">Followup</p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                      <span className="text-sm text-gray-900">
                         {row.followup_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.followup_count >= kpiTarget.followup_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.followup_target}
+                          </span>
+                        )}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <p className="text-gray-600 text-xs">Penawaran</p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                      <span className="text-sm text-gray-900">
                         {row.penawaran_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.penawaran_count >= kpiTarget.penawaran_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.penawaran_target}
+                          </span>
+                        )}
                       </span>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <p className="text-gray-600 text-xs">Kesepakatan</p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                      <span className="text-sm text-gray-900">
                         {row.kesepakatan_tarif_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.kesepakatan_tarif_count >= kpiTarget.kesepakatan_tarif_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.kesepakatan_tarif_target}
+                          </span>
+                        )}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <p className="text-gray-600 text-xs">Deal DO</p>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                      <span className="text-sm text-gray-900">
                         {row.deal_do_count}
+                        {kpiTarget && (
+                          <span className={`text-xs ml-1 ${row.deal_do_count >= kpiTarget.deal_do_target ? 'text-green-600' : 'text-red-600'}`}>
+                            /{kpiTarget.deal_do_target}
+                          </span>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -740,6 +806,24 @@ export default function ReportsPage() {
             ))
           )}
         </div>
+
+        {/* Simple Target Info */}
+        {kpiTarget && (
+          <div className="mb-4 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+            <div className="flex items-center">
+              <Info className="w-5 h-5 text-blue-600 mr-2" />
+              <div>
+                <p className="text-sm text-blue-800">
+                  <strong>Target KPI {filters.viewType === "BULANAN" ? "Bulanan" : "Harian"}:</strong>
+                  Kanvasing {kpiTarget.kanvasing_target}, Followup {kpiTarget.followup_target},
+                  Penawaran {kpiTarget.penawaran_target}, Kesepakatan {kpiTarget.kesepakatan_tarif_target},
+                  Deal DO {kpiTarget.deal_do_target}
+                </p>
+                <p className="text-xs text-blue-600 mt-1">Semua target harus terpenuhi untuk status "Terpenuhi"</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
@@ -790,4 +874,3 @@ export default function ReportsPage() {
     </main>
   );
 }
-

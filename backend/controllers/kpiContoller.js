@@ -54,19 +54,18 @@ export const calculateDailyKPI = async (userId, date) => {
         case 'Penawaran':
           counts.penawaran_count = count;
           break;
-        case 'Kesepakatan Tarif':  // 📝 NEW: Kategori baru
+        case 'Kesepakatan Tarif': 
           counts.kesepakatan_tarif_count = count;
           break;
-        case 'Deal DO':  // 📝 NEW: Kategori baru
+        case 'Deal DO': 
           counts.deal_do_count = count;
           break;
         default:
-          // Handle kategori 'Lainnya' atau kategori lain jika diperlukan
           break;
       }
     });
 
-    console.log(`🔢 Final counts for ${targetDate}:`, counts);
+    console.log(`Final counts for ${targetDate}:`, counts);
 
     const dailyTarget = await KpiTargets.findOne({
       where: { type: 'daily', is_active: true }
@@ -127,7 +126,6 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
     const endDate = new Date(year, month, 0);
     endDate.setHours(23, 59, 59, 999);
 
-    // 📝 UPDATED: Semua dari tasks saja
     const taskCounts = await Tasks.findAll({
       attributes: [
         'category',
@@ -146,7 +144,6 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
 
     console.log(`Monthly task counts for ${year}-${month}:`, taskCounts);
 
-    // 📝 UPDATED: Inisialisasi semua count dengan 0
     let counts = {
       kanvasing_count: 0,
       followup_count: 0,
@@ -155,7 +152,6 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
       deal_do_count: 0             // Sekarang dari task category
     };
 
-    // 📝 UPDATED: Mapping semua kategori dari tasks
     taskCounts.forEach(task => {
       const count = parseInt(task.count);
       switch (task.category) {
@@ -168,10 +164,10 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
         case 'Penawaran':
           counts.penawaran_count = count;
           break;
-        case 'Kesepakatan Tarif':  // 📝 NEW: Kategori baru
+        case 'Kesepakatan Tarif': 
           counts.kesepakatan_tarif_count = count;
           break;
-        case 'Deal DO':  // 📝 NEW: Kategori baru
+        case 'Deal DO':  
           counts.deal_do_count = count;
           break;
         default:
@@ -187,7 +183,6 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
 
     let statusKpi = 'Tidak Terpenuhi';
     if (monthlyTarget) {
-      // 📝 UPDATED: Evaluasi semua target
       const isTargetMet = [
         counts.kanvasing_count >= monthlyTarget.kanvasing_target,
         counts.followup_count >= monthlyTarget.followup_target,
@@ -229,7 +224,6 @@ export const calculateMonthlyKPI = async (userId, year, month) => {
   }
 };
 
-// 📝 UPDATED: autoUpdateKPI tetap sama, hanya untuk tasks
 export const autoUpdateKPI = async (taskId, userId) => {
   try {
     const task = await Tasks.findByPk(taskId);
@@ -364,7 +358,6 @@ export const getMonthlyKPI = async (req, res) => {
     });
   }
 };
-
 
 export const triggerDailyKPI = async (req, res) => {
   try {

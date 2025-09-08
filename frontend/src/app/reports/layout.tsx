@@ -20,7 +20,6 @@ export default function ReportsLayout(
       <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
       <div className={`flex-1 ${isMinimized ? 'ml-16' : 'ml-50'} flex flex-col bg-gray-50 transition-all duration-300`}>
-        {/* Tampilkan Header hanya jika BUKAN di halaman detail */}
         <Header
           isOpen={isOpen}
           setIsOpen={setIsOpen}

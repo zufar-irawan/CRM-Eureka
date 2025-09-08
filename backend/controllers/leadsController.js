@@ -199,10 +199,10 @@ export const createLead = async (req, res) => {
             description
         } = req.body;
 
-        if (!email && !work_email) {
+        if (!first_name && !last_name) {
             await transaction.rollback();
             return res.status(400).json({
-                message: "At least one email (personal or work) is required"
+                message: "At least a name is required"
             });
         }
 
@@ -345,7 +345,7 @@ export const updateLead = async (req, res) => {
         }
 
         await lead.update(updatedFields, { transaction });
-        
+
         if (changes.length > 0) {
             await LeadComments.create({
                 lead_id: lead.id,

@@ -354,7 +354,7 @@ export const updateLead = async (req, res) => {
                 message: `Lead details updated:\n${changes.join('\n')}`,
             }, { transaction });
         }
-
+s
         await transaction.commit();
 
         const updatedLead = await Leads.findOne({ where: whereCondition });
@@ -482,7 +482,7 @@ export const convertLead = async (req, res) => {
                 if (Object.keys(updateData).length > 0) {
                     await existingCompany.update(updateData, { transaction });
                 }
-            } else {
+            } else { 
                 // Create new company
                 const addressParts = [lead.street, lead.city, lead.state, lead.postal_code].filter(Boolean);
                 const companyAddress = addressParts.length > 0 ? addressParts.join(', ') : null;

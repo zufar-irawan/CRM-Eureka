@@ -354,7 +354,6 @@ export const updateLead = async (req, res) => {
                 message: `Lead details updated:\n${changes.join('\n')}`,
             }, { transaction });
         }
-s
         await transaction.commit();
 
         const updatedLead = await Leads.findOne({ where: whereCondition });

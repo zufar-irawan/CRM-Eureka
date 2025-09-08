@@ -25,6 +25,8 @@ type fetchDataProps = {
 const fetchData = async (
     { setData, setLoading, url, selectedStatus, selectedCategory, selectedPriority, searchTerm, assignedTo}: fetchDataProps
 ) => {
+    console.log(assignedTo)
+
     try {
         setLoading(true)
 

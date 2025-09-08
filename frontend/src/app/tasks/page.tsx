@@ -330,15 +330,31 @@ export default function TasksList() {
     )
   }
 
+  const [assigned, setAssigned] = useState<number | undefined>();
+
   const handleRefresh = async () => {
     await fetchData({
-      setData, setLoading, url: "/tasks/", assignedTo: showMyTask && user ? user.id : undefined,
+      setData,
+      setLoading,
+      url: "/tasks/",
+      assignedTo: assigned,
     });
-  }
+  };
 
+  // Fetch data setiap kali assigned berubah
   useEffect(() => {
-    handleRefresh(); // fetch sekali, sisanya slicing di frontend
-  }, [showMyTask]);
+    handleRefresh();
+  }, [assigned]);
+
+  // Set assigned hanya ketika user berubah
+  useEffect(() => {
+    if (user?.isSales) {
+      setAssigned(user.id);
+    } else {
+      setAssigned(undefined);
+    }
+  }, [user]);
+
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500)
@@ -433,7 +449,7 @@ export default function TasksList() {
                     <div className="relative mt-2">
                       <input
                         type="text"
-                        placeholder="Search Tasks by Title, Category, and Assigned users"
+                        placeholder={`Search Tasks by Title, ${user?.isAdmin ? "Category, and Assigned users" : "and Category"}`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full px-3 py-2 pr-10 border border-gray-200 rounded text-sm focus:outline-none"
@@ -507,15 +523,15 @@ export default function TasksList() {
               )}
             </div>
 
-            <button
+            {/* <button
               onClick={() => setShowMyTask((prev) => !prev)}
               className={`px-3 py-2 text-sm rounded-md border transition-colors ${showMyTask
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
             >
               My Task
-            </button>
+            </button> */}
 
           </div>
         </div>

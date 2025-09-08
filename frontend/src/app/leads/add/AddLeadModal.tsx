@@ -1,14 +1,14 @@
 "use client";
 
-import { X, ArrowLeft } from "lucide-react";
+import { X, ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import Swal from "sweetalert2";
 
 interface Props {
   onClose: () => void;
   onLeadCreated?: () => void;
-  showBackButton?: boolean;    
-  onBack?: () => void;         
+  showBackButton?: boolean;
+  onBack?: () => void;
   backButtonText?: string;
 }
 
@@ -42,12 +42,12 @@ interface FormErrors {
   [key: string]: string;
 }
 
-export default function CreateLeadModal({ 
-  onClose, 
-  onLeadCreated, 
-  showBackButton = false, 
-  onBack, 
-  backButtonText = "Back" 
+export default function CreateLeadModal({
+  onClose,
+  onLeadCreated,
+  showBackButton = false,
+  onBack,
+  backButtonText = "Back"
 }: Props) {
   const [form, setForm] = useState<FormState>({
     title: "",
@@ -74,6 +74,20 @@ export default function CreateLeadModal({
     description: "",
     owner: "",
   });
+
+  const [openSections, setOpenSections] = useState({
+    personal: true,
+    company: false,
+    address: false,
+    lead: false,
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,25 +142,25 @@ export default function CreateLeadModal({
         return '';
 
       // case 'email':
-      //   if (!value.trim()) return 'Email is required';
-      //   if (!validateEmail(value.trim())) return 'Please enter a valid email address';
-      //   if (value.length > 100) return 'Email cannot exceed 100 characters';
-      //   return '';
+      // if (!value.trim()) return 'Email is required';
+      // if (!validateEmail(value.trim())) return 'Please enter a valid email address';
+      // if (value.length > 100) return 'Email cannot exceed 100 characters';
+      // return '';
 
       // case 'work_email':
-      //   if (!value.trim()) return 'Company email is required';
-      //   if (!validateEmail(value.trim())) return 'Please enter a valid email address';
-      //   if (value.length > 100) return 'Email cannot exceed 100 characters';
-      //   return '';
+      // if (!value.trim()) return 'Company email is required';
+      // if (!validateEmail(value.trim())) return 'Please enter a valid email address';
+      // if (value.length > 100) return 'Email cannot exceed 100 characters';
+      // return '';
 
       // case 'mobile':
-      //   if (!value.trim()) return 'Mobile number is required';
-      //   if (!validatePhone(value.trim())) return 'Please enter a valid mobile number';
-      //   if (value.length > 20) return 'Mobile number cannot exceed 20 characters';
-      //   return '';
+      // if (!value.trim()) return 'Mobile number is required';
+      // if (!validatePhone(value.trim())) return 'Please enter a valid mobile number';
+      // if (value.length > 20) return 'Mobile number cannot exceed 20 characters';
+      // return '';
 
       // case 'phone':
-      //   if (!value.trim()) return 'Phone number is required';
+      // if (!value.trim()) return 'Phone number is required';
       //   if (!validatePhone(value.trim())) return 'Please enter a valid phone number';
       //   if (value.length > 20) return 'Phone number cannot exceed 20 characters';
       //   return '';
@@ -167,10 +181,10 @@ export default function CreateLeadModal({
       //   return '';
 
       // case 'company':
-      //   if (!value.trim()) return 'Company name is required';
-      //   if (value.trim().length < 2) return 'Company name must be at least 2 characters';
-      //   if (value.length > 100) return 'Company name cannot exceed 100 characters';
-      //   return '';
+      // if (!value.trim()) return 'Company name is required';
+      // if (value.trim().length < 2) return 'Company name must be at least 2 characters';
+      // if (value.length > 100) return 'Company name cannot exceed 100 characters';
+      // return '';
 
       // case 'number_of_employees':
       //   if (value.trim()) {
@@ -181,31 +195,31 @@ export default function CreateLeadModal({
       //   return '';
 
       // case 'street':
-      //   if (!value.trim()) return 'Street address is required';
-      //   if (value.trim().length < 5) return 'Street address must be at least 5 characters';
-      //   if (value.length > 255) return 'Street address cannot exceed 255 characters';
-      //   return '';
+      // if (!value.trim()) return 'Street address is required';
+      // if (value.trim().length < 5) return 'Street address must be at least 5 characters';
+      // if (value.length > 255) return 'Street address cannot exceed 255 characters';
+      // return '';
 
       // case 'city':
-      //   if (!value.trim()) return 'City is required';
-      //   if (value.trim().length < 2) return 'City must be at least 2 characters';
-      //   if (value.length > 100) return 'City cannot exceed 100 characters';
-      //   if (value.trim() && !validateName(value.trim())) return 'City can only contain letters, spaces, hyphens, and apostrophes';
-      //   return '';
+      // if (!value.trim()) return 'City is required';
+      // if (value.trim().length < 2) return 'City must be at least 2 characters';
+      // if (value.length > 100) return 'City cannot exceed 100 characters';
+      // if (value.trim() && !validateName(value.trim())) return 'City can only contain letters, spaces, hyphens, and apostrophes';
+      // return '';
 
       // case 'state':
-      //   if (!value.trim()) return 'State is required';
-      //   if (value.trim().length < 2) return 'State must be at least 2 characters';
-      //   if (value.length > 100) return 'State cannot exceed 100 characters';
-      //   if (value.trim() && !validateName(value.trim())) return 'State can only contain letters, spaces, hyphens, and apostrophes';
-      //   return '';
+      // if (!value.trim()) return 'State is required';
+      // if (value.trim().length < 2) return 'State must be at least 2 characters';
+      // if (value.length > 100) return 'State cannot exceed 100 characters';
+      // if (value.trim() && !validateName(value.trim())) return 'State can only contain letters, spaces, hyphens, and apostrophes';
+      // return '';
 
       // case 'country':
-      //   if (!value.trim()) return 'Country is required';
-      //   if (value.trim().length < 2) return 'Country must be at least 2 characters';
-      //   if (value.length > 100) return 'Country cannot exceed 100 characters';
-      //   if (value.trim() && !validateName(value.trim())) return 'Country can only contain letters, spaces, hyphens, and apostrophes';
-      //   return '';
+      // if (!value.trim()) return 'Country is required';
+      // if (value.trim().length < 2) return 'Country must be at least 2 characters';
+      // if (value.length > 100) return 'Country cannot exceed 100 characters';
+      // if (value.trim() && !validateName(value.trim())) return 'Country can only contain letters, spaces, hyphens, and apostrophes';
+      // return '';
 
       // case 'postal_code':
       //   if (value.trim() && !validatePostalCode(value.trim())) return 'Please enter a valid 5-digit postal code';
@@ -294,20 +308,20 @@ export default function CreateLeadModal({
         title: form.title.trim(),
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        mobile: form.mobile.trim(),
-        fax: form.fax.trim(),
-        website: form.website.trim(),
-        work_email: form.work_email.trim(),
-        job_position: form.job_position.trim(),
-        company: form.company.trim(),
-        street: form.street.trim(),
-        city: form.city.trim(),
-        state: form.state.trim(),
-        postal_code: form.postal_code.trim(),
-        country: form.country.trim(),
-        description: form.description.trim(),
+        email: form.email.trim() || "",
+        phone: form.phone.trim() || "",
+        mobile: form.mobile.trim() || "",
+        fax: form.fax.trim() || "",
+        website: form.website.trim() || "",
+        work_email: form.work_email.trim() || "",
+        job_position: form.job_position.trim() || "",
+        company: form.company.trim() || "",
+        street: form.street.trim() || "",
+        city: form.city.trim() || "",
+        state: form.state.trim() || "",
+        postal_code: form.postal_code.trim() || "",
+        country: form.country.trim() || "",
+        description: form.description.trim() || "",
         number_of_employees: form.number_of_employees ? parseInt(form.number_of_employees) : null,
         owner: form.owner ? parseInt(form.owner) : null,
       };
@@ -420,392 +434,448 @@ export default function CreateLeadModal({
               <form onSubmit={handleSubmit}>
                 {/* Personal & Contact Information Section */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("personal")}
+                    className="flex w-full justify-between items-center text-lg font-medium text-gray-700 mb-2 pb-2 border-b border-gray-200"
+                  >
                     Personal & Contact Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">
-                        Salutation <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="title"
-                        value={form.title}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('title')}
-                      >
-                        <option value="">Select Salutation</option>
-                        <option value="Mr">Mr</option>
-                        <option value="Mrs">Mrs</option>
-                        <option value="Ms">Ms</option>
-                      </select>
-                      {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
-                    </div>
+                    {openSections.personal ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        name="first_name"
-                        placeholder="Enter first name"
-                        value={form.first_name}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('first_name')}
-                        required
-                        maxLength={50}
-                      />
-                      {errors.first_name && <p className="text-red-500 text-xs mt-1">{errors.first_name}</p>}
-                    </div>
+                  {openSections.personal && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">
+                          Salutation
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <select
+                          name="title"
+                          value={form.title}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('title')}
+                        >
+                          <option value="">Select Salutation</option>
+                          <option value="Mr">Mr</option>
+                          <option value="Mrs">Mrs</option>
+                          <option value="Ms">Ms</option>
+                        </select>
+                        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Last Name</label>
-                      <input
-                        name="last_name"
-                        placeholder="Enter last name"
-                        value={form.last_name}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('last_name')}
-                        maxLength={50}
-                      />
-                      {errors.last_name && <p className="text-red-500 text-xs mt-1">{errors.last_name}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">
+                          First Name
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="first_name"
+                          placeholder="Enter first name"
+                          value={form.first_name}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('first_name')}
+                          // required
+                          maxLength={50}
+                        />
+                        {errors.first_name && <p className="text-red-500 text-xs mt-1">{errors.first_name}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Email <span className="text-red-500">*</span></label>
-                      <input
-                        name="email"
-                        type="email"
-                        placeholder="Enter email address"
-                        value={form.email}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('email')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Last Name</label>
+                        <input
+                          name="last_name"
+                          placeholder="Enter last name"
+                          value={form.last_name}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('last_name')}
+                          maxLength={50}
+                        />
+                        {errors.last_name && <p className="text-red-500 text-xs mt-1">{errors.last_name}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Mobile <span className="text-red-500">*</span></label>
-                      <input
-                        name="mobile"
-                        placeholder="Enter mobile number"
-                        value={form.mobile}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('mobile')}
-                        maxLength={20}
-                        required
-                      />
-                      {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Email
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="email"
+                          type="email"
+                          placeholder="Enter email address"
+                          value={form.email}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('email')}
+                          maxLength={100}
+                        // required
+                        />
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Fax</label>
-                      <input
-                        name="fax"
-                        placeholder="Enter fax number"
-                        value={form.fax}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('fax')}
-                        maxLength={20}
-                      />
-                      {errors.fax && <p className="text-red-500 text-xs mt-1">{errors.fax}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Mobile
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="mobile"
+                          placeholder="Enter mobile number"
+                          value={form.mobile}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('mobile')}
+                          maxLength={20}
+                        // required
+                        />
+                        {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Job Position</label>
-                      <input
-                        name="job_position"
-                        placeholder="Enter job position"
-                        value={form.job_position}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('job_position')}
-                        maxLength={100}
-                      />
-                      {errors.job_position && <p className="text-red-500 text-xs mt-1">{errors.job_position}</p>}
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Fax</label>
+                        <input
+                          name="fax"
+                          placeholder="Enter fax number"
+                          value={form.fax}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('fax')}
+                          maxLength={20}
+                        />
+                        {errors.fax && <p className="text-red-500 text-xs mt-1">{errors.fax}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Job Position</label>
+                        <input
+                          name="job_position"
+                          placeholder="Enter job position"
+                          value={form.job_position}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('job_position')}
+                          maxLength={100}
+                        />
+                        {errors.job_position && <p className="text-red-500 text-xs mt-1">{errors.job_position}</p>}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
                 </div>
 
                 {/* Professional Information Section */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("company")}
+                    className="flex w-full justify-between items-center text-lg font-medium text-gray-700 mb-2 pb-2 border-b border-gray-200"
+                  >
                     Company Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {openSections.company ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Company
-                        {/* <span className="text-red-500">*</span> */}
-                      </label>
-                      <input
-                        name="company"
-                        placeholder="Enter company name"
-                        value={form.company}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('company')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.company && <p className="text-red-500 text-xs mt-1">{errors.company}</p>}
-                    </div>
+                  {openSections.company && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Industry</label>
-                      <select
-                        name="industry"
-                        value={form.industry}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('industry')}
-                      >
-                        <option value="">Select Industry</option>
-                        <option value="Securities & Commodity Exchanges">Securities & Commodity Exchanges</option>
-                        <option value="Service">Service</option>
-                        <option value="Soap & Detergent">Soap & Detergent</option>
-                        <option value="Software">Software</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Technology">Technology</option>
-                        <option value="Telecommunications">Telecommunications</option>
-                        <option value="Television">Television</option>
-                        <option value="Transportation">Transportation</option>
-                        <option value="Venture Capital">Venture Capital</option>
-                      </select>
-                      {errors.industry && <p className="text-red-500 text-xs mt-1">{errors.industry}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Company
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="company"
+                          placeholder="Enter company name"
+                          value={form.company}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('company')}
+                          maxLength={100}
+                        // required
+                        />
+                        {errors.company && <p className="text-red-500 text-xs mt-1">{errors.company}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Phone
-                        {/* <span className="text-red-500">*</span> */}
-                      </label>
-                      <input
-                        name="phone"
-                        placeholder="Enter phone number"
-                        value={form.phone}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('phone')}
-                        maxLength={20}
-                        required
-                      />
-                      {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Industry</label>
+                        <select
+                          name="industry"
+                          value={form.industry}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('industry')}
+                        >
+                          <option value="">Select Industry</option>
+                          <option value="Securities & Commodity Exchanges">Securities & Commodity Exchanges</option>
+                          <option value="Service">Service</option>
+                          <option value="Soap & Detergent">Soap & Detergent</option>
+                          <option value="Software">Software</option>
+                          <option value="Sports">Sports</option>
+                          <option value="Technology">Technology</option>
+                          <option value="Telecommunications">Telecommunications</option>
+                          <option value="Television">Television</option>
+                          <option value="Transportation">Transportation</option>
+                          <option value="Venture Capital">Venture Capital</option>
+                        </select>
+                        {errors.industry && <p className="text-red-500 text-xs mt-1">{errors.industry}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Website</label>
-                      <input
-                        name="website"
-                        type="url"
-                        placeholder="Enter website URL"
-                        value={form.website}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('website')}
-                        maxLength={100}
-                      />
-                      {errors.website && <p className="text-red-500 text-xs mt-1">{errors.website}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Phone
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="phone"
+                          placeholder="Enter phone number"
+                          value={form.phone}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('phone')}
+                          maxLength={20}
+                        // required
+                        />
+                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Company Email
-                        {/* <span className="text-red-500">*</span> */}
-                      </label>
-                      <input
-                        name="work_email"
-                        type="email"
-                        placeholder="Enter work email address"
-                        value={form.work_email}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('work_email')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.work_email && <p className="textred-500 text-xs mt-1">{errors.work_email}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Website</label>
+                        <input
+                          name="website"
+                          type="url"
+                          placeholder="Enter website URL"
+                          value={form.website}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('website')}
+                          maxLength={100}
+                        />
+                        {errors.website && <p className="text-red-500 text-xs mt-1">{errors.website}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Amount of Employees</label>
-                      <input
-                        name="number_of_employees"
-                        type="number"
-                        placeholder="Enter amount of employees"
-                        value={form.number_of_employees}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('number_of_employees')}
-                        min="0"
-                        max="999999"
-                      />
-                      {errors.number_of_employees && <p className="text-red-500 text-xs mt-1">{errors.number_of_employees}</p>}
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Company Email
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="work_email"
+                          type="email"
+                          placeholder="Enter work email address"
+                          value={form.work_email}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('work_email')}
+                          maxLength={100}
+                        // required
+                        />
+                        {errors.work_email && <p className="textred-500 text-xs mt-1">{errors.work_email}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Amount of Employees</label>
+                        <input
+                          name="number_of_employees"
+                          type="number"
+                          placeholder="Enter amount of employees"
+                          value={form.number_of_employees}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('number_of_employees')}
+                          min="0"
+                          max="999999"
+                        />
+                        {errors.number_of_employees && <p className="text-red-500 text-xs mt-1">{errors.number_of_employees}</p>}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Address Information Section */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("address")}
+                    className="flex w-full justify-between items-center text-lg font-medium text-gray-700 mb-2 pb-2 border-b border-gray-200"
+                  >
                     Address Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1 md:col-span-3">
-                      <label className="block text-sm font-medium text-gray-600">Street
-                        {/* <span className="text-red-500">*</span> */}
-                      </label>
-                      <input
-                        name="street"
-                        placeholder="Enter street address"
-                        value={form.street}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('street')}
-                        maxLength={255}
-                        required
-                      />
-                      {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
-                    </div>
+                    {openSections.address ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">City
-                        {/* <span className="text-red-500">*</span> */}
-                      </label>
-                      <input
-                        name="city"
-                        placeholder="Enter city"
-                        value={form.city}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('city')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
-                    </div>
+                  {openSections.address && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1 md:col-span-3">
+                        <label className="block text-sm font-medium text-gray-600">Street
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="street"
+                          placeholder="Enter street address"
+                          value={form.street}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('street')}
+                          maxLength={255}
+                        // required
+                        />
+                        {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">State
-                        {/* <span className="text-red-500">*</span> */}
-                      </label>
-                      <input
-                        name="state"
-                        placeholder="Enter state"
-                        value={form.state}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('state')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">City
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="city"
+                          placeholder="Enter city"
+                          value={form.city}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('city')}
+                          maxLength={100}
+                        // required
+                        />
+                        {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Postal Code</label>
-                      <input
-                        name="postal_code"
-                        placeholder="Enter postal code (5 digits)"
-                        value={form.postal_code}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('postal_code')}
-                        maxLength={5}
-                        pattern="\d{5}"
-                      />
-                      {errors.postal_code && <p className="text-red-500 text-xs mt-1">{errors.postal_code}</p>}
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">State
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="state"
+                          placeholder="Enter state"
+                          value={form.state}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('state')}
+                          maxLength={100}
+                        // required
+                        />
+                        {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Country
-                        {/* <span className="text-red-500">*</span> */}
-                      </label>
-                      <input
-                        name="country"
-                        placeholder="Enter country"
-                        value={form.country}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('country')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Postal Code</label>
+                        <input
+                          name="postal_code"
+                          placeholder="Enter postal code (5 digits)"
+                          value={form.postal_code}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('postal_code')}
+                          maxLength={5}
+                          pattern="\d{5}"
+                        />
+                        {errors.postal_code && <p className="text-red-500 text-xs mt-1">{errors.postal_code}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Country
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          name="country"
+                          placeholder="Enter country"
+                          value={form.country}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('country')}
+                          maxLength={100}
+                        // required
+                        />
+                        {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
                 </div>
 
                 {/* Lead Information Section */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("lead")}
+                    className="flex w-full justify-between items-center text-lg font-medium text-gray-700 mb-2 pb-2 border-b border-gray-200"
+                  >
                     Lead Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Lead Source</label>
-                      <select
-                        name="lead_source"
-                        value={form.lead_source}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('lead_source')}
-                      >
-                        <option value="">Select Lead Source</option>
-                        <option value="Website">Website</option>
-                        <option value="Social Media">Social Media</option>
-                        <option value="Email Campaign">Email Campaign</option>
-                        <option value="Referral">Referral</option>
-                        <option value="Cold Call">Cold Call</option>
-                        <option value="Trade Show">Trade Show</option>
-                        <option value="Advertisement">Advertisement</option>
-                        <option value="Other">Other</option>
-                      </select>
-                      {errors.lead_source && <p className="text-red-500 text-xs mt-1">{errors.lead_source}</p>}
-                    </div>
+                    {openSections.lead ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Stage</label>
-                      <select
-                        name="stage"
-                        value={form.stage}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('stage')}
-                      >
-                        <option value="">Select Stage</option>
-                        <option value="New">New</option>
-                        <option value="Contacted">Contacted</option>
-                        <option value="Qualification">Qualification</option>
-                        <option value="Converted">Converted</option>
-                        <option value="Unqualified">Unqualified</option>
-                      </select>
-                      {errors.stage && <p className="text-red-500 text-xs mt-1">{errors.stage}</p>}
-                    </div>
+                  {openSections.lead && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Lead Source</label>
+                        <select
+                          name="lead_source"
+                          value={form.lead_source}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('lead_source')}
+                        >
+                          <option value="">Select Lead Source</option>
+                          <option value="Website">Website</option>
+                          <option value="Social Media">Social Media</option>
+                          <option value="Email Campaign">Email Campaign</option>
+                          <option value="Referral">Referral</option>
+                          <option value="Cold Call">Cold Call</option>
+                          <option value="Trade Show">Trade Show</option>
+                          <option value="Advertisement">Advertisement</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        {errors.lead_source && <p className="text-red-500 text-xs mt-1">{errors.lead_source}</p>}
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Rating</label>
-                      <select
-                        name="rating"
-                        value={form.rating}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('rating')}
-                      >
-                        <option value="">Select Rating</option>
-                        <option value="Hot">Hot</option>
-                        <option value="Warm">Warm</option>
-                        <option value="Cold">Cold</option>
-                      </select>
-                      {errors.rating && <p className="text-red-500 text-xs mt-1">{errors.rating}</p>}
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Stage</label>
+                        <select
+                          name="stage"
+                          value={form.stage}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('stage')}
+                        >
+                          <option value="">Select Stage</option>
+                          <option value="New">New</option>
+                          <option value="Contacted">Contacted</option>
+                          <option value="Qualification">Qualification</option>
+                          <option value="Converted">Converted</option>
+                          <option value="Unqualified">Unqualified</option>
+                        </select>
+                        {errors.stage && <p className="text-red-500 text-xs mt-1">{errors.stage}</p>}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Rating</label>
+                        <select
+                          name="rating"
+                          value={form.rating}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          className={getInputClassName('rating')}
+                        >
+                          <option value="">Select Rating</option>
+                          <option value="Hot">Hot</option>
+                          <option value="Warm">Warm</option>
+                          <option value="Cold">Cold</option>
+                        </select>
+                        {errors.rating && <p className="text-red-500 text-xs mt-1">{errors.rating}</p>}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Description Section */}

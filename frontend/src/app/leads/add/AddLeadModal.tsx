@@ -118,93 +118,93 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
         if (value.trim() && !validateName(value.trim())) return 'Last name can only contain letters, spaces, hyphens, and apostrophes';
         return '';
 
-      case 'email':
-        if (!value.trim()) return 'Email is required';
-        if (!validateEmail(value.trim())) return 'Please enter a valid email address';
-        if (value.length > 100) return 'Email cannot exceed 100 characters';
-        return '';
+      // case 'email':
+      //   if (!value.trim()) return 'Email is required';
+      //   if (!validateEmail(value.trim())) return 'Please enter a valid email address';
+      //   if (value.length > 100) return 'Email cannot exceed 100 characters';
+      //   return '';
 
-      case 'work_email':
-        if (!value.trim()) return 'Company email is required';
-        if (!validateEmail(value.trim())) return 'Please enter a valid email address';
-        if (value.length > 100) return 'Email cannot exceed 100 characters';
-        return '';
+      // case 'work_email':
+      //   if (!value.trim()) return 'Company email is required';
+      //   if (!validateEmail(value.trim())) return 'Please enter a valid email address';
+      //   if (value.length > 100) return 'Email cannot exceed 100 characters';
+      //   return '';
 
-      case 'mobile':
-        if (!value.trim()) return 'Mobile number is required';
-        if (!validatePhone(value.trim())) return 'Please enter a valid mobile number';
-        if (value.length > 20) return 'Mobile number cannot exceed 20 characters';
-        return '';
+      // case 'mobile':
+      //   if (!value.trim()) return 'Mobile number is required';
+      //   if (!validatePhone(value.trim())) return 'Please enter a valid mobile number';
+      //   if (value.length > 20) return 'Mobile number cannot exceed 20 characters';
+      //   return '';
 
-      case 'phone':
-        if (!value.trim()) return 'Phone number is required';
-        if (!validatePhone(value.trim())) return 'Please enter a valid phone number';
-        if (value.length > 20) return 'Phone number cannot exceed 20 characters';
-        return '';
+      // case 'phone':
+      //   if (!value.trim()) return 'Phone number is required';
+      //   if (!validatePhone(value.trim())) return 'Please enter a valid phone number';
+      //   if (value.length > 20) return 'Phone number cannot exceed 20 characters';
+      //   return '';
 
-      case 'fax':
-        if (value.trim() && !validatePhone(value.trim())) return 'Please enter a valid fax number';
-        if (value.length > 20) return 'Fax number cannot exceed 20 characters';
-        return '';
+      // case 'fax':
+      //   if (value.trim() && !validatePhone(value.trim())) return 'Please enter a valid fax number';
+      //   if (value.length > 20) return 'Fax number cannot exceed 20 characters';
+      //   return '';
 
-      case 'website':
-        if (value.trim() && !validateURL(value.trim())) return 'Please enter a valid website URL';
-        if (value.length > 100) return 'Website URL cannot exceed 100 characters';
-        return '';
+      // case 'website':
+      //   if (value.trim() && !validateURL(value.trim())) return 'Please enter a valid website URL';
+      //   if (value.length > 100) return 'Website URL cannot exceed 100 characters';
+      //   return '';
 
-      case 'job_position':
-        if (value.trim() && value.trim().length < 2) return 'Job position must be at least 2 characters';
-        if (value.length > 100) return 'Job position cannot exceed 100 characters';
-        return '';
+      // case 'job_position':
+      //   if (value.trim() && value.trim().length < 2) return 'Job position must be at least 2 characters';
+      //   if (value.length > 100) return 'Job position cannot exceed 100 characters';
+      //   return '';
 
-      case 'company':
-        if (!value.trim()) return 'Company name is required';
-        if (value.trim().length < 2) return 'Company name must be at least 2 characters';
-        if (value.length > 100) return 'Company name cannot exceed 100 characters';
-        return '';
+      // case 'company':
+      //   if (!value.trim()) return 'Company name is required';
+      //   if (value.trim().length < 2) return 'Company name must be at least 2 characters';
+      //   if (value.length > 100) return 'Company name cannot exceed 100 characters';
+      //   return '';
 
-      case 'number_of_employees':
-        if (value.trim()) {
-          const num = parseInt(value);
-          if (isNaN(num) || num < 0) return 'Number of employees must be a positive number';
-          if (num > 999999) return 'Number of employees seems too large';
-        }
-        return '';
+      // case 'number_of_employees':
+      //   if (value.trim()) {
+      //     const num = parseInt(value);
+      //     if (isNaN(num) || num < 0) return 'Number of employees must be a positive number';
+      //     if (num > 999999) return 'Number of employees seems too large';
+      //   }
+      //   return '';
 
-      case 'street':
-        if (!value.trim()) return 'Street address is required';
-        if (value.trim().length < 5) return 'Street address must be at least 5 characters';
-        if (value.length > 255) return 'Street address cannot exceed 255 characters';
-        return '';
+      // case 'street':
+      //   if (!value.trim()) return 'Street address is required';
+      //   if (value.trim().length < 5) return 'Street address must be at least 5 characters';
+      //   if (value.length > 255) return 'Street address cannot exceed 255 characters';
+      //   return '';
 
-      case 'city':
-        if (!value.trim()) return 'City is required';
-        if (value.trim().length < 2) return 'City must be at least 2 characters';
-        if (value.length > 100) return 'City cannot exceed 100 characters';
-        if (value.trim() && !validateName(value.trim())) return 'City can only contain letters, spaces, hyphens, and apostrophes';
-        return '';
+      // case 'city':
+      //   if (!value.trim()) return 'City is required';
+      //   if (value.trim().length < 2) return 'City must be at least 2 characters';
+      //   if (value.length > 100) return 'City cannot exceed 100 characters';
+      //   if (value.trim() && !validateName(value.trim())) return 'City can only contain letters, spaces, hyphens, and apostrophes';
+      //   return '';
 
-      case 'state':
-        if (!value.trim()) return 'State is required';
-        if (value.trim().length < 2) return 'State must be at least 2 characters';
-        if (value.length > 100) return 'State cannot exceed 100 characters';
-        if (value.trim() && !validateName(value.trim())) return 'State can only contain letters, spaces, hyphens, and apostrophes';
-        return '';
+      // case 'state':
+      //   if (!value.trim()) return 'State is required';
+      //   if (value.trim().length < 2) return 'State must be at least 2 characters';
+      //   if (value.length > 100) return 'State cannot exceed 100 characters';
+      //   if (value.trim() && !validateName(value.trim())) return 'State can only contain letters, spaces, hyphens, and apostrophes';
+      //   return '';
 
-      case 'country':
-        if (!value.trim()) return 'Country is required';
-        if (value.trim().length < 2) return 'Country must be at least 2 characters';
-        if (value.length > 100) return 'Country cannot exceed 100 characters';
-        if (value.trim() && !validateName(value.trim())) return 'Country can only contain letters, spaces, hyphens, and apostrophes';
-        return '';
+      // case 'country':
+      //   if (!value.trim()) return 'Country is required';
+      //   if (value.trim().length < 2) return 'Country must be at least 2 characters';
+      //   if (value.length > 100) return 'Country cannot exceed 100 characters';
+      //   if (value.trim() && !validateName(value.trim())) return 'Country can only contain letters, spaces, hyphens, and apostrophes';
+      //   return '';
 
-      case 'postal_code':
-        if (value.trim() && !validatePostalCode(value.trim())) return 'Please enter a valid 5-digit postal code';
-        return '';
+      // case 'postal_code':
+      //   if (value.trim() && !validatePostalCode(value.trim())) return 'Please enter a valid 5-digit postal code';
+      //   return '';
 
-      case 'description':
-        if (value.length > 500) return 'Description cannot exceed 500 characters';
-        return '';
+      // case 'description':
+      //   if (value.length > 500) return 'Description cannot exceed 500 characters';
+      //   return '';
 
       default:
         return '';
@@ -520,10 +520,12 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                   <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
                     Company Information
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Company <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-gray-600">Company
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
                       <input
                         name="company"
                         placeholder="Enter company name"
@@ -562,23 +564,9 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Amount of Employees</label>
-                      <input
-                        name="number_of_employees"
-                        type="number"
-                        placeholder="Enter amount of employees"
-                        value={form.number_of_employees}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('number_of_employees')}
-                        min="0"
-                        max="999999"
-                      />
-                      {errors.number_of_employees && <p className="text-red-500 text-xs mt-1">{errors.number_of_employees}</p>}
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Phone <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-gray-600">Phone
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
                       <input
                         name="phone"
                         placeholder="Enter phone number"
@@ -608,7 +596,9 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Company Email <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-medium text-gray-600">Company Email
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
                       <input
                         name="work_email"
                         type="email"
@@ -621,6 +611,113 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                         required
                       />
                       {errors.work_email && <p className="text-red-500 text-xs mt-1">{errors.work_email}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Amount of Employees</label>
+                      <input
+                        name="number_of_employees"
+                        type="number"
+                        placeholder="Enter amount of employees"
+                        value={form.number_of_employees}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={getInputClassName('number_of_employees')}
+                        min="0"
+                        max="999999"
+                      />
+                      {errors.number_of_employees && <p className="text-red-500 text-xs mt-1">{errors.number_of_employees}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address Information Section */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
+                    Address Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1 md:col-span-3">
+                      <label className="block text-sm font-medium text-gray-600">Street
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
+                      <input
+                        name="street"
+                        placeholder="Enter street address"
+                        value={form.street}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={getInputClassName('street')}
+                        maxLength={255}
+                        required
+                      />
+                      {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">City
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
+                      <input
+                        name="city"
+                        placeholder="Enter city"
+                        value={form.city}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={getInputClassName('city')}
+                        maxLength={100}
+                        required
+                      />
+                      {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">State
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
+                      <input
+                        name="state"
+                        placeholder="Enter state"
+                        value={form.state}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={getInputClassName('state')}
+                        maxLength={100}
+                        required
+                      />
+                      {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Postal Code</label>
+                      <input
+                        name="postal_code"
+                        placeholder="Enter postal code (5 digits)"
+                        value={form.postal_code}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={getInputClassName('postal_code')}
+                        maxLength={5}
+                        pattern="\d{5}"
+                      />
+                      {errors.postal_code && <p className="text-red-500 text-xs mt-1">{errors.postal_code}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Country
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
+                      <input
+                        name="country"
+                        placeholder="Enter country"
+                        value={form.country}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={getInputClassName('country')}
+                        maxLength={100}
+                        required
+                      />
+                      {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
                     </div>
                   </div>
                 </div>
@@ -691,91 +788,8 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                   </div>
                 </div>
 
-                {/* Address Information Section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Address Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1 md:col-span-3">
-                      <label className="block text-sm font-medium text-gray-600">Street <span className="text-red-500">*</span></label>
-                      <input
-                        name="street"
-                        placeholder="Enter street address"
-                        value={form.street}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('street')}
-                        maxLength={255}
-                        required
-                      />
-                      {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">City <span className="text-red-500">*</span></label>
-                      <input
-                        name="city"
-                        placeholder="Enter city"
-                        value={form.city}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('city')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">State <span className="text-red-500">*</span></label>
-                      <input
-                        name="state"
-                        placeholder="Enter state"
-                        value={form.state}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('state')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Postal Code</label>
-                      <input
-                        name="postal_code"
-                        placeholder="Enter postal code (5 digits)"
-                        value={form.postal_code}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('postal_code')}
-                        maxLength={5}
-                        pattern="\d{5}"
-                      />
-                      {errors.postal_code && <p className="text-red-500 text-xs mt-1">{errors.postal_code}</p>}
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Country <span className="text-red-500">*</span></label>
-                      <input
-                        name="country"
-                        placeholder="Enter country"
-                        value={form.country}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={getInputClassName('country')}
-                        maxLength={100}
-                        required
-                      />
-                      {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
-                    </div>
-                  </div>
-                </div>
-
                 {/* Description Section */}
-                <div className="mb-8">
+                {/* <div className="mb-8">
                   <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
                     Additional Information
                   </h3>
@@ -800,7 +814,7 @@ export default function CreateLeadModal({ onClose, onLeadCreated }: Props) {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Form Actions */}
                 <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4">

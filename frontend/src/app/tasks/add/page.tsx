@@ -4,9 +4,10 @@ import DateTime from "@/components/AddModal/DateTime";
 import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
 import TextArea from "@/components/AddModal/TextArea";
-import { PlusIcon, X } from "lucide-react";
+import { PlusIcon, X, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react"
 import Swal from "sweetalert2";
+import CreateLeadModal from "../../leads/add/AddLeadModal";
 
 interface Props {
     onClose: () => void;
@@ -36,6 +37,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
 
     const [leadOptions, setLeadOptions] = useState<any[]>([])
     const [userOptions, setUserOptions] = useState<any[]>([])
+    const [showLeadModal, setShowLeadModal] = useState(false);
 
     useEffect(() => {
         const fetchLeads = async () => {
@@ -86,6 +88,26 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
         fetchUsers()
     }, [])
 
+    // Refresh leads when returning from lead modal
+    const refreshLeads = async () => {
+        try {
+            const res = await fetch("http://localhost:3000/api/leads", {
+                credentials: 'include',
+            })
+            const result = await res.json()
+            const data = result.leads
+
+            const mappedOptions = data.map((lead: any) => ({
+                value: lead.id,
+                label: lead.fullname,
+            }))
+
+            setLeadOptions(mappedOptions)
+        } catch (error) {
+            console.error("Failed to refresh leads", error)
+        }
+    }
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
 
@@ -93,6 +115,20 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
     ) {
         setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    function handleAddLead() {
+        setShowLeadModal(true);
+    }
+
+    function handleLeadModalClose() {
+        setShowLeadModal(false);
+    }
+
+    function handleLeadCreated() {
+        // Refresh the lead options when a new lead is created
+        refreshLeads();
+        setShowLeadModal(false);
     }
 
     async function handleSubmit(e: React.FormEvent) {
@@ -161,6 +197,19 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
         }
     }
 
+    // Render Lead Modal if showLeadModal is true
+    if (showLeadModal) {
+        return (
+            <CreateLeadModal
+                onClose={handleLeadModalClose}
+                onLeadCreated={handleLeadCreated}
+                showBackButton={true}
+                onBack={handleLeadModalClose}
+                backButtonText="Back to Task"
+            />
+        );
+    }
+
     return (
         <>
             {/* Transparent Backdrop */}
@@ -225,12 +274,13 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
 
                                             <button
                                                 type="button"
-                                                className="h-10 w-10 mt-6 flex items-center justify-center rounded-md border border-gray-300 bg-white hover:bg-gray-100"
+                                                onClick={handleAddLead}
+                                                className="h-10 w-10 mt-6 flex items-center justify-center rounded-md border border-gray-300 bg-white hover:bg-gray-100 transition-colors duration-200"
+                                                title="Add New Lead"
                                             >
                                                 <PlusIcon className="w-5 h-5" />
                                             </button>
                                         </div>
-
 
                                         <Dropdown
                                             label="Assigned To"
@@ -277,7 +327,6 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                             value={form.due_date}
                                             onChange={handleChange}
                                             required
-
                                         />
                                     </div>
 
@@ -289,7 +338,6 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                             value={form.description}
                                             onChange={handleChange}
                                             rows={4}
-
                                         />
                                     </div>
                                 </div>

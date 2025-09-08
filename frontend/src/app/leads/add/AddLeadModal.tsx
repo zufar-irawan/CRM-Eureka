@@ -677,7 +677,7 @@ export default function CreateLeadModal({
                         {errors.work_email && <p className="textred-500 text-xs mt-1">{errors.work_email}</p>}
                       </div>
 
-                      <div className="space-y-1">
+                      {/* <div className="space-y-1">
                         <label className="block text-sm font-medium text-gray-600">Amount of Employees</label>
                         <input
                           name="number_of_employees"
@@ -691,7 +691,7 @@ export default function CreateLeadModal({
                           max="999999"
                         />
                         {errors.number_of_employees && <p className="text-red-500 text-xs mt-1">{errors.number_of_employees}</p>}
-                      </div>
+                      </div> */}
                     </div>
                   )}
                 </div>
@@ -816,7 +816,7 @@ export default function CreateLeadModal({
                   </button>
 
                   {openSections.lead && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="block text-sm font-medium text-gray-600">Lead Source</label>
                         <select

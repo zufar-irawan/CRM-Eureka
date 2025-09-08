@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 
@@ -63,6 +63,20 @@ export default function EditLeadModal({ lead, isOpen, onClose, onSave }: Props) 
     description: "",
     owner: "",
   });
+
+  const [openSections, setOpenSections] = useState({
+    personal: true,
+    company: false,
+    address: false,
+    lead: false,
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -204,322 +218,360 @@ export default function EditLeadModal({ lead, isOpen, onClose, onSave }: Props) 
               <form onSubmit={handleSubmit}>
                 {/* Personal & Contact Information Section */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("personal")}
+                    className="flex w-full justify-between items-center text-lg font-medium text-gray-700 mb-2 pb-2 border-b border-gray-200"
+                  >
                     Personal & Contact Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Salutation</label>
-                      <select
-                        name="title"
-                        value={form.title}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                      >
-                        <option value="">Select Salutation</option>
-                        <option value="Mr">Mr</option>
-                        <option value="Mrs">Mrs</option>
-                        <option value="Ms">Ms</option>
-                      </select>
-                    </div>
+                    {openSections.personal ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        name="first_name"
-                        placeholder="Enter first name"
-                        value={form.first_name}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        required
-                        maxLength={50}
-                      />
-                    </div>
+                  {openSections.personal && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Salutation</label>
+                        <select
+                          name="title"
+                          value={form.title}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        >
+                          <option value="">Select Salutation</option>
+                          <option value="Mr">Mr</option>
+                          <option value="Mrs">Mrs</option>
+                          <option value="Ms">Ms</option>
+                        </select>
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Last Name</label>
-                      <input
-                        name="last_name"
-                        placeholder="Enter last name"
-                        value={form.last_name}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={50}
-                      />
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">
+                          First Name
+                        </label>
+                        <input
+                          name="first_name"
+                          placeholder="Enter first name"
+                          value={form.first_name}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          required
+                          maxLength={50}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Email</label>
-                      <input
-                        name="email"
-                        type="email"
-                        placeholder="Enter email address"
-                        value={form.email}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
-                      />
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Last Name</label>
+                        <input
+                          name="last_name"
+                          placeholder="Enter last name"
+                          value={form.last_name}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={50}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Mobile</label>
-                      <input
-                        name="mobile"
-                        placeholder="Enter mobile number"
-                        value={form.mobile}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={20}
-                      />
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Email</label>
+                        <input
+                          name="email"
+                          type="email"
+                          placeholder="Enter email address"
+                          value={form.email}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={100}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Fax</label>
-                      <input
-                        name="fax"
-                        placeholder="Enter fax number"
-                        value={form.fax}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={20}
-                      />
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Mobile</label>
+                        <input
+                          name="mobile"
+                          placeholder="Enter mobile number"
+                          value={form.mobile}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={20}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Fax</label>
+                        <input
+                          name="fax"
+                          placeholder="Enter fax number"
+                          value={form.fax}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={20}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Job Position</label>
+                        <input
+                          name="job_position"
+                          placeholder="Enter job position"
+                          value={form.job_position}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={100}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
+
                 </div>
 
                 {/* Professional Information Section */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Professional Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Job Position</label>
-                      <input
-                        name="job_position"
-                        placeholder="Enter job position"
-                        value={form.job_position}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
-                      />
-                    </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("company")}
+                    className="flex w-full justify-between items-center text-lg font-medium text-gray-700 mb-2 pb-2 border-b border-gray-200"
+                  >
+                    Company Information
+                    {openSections.company ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Company</label>
-                      <input
-                        name="company"
-                        placeholder="Enter company name"
-                        value={form.company}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
-                      />
-                    </div>
+                  {openSections.company && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Industry</label>
-                      <select
-                        name="industry"
-                        value={form.industry}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                      >
-                        <option value="">Select Industry</option>
-                        <option value="Securities & Commodity Exchanges">Securities & Commodity Exchanges</option>
-                        <option value="Service">Service</option>
-                        <option value="Soap & Detergent">Soap & Detergent</option>
-                        <option value="Software">Software</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Technology">Technology</option>
-                        <option value="Telecommunications">Telecommunications</option>
-                        <option value="Television">Television</option>
-                        <option value="Transportation">Transportation</option>
-                        <option value="Venture Capital">Venture Capital</option>
-                      </select>
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Company</label>
+                        <input
+                          name="company"
+                          placeholder="Enter company name"
+                          value={form.company}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={100}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">No. of Employees</label>
-                      <input
-                        name="number_of_employees"
-                        type="number"
-                        placeholder="Enter number of employees"
-                        value={form.number_of_employees}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        min="0"
-                      />
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Industry</label>
+                        <select
+                          name="industry"
+                          value={form.industry}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        >
+                          <option value="">Select Industry</option>
+                          <option value="Securities & Commodity Exchanges">Securities & Commodity Exchanges</option>
+                          <option value="Service">Service</option>
+                          <option value="Soap & Detergent">Soap & Detergent</option>
+                          <option value="Software">Software</option>
+                          <option value="Sports">Sports</option>
+                          <option value="Technology">Technology</option>
+                          <option value="Telecommunications">Telecommunications</option>
+                          <option value="Television">Television</option>
+                          <option value="Transportation">Transportation</option>
+                          <option value="Venture Capital">Venture Capital</option>
+                        </select>
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Phone</label>
-                      <input
-                        name="phone"
-                        placeholder="Enter phone number"
-                        value={form.phone}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={20}
-                      />
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Phone</label>
+                        <input
+                          name="phone"
+                          placeholder="Enter phone number"
+                          value={form.phone}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={20}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Website</label>
-                      <input
-                        name="website"
-                        type="url"
-                        placeholder="Enter website URL"
-                        value={form.website}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
-                      />
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Website</label>
+                        <input
+                          name="website"
+                          type="url"
+                          placeholder="Enter website URL"
+                          value={form.website}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={100}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Work Email</label>
-                      <input
-                        name="work_email"
-                        type="email"
-                        placeholder="Enter work email address"
-                        value={form.work_email}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
-                      />
-                    </div>
-                  </div>
-                </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Company Email</label>
+                        <input
+                          name="work_email"
+                          type="email"
+                          placeholder="Enter company email address"
+                          value={form.work_email}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={100}
+                        />
+                      </div>
 
-                {/* Lead Information Section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
-                    Lead Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Lead Source</label>
-                      <select
-                        name="lead_source"
-                        value={form.lead_source}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                      >
-                        <option value="">Select Lead Source</option>
-                        <option value="Website">Website</option>
-                        <option value="Social Media">Social Media</option>
-                        <option value="Email Campaign">Email Campaign</option>
-                        <option value="Referral">Referral</option>
-                        <option value="Cold Call">Cold Call</option>
-                        <option value="Trade Show">Trade Show</option>
-                        <option value="Advertisement">Advertisement</option>
-                        <option value="Other">Other</option>
-                      </select>
+                      {/* <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Amount of Employees</label>
+                        <input
+                          name="number_of_employees"
+                          type="number"
+                          placeholder="Enter number of employees"
+                          value={form.number_of_employees}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          min="0"
+                        />
+                      </div> */}
                     </div>
+                  )}
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Stage</label>
-                      <select
-                        name="stage"
-                        value={form.stage}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                      >
-                        <option value="">Select Stage</option>
-                        <option value="New">New</option>
-                        <option value="Contacted">Contacted</option>
-                        <option value="Qualification">Qualification</option>
-                        <option value="Converted">Converted</option>
-                        <option value="Unqualified">Unqualified</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Rating</label>
-                      <select
-                        name="rating"
-                        value={form.rating}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                      >
-                        <option value="">Select Rating</option>
-                        <option value="Hot">Hot</option>
-                        <option value="Warm">Warm</option>
-                        <option value="Cold">Cold</option>
-                      </select>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Address Information Section */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4 pb-2 border-b border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("address")}
+                    className="flex w-full justify-between items-center text-lg font-medium text-gray-700 mb-2 pb-2 border-b border-gray-200"
+                  >
                     Address Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1 md:col-span-3">
-                      <label className="block text-sm font-medium text-gray-600">Street</label>
-                      <input
-                        name="street"
-                        placeholder="Enter street address"
-                        value={form.street}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={255}
-                      />
-                    </div>
+                    {openSections.address ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">City</label>
-                      <input
-                        name="city"
-                        placeholder="Enter city"
-                        value={form.city}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
-                      />
-                    </div>
+                  {openSections.address && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1 md:col-span-3">
+                        <label className="block text-sm font-medium text-gray-600">Street</label>
+                        <input
+                          name="street"
+                          placeholder="Enter street address"
+                          value={form.street}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={255}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">State</label>
-                      <input
-                        name="state"
-                        placeholder="Enter state"
-                        value={form.state}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
-                      />
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">City</label>
+                        <input
+                          name="city"
+                          placeholder="Enter city"
+                          value={form.city}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={100}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Postal Code</label>
-                      <input
-                        name="postal_code"
-                        placeholder="Enter postal code"
-                        value={form.postal_code}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={20}
-                      />
-                    </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">State</label>
+                        <input
+                          name="state"
+                          placeholder="Enter state"
+                          value={form.state}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={100}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-600">Country</label>
-                      <input
-                        name="country"
-                        placeholder="Enter country"
-                        value={form.country}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
-                        maxLength={100}
-                      />
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Postal Code</label>
+                        <input
+                          name="postal_code"
+                          placeholder="Enter postal code"
+                          value={form.postal_code}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={20}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Country</label>
+                        <input
+                          name="country"
+                          placeholder="Enter country"
+                          value={form.country}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                          maxLength={100}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                </div>
+
+                {/* Lead Information Section */}
+                <div className="mb-8">
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("lead")}
+                    className="flex w-full justify-between items-center text-lg font-medium text-gray-700 mb-2 pb-2 border-b border-gray-200"
+                  >
+                    Lead Information
+                    {openSections.lead ? (
+                      <ChevronDown className="w-5 h-5" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5" />
+                    )}
+                  </button>
+
+                  {openSections.lead && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Lead Source</label>
+                        <select
+                          name="lead_source"
+                          value={form.lead_source}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        >
+                          <option value="">Select Lead Source</option>
+                          <option value="Website">Website</option>
+                          <option value="Social Media">Social Media</option>
+                          <option value="Email Campaign">Email Campaign</option>
+                          <option value="Referral">Referral</option>
+                          <option value="Cold Call">Cold Call</option>
+                          <option value="Trade Show">Trade Show</option>
+                          <option value="Advertisement">Advertisement</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-gray-600">Stage</label>
+                        <select
+                          name="stage"
+                          value={form.stage}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+                        >
+                          <option value="">Select Stage</option>
+                          <option value="New">New</option>
+                          <option value="Contacted">Contacted</option>
+                          <option value="Qualification">Qualification</option>
+                          <option value="Converted">Converted</option>
+                          <option value="Unqualified">Unqualified</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
 
                 {/* Form Actions */}

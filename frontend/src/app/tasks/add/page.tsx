@@ -4,7 +4,7 @@ import DateTime from "@/components/AddModal/DateTime";
 import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
 import TextArea from "@/components/AddModal/TextArea";
-import { X } from "lucide-react";
+import { PlusIcon, X } from "lucide-react";
 import { useEffect, useState } from "react"
 import Swal from "sweetalert2";
 
@@ -41,7 +41,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
         const fetchLeads = async () => {
             try {
                 const res = await fetch("http://localhost:3000/api/leads", {
-                  credentials: 'include',
+                    credentials: 'include',
                 })
                 const result = await res.json()
                 const data = result.leads
@@ -60,7 +60,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
         const fetchUsers = async () => {
             try {
                 const res = await fetch("http://localhost:3000/api/users", {
-                  credentials: 'include',
+                    credentials: 'include',
                 })
                 const result = await res.json()
                 console.log("API Result:", result)
@@ -212,13 +212,25 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                             maxLength={100}
                                         />
 
-                                        <Dropdown
-                                            label="Lead"
-                                            name="lead_id"
-                                            value={form.lead_id}
-                                            onChange={handleChange}
-                                            options={leadOptions}
-                                        />
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex-1">
+                                                <Dropdown
+                                                    label="Lead"
+                                                    name="lead_id"
+                                                    value={form.lead_id}
+                                                    onChange={handleChange}
+                                                    options={leadOptions}
+                                                />
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="h-10 w-10 mt-6 flex items-center justify-center rounded-md border border-gray-300 bg-white hover:bg-gray-100"
+                                            >
+                                                <PlusIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+
 
                                         <Dropdown
                                             label="Assigned To"
@@ -244,7 +256,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                                             ]}
                                             isRequired
                                         />
-                                        
+
                                         <Dropdown
                                             label="Priority"
                                             name="priority"

@@ -12,6 +12,7 @@ import { checkAuthStatus } from "../../../utils/auth"
 import { redirect } from "next/navigation"
 import { useRouter } from "next/navigation"
 import Swal from "sweetalert2"
+import CreateTasksModal from "../tasks/add/page" // Import modal component
 
 export default function Dashboard() {
     const router = useRouter()
@@ -40,6 +41,7 @@ export default function Dashboard() {
 
     const { user, loading } = useUser()
     const [isMinimized, setIsMinimized] = useState(false)
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false) // State untuk modal
 
     const BarChart = dynamic(() => import("./components/BarChart"), { ssr: false })
 
@@ -151,15 +153,35 @@ export default function Dashboard() {
         loadData()
     }, [])
 
+    // Function to handle task creation success
+    const handleTaskCreated = () => {
+        // Refresh data atau lakukan aksi lain setelah task dibuat
+        console.log("Task created successfully!");
+    }
+
     return (
         <div className="flex h-screen overflow-hidden">
             <Sidebar isMinimized={isMinimized} setIsMinimized={setIsMinimized} />
 
             <div className={`flex ${isMinimized ? 'ml-16' : 'ml-50'} flex-1 flex-col bg-slate-100 overflow-hidden`}>
-                <header className="bg-slate-800 text-white p-4 text-right flex-shrink-0">
+                <header className="bg-slate-800 text-white p-4 flex-shrink-0 flex justify-between items-center">
+                    {/* Teks Hi Admin - Digeser ke kiri */}
                     <p className="text-lg">
                         Hi, <span>{loading ? "..." : user?.name || "User"}</span>
                     </p>
+
+                    {/* Button Add Task - Di sebelah kanan */}
+                    <button
+                        onClick={() => setIsTaskModalOpen(true)}
+                        className="relative inline-block group"
+                    >
+                        <span className="relative flex hover:scale-105 text-sm bg-black hover:bg-gray-800 rounded-md overflow-hidden transition-all px-4 py-2 text-white items-center">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                            <span className="relative z-10 flex items-center">
+                                <span className="mr-1.5">+</span> Add Task
+                            </span>
+                        </span>
+                    </button>
                 </header>
 
                 <main className="px-6 py-4 space-y-4 flex-1 overflow-hidden flex flex-col">
@@ -205,6 +227,14 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </main>
+
+                {/* Modal Add Task */}
+                {isTaskModalOpen && (
+                    <CreateTasksModal
+                        onClose={() => setIsTaskModalOpen(false)}
+                        onTaskCreated={handleTaskCreated}
+                    />
+                )}
             </div>
         </div>
     )

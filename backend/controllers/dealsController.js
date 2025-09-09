@@ -67,7 +67,7 @@ export const getAllDeals = async (req, res) => {
         } = req.query;
 
         const offset = (page - 1) * limit;
-        const whereConditions = {};
+        const whereConditions = {}
         const whereLead = {}
 
         if (stage) {

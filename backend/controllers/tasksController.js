@@ -42,7 +42,8 @@ const generateTaskCode = async (transaction) => {
 export const getTasks = async (req, res) => {
   try {
     const { status, priority, category, assigned_to, lead_id, search } = req.query;
-    let whereClause = {};
+    let whereClause = {}
+    const whereConditions = {}
 
     // Filter berdasarkan lead_id (PENTING untuk detail lead)
     if (lead_id) {
@@ -63,6 +64,10 @@ export const getTasks = async (req, res) => {
 
     if (status) {
       whereClause.status = status;
+    }
+
+    if (req.query.status_ne) {
+      whereConditions.status = { [Op.ne]: req.query.status_ne };
     }
 
     if (priority) {

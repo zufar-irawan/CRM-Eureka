@@ -45,7 +45,7 @@ export default function Dashboard() {
 
     const BarChart = dynamic(() => import("./components/BarChart"), { ssr: false })
 
-    const [cards, setCards] = useState([
+    const [adminCards, setAdminCards] = useState([
         {
             id: 1,
             number: "0",
@@ -67,6 +67,89 @@ export default function Dashboard() {
             title: "Active Deals"
         },
     ])
+
+    const [salesCards, setSalesCards] = useState([
+        {
+            id: 1,
+            number: "0",
+            title: "All Tasks"
+        },
+        {
+            id: 2,
+            number: "0",
+            title: "All Leads"
+        },
+        {
+            id: 3,
+            number: "0",
+            title: "Undone Tasks"
+        },
+        {
+            id: 4,
+            number: "0",
+            title: "Completed Tasks"
+        },
+    ])
+
+    const fetchAllTasks = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/tasks', {
+                params: { assigned_to: user?.id },
+                withCredentials: true,
+            })
+
+            const res = response.data.data
+            return res.length.toString()
+        } catch (error: any) {
+            console.error('Error fetching leads: ', error.message)
+            throw error
+        }
+    }
+
+    const fetchUndoneTasks = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/tasks', {
+                params: { assigned_to: user?.id, status_ne: 'completed' },
+                withCredentials: true,
+            })
+
+            const res = response.data.data
+            return res.length.toString()
+        } catch (error: any) {
+            console.error('Error fetching leads: ', error.message)
+            throw error
+        }
+    }
+
+    const fetchDoneTasks = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/tasks', {
+                params: { assigned_to: user?.id, status: 'completed' },
+                withCredentials: true,
+            })
+
+            const res = response.data.data
+            return res.length.toString()
+        } catch (error: any) {
+            console.error('Error fetching leads: ', error.message)
+            throw error
+        }
+    }
+
+    const fetchSalesLeads = async () => {
+        try {
+            const response = await axios.get('http://localhost:3000/api/leads', {
+                params: { owner: user?.id },
+                withCredentials: true,
+            })
+
+            const res = response.data.leads
+            return res.length.toString()
+        } catch (error: any) {
+            console.error('Error fetching leads: ', error.message)
+            throw error
+        }
+    }
 
     const fetchNewLeads = async () => {
         try {
@@ -115,7 +198,7 @@ export default function Dashboard() {
     const fetchAllUnconvertedLeads = async () => {
         try {
             const response = await axios.get('http://localhost:3000/api/leads', {
-              withCredentials: true,
+                withCredentials: true,
             })
 
             const res = response.data.leads
@@ -132,7 +215,7 @@ export default function Dashboard() {
             const allLeads = await fetchALlLeads()
             const notWonDeals = await fetchAllDeals()
             const unconvertedLeads = await fetchAllUnconvertedLeads()
-            setCards(prevCards =>
+            setAdminCards(prevCards =>
                 prevCards.map(card =>
                     card.id === 1
                         ? { ...card, number: newleads.length.toString() }
@@ -142,6 +225,27 @@ export default function Dashboard() {
                                 ? { ...card, number: unconvertedLeads }
                                 : (card.id === 4
                                     ? { ...card, number: notWonDeals }
+                                    : card
+                                )
+                            )
+                        )
+                )
+            )
+
+            const alltasks = await fetchAllTasks()
+            const leadSales = await fetchSalesLeads()
+            const undoneTask = await fetchUndoneTasks()
+            const doneTask = await fetchDoneTasks()
+            setSalesCards(prevCards =>
+                prevCards.map(card =>
+                    card.id === 1
+                        ? { ...card, number: alltasks }
+                        : (card.id === 2
+                            ? { ...card, number: leadSales }
+                            : (card.id === 3
+                                ? { ...card, number: undoneTask }
+                                : (card.id === 4
+                                    ? { ...card, number: doneTask }
                                     : card
                                 )
                             )
@@ -187,7 +291,7 @@ export default function Dashboard() {
                 <main className="px-6 py-4 space-y-4 flex-1 overflow-hidden flex flex-col">
                     {/* Stats Cards - Compact */}
                     <div className="grid grid-cols-4 gap-3 flex-shrink-0">
-                        {cards.map((card) => (
+                        {user?.isSales ? salesCards.map((card) => (
                             <div key={card.id} className="border rounded-2xl border-gray-300 p-4 bg-white">
                                 <p className="text-xl font-bold text-gray-800">
                                     {card.number}
@@ -196,11 +300,21 @@ export default function Dashboard() {
                                     {card.title}
                                 </p>
                             </div>
-                        ))}
+                        )) :
+                            adminCards.map((card) => (
+                                <div key={card.id} className="border rounded-2xl border-gray-300 p-4 bg-white">
+                                    <p className="text-xl font-bold text-gray-800">
+                                        {card.number}
+                                    </p>
+                                    <p className="text-sm text-gray-700">
+                                        {card.title}
+                                    </p>
+                                </div>
+                            ))}
                     </div>
 
                     {/* Two sections side by side - Fixed height */}
-                    <div className="flex gap-4 flex-shrink-0" style={{height: '280px'}}>
+                    <div className="flex gap-4 flex-shrink-0" style={{ height: '280px' }}>
                         <div className="border rounded-2xl border-gray-300 p-4 bg-white flex-1">
                             <p className="text-lg text-gray-900 mb-2">
                                 Chart

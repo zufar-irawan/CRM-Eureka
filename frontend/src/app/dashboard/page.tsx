@@ -211,47 +211,50 @@ export default function Dashboard() {
 
     useEffect(() => {
         const loadData = async () => {
-            const newleads = await fetchNewLeads()
-            const allLeads = await fetchALlLeads()
-            const notWonDeals = await fetchAllDeals()
-            const unconvertedLeads = await fetchAllUnconvertedLeads()
-            setAdminCards(prevCards =>
-                prevCards.map(card =>
-                    card.id === 1
-                        ? { ...card, number: newleads.length.toString() }
-                        : (card.id === 2
-                            ? { ...card, number: allLeads }
-                            : (card.id === 3
-                                ? { ...card, number: unconvertedLeads }
-                                : (card.id === 4
-                                    ? { ...card, number: notWonDeals }
-                                    : card
+            if (user?.isSales) {
+                const alltasks = await fetchAllTasks()
+                const leadSales = await fetchSalesLeads()
+                const undoneTask = await fetchUndoneTasks()
+                const doneTask = await fetchDoneTasks()
+                setSalesCards(prevCards =>
+                    prevCards.map(card =>
+                        card.id === 1
+                            ? { ...card, number: alltasks }
+                            : (card.id === 2
+                                ? { ...card, number: leadSales }
+                                : (card.id === 3
+                                    ? { ...card, number: undoneTask }
+                                    : (card.id === 4
+                                        ? { ...card, number: doneTask }
+                                        : card
+                                    )
                                 )
                             )
-                        )
+                    )
                 )
-            )
+            } else {
+                const newleads = await fetchNewLeads()
+                const allLeads = await fetchALlLeads()
+                const notWonDeals = await fetchAllDeals()
+                const unconvertedLeads = await fetchAllUnconvertedLeads()
+                setAdminCards(prevCards =>
+                    prevCards.map(card =>
+                        card.id === 1
+                            ? { ...card, number: newleads.length.toString() }
+                            : (card.id === 2
+                                ? { ...card, number: allLeads }
+                                : (card.id === 3
+                                    ? { ...card, number: unconvertedLeads }
+                                    : (card.id === 4
+                                        ? { ...card, number: notWonDeals }
+                                        : card
+                                    )
+                                )
+                            )
+                    )
+                )
+            }
 
-            const alltasks = await fetchAllTasks()
-            const leadSales = await fetchSalesLeads()
-            const undoneTask = await fetchUndoneTasks()
-            const doneTask = await fetchDoneTasks()
-            setSalesCards(prevCards =>
-                prevCards.map(card =>
-                    card.id === 1
-                        ? { ...card, number: alltasks }
-                        : (card.id === 2
-                            ? { ...card, number: leadSales }
-                            : (card.id === 3
-                                ? { ...card, number: undoneTask }
-                                : (card.id === 4
-                                    ? { ...card, number: doneTask }
-                                    : card
-                                )
-                            )
-                        )
-                )
-            )
         }
 
         loadData()

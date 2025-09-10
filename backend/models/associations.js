@@ -1,4 +1,4 @@
-// models/associations.js - Updated dengan task created_by association
+// models/associations.js - Updated with new role hierarchy
 import { Leads } from "./leads/leadsModel.js";
 import { LeadComments } from "./leads/leadsCommentModel.js";
 import { Tasks } from "./tasks/tasksModel.js";
@@ -14,6 +14,7 @@ import { TaskAttachments } from "./tasks/tasksAttachmentModel.js";
 import { SalesKpiDaily, SalesKpiMonthly, KpiTargets } from "../models/kpi/kpiModel.js";
 
 export const setupAssociations = () => {
+    // User-Role many-to-many relationship
     User.belongsToMany(Role, {
         through: UserRole,
         foreignKey: 'user_id',
@@ -43,6 +44,39 @@ export const setupAssociations = () => {
         as: 'role'
     });
 
+    // Organizational Hierarchy Associations
+    // Manager -> Asmen -> GL -> Sales hierarchy
+    User.hasMany(User, { 
+        as: 'DirectAsmen', 
+        foreignKey: 'manager_id',
+        scope: { 
+            // Only get users where this user is their direct manager
+        }
+    });
+    User.belongsTo(User, { 
+        as: 'Manager', 
+        foreignKey: 'manager_id' 
+    });
+
+    User.hasMany(User, { 
+        as: 'DirectGLs', 
+        foreignKey: 'asmen_id' 
+    });
+    User.belongsTo(User, { 
+        as: 'Asmen', 
+        foreignKey: 'asmen_id' 
+    });
+
+    User.hasMany(User, { 
+        as: 'DirectSales', 
+        foreignKey: 'gl_id' 
+    });
+    User.belongsTo(User, { 
+        as: 'GL', 
+        foreignKey: 'gl_id' 
+    });
+
+    // Lead associations
     Leads.hasMany(LeadComments, {
         foreignKey: 'lead_id',  
         as: 'comments'
@@ -83,6 +117,7 @@ export const setupAssociations = () => {
         onDelete: 'CASCADE'
     });
 
+    // Task associations
     Tasks.belongsTo(User, {
         foreignKey: 'assigned_to',
         as: 'assignee'
@@ -158,6 +193,7 @@ export const setupAssociations = () => {
         as: 'uploaded_attachments'
     });
 
+    // Deal associations
     Leads.hasMany(Deals, {
         foreignKey: 'lead_id',
         as: 'deals'
@@ -266,10 +302,10 @@ export const setupAssociations = () => {
         as: 'sales_user'
     });
 
-    console.log('All associations including KPI and Tasks created_by have been set up successfully');
+    console.log('All associations including organizational hierarchy have been set up successfully');
 };
 
-export { 
+export {
     Tasks, 
     TaskComments, 
     TaskResults, 

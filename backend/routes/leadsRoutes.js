@@ -6,7 +6,7 @@ import {
     getLeadById,
     createLead,
     updateLead,
-    deleteLead,
+    deleteLead, 
     convertLead,
     updateLeadStage,
     getLeadComments,

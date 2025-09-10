@@ -1,7 +1,9 @@
 "use client"
 
-import RolesPageClient from './RolesClient';
+export default function roles() {
+    return (
+        <>
 
-export default function RolesPage() {
-  return <RolesPageClient />;
+        </>
+    )
 }

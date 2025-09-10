@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Aug 26, 2025 at 02:10 AM
+-- Generation Time: Sep 10, 2025 at 07:22 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.2.28
 
@@ -35,15 +35,6 @@ CREATE TABLE `approvals` (
   `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `approved_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `approvals`
---
-
-INSERT INTO `approvals` (`id`, `contract_id`, `approver_id`, `role`, `status`, `approved_at`) VALUES
-(1, 1, 3, 'partnership', 'approved', '2025-07-19 02:07:35'),
-(2, 1, 4, 'akunting', 'approved', '2025-07-19 02:07:35'),
-(3, 2, 3, 'partnership', 'approved', '2025-07-19 02:07:35');
 
 -- --------------------------------------------------------
 
@@ -116,7 +107,9 @@ INSERT INTO `companies` (`id`, `name`, `address`, `phone`, `email`, `created_at`
 (16, 'PT Exatama', 'Jl Hj Liah, Jakarta Timur, DKI Jakarta, 82392', '021-728733', 'Exatama@gmail.com', '2025-08-08 07:03:27'),
 (17, 'PT Insan Abadi', 'Jl.Bambu Petung, Jakarta Timur, DKI Jakarta, 1874', '021-879379', 'InsanAbadi@gmail.com', '2025-08-15 01:31:58'),
 (18, 'PT Irsyad', 'Jl. Bambu Hitam, Jakarta Timur, DKI Jakarta, 1835', '021-55555', 'irsyadjaya@gmail.com', '2025-08-15 03:14:20'),
-(19, 'PT Gaming Irsyad', 'Jl. Prestasi Prima, Jakarta Timur, DKI Jakarta, 18377', '021-22222', 'gamingirsyad@gmail.com', '2025-08-15 07:16:53');
+(19, 'PT Gaming Irsyad', 'Jl. Prestasi Prima, Jakarta Timur, DKI Jakarta, 18377', '021-22222', 'gamingirsyad@gmail.com', '2025-08-15 07:16:53'),
+(20, 'PT Gaza', 'Jl. Yaman, Jakarta Timur, DKI Jakarta, 18383', '021-97593', 'gaza@gmail.com', '2025-08-27 06:39:04'),
+(21, 'PT Susano', 'Jl.Bambu Ungu, Jakarta Timur, DKI Jakarta, 18012', '021-81979', 'susanooh@gmail.com', '2025-08-28 03:23:36');
 
 -- --------------------------------------------------------
 
@@ -151,7 +144,10 @@ INSERT INTO `contacts` (`id`, `company_id`, `lead_id`, `name`, `email`, `phone`,
 (13, 15, NULL, 'fazry kiedrowsky', 'fazryganteng@gmail.com', '081907048347', 'CEO', '2025-08-04 07:56:21'),
 (14, 17, NULL, 'Irsyad Gaza', 'Irsyad@gmail.com', '081979317913', 'CMO', '2025-08-15 01:31:58'),
 (15, 18, NULL, 'irsyad zufar', 'irsyadzufar@gmail.com', '081374372727', 'Manager', '2025-08-15 03:14:20'),
-(16, 19, NULL, 'irsyad gaming', 'gamingirsyad@gmail.com', '081727979127', 'Ceo', '2025-08-15 07:16:53');
+(16, 19, NULL, 'irsyad gaming', 'gamingirsyad@gmail.com', '081727979127', 'Ceo', '2025-08-15 07:16:53'),
+(17, 20, 25, 'Raya Gaza', 'raya@gmail.com', '081465473456', 'Marketing', '2025-08-27 06:39:04'),
+(18, 21, 24, 'zufarr susano', 'susanooo@gmail.com', '081879137910', 'CTO', '2025-08-28 03:23:36'),
+(19, NULL, 27, 'arhan pratama', NULL, NULL, NULL, '2025-09-09 01:12:10');
 
 -- --------------------------------------------------------
 
@@ -171,14 +167,6 @@ CREATE TABLE `contracts` (
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `contracts`
---
-
-INSERT INTO `contracts` (`id`, `quotation_id`, `contract_number`, `status`, `start_date`, `end_date`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 'CT-2025-0001', 'active', '2025-08-01', '2026-07-31', 2, '2025-07-19 02:07:35', '2025-07-19 02:07:35'),
-(2, 2, 'CT-2025-0002', 'pending_approval', '2025-08-01', '2025-10-31', 2, '2025-07-19 02:07:35', '2025-07-19 02:07:35');
-
 -- --------------------------------------------------------
 
 --
@@ -194,15 +182,6 @@ CREATE TABLE `contract_comments` (
   `created_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `contract_comments`
---
-
-INSERT INTO `contract_comments` (`id`, `contract_id`, `user_id`, `user_name`, `message`, `created_at`) VALUES
-(1, 1, 3, 'Partnership One', 'Sudah review, partnership OK.', '2025-07-19 02:07:35'),
-(2, 1, 4, 'Akunting One', 'Harga sudah sesuai budget, disetujui.', '2025-07-19 02:07:35'),
-(3, 2, 3, 'Partnership One', 'Kontrak 3 bulan disetujui, tinggal tunggu akunting.', '2025-07-19 02:07:35');
-
 -- --------------------------------------------------------
 
 --
@@ -217,15 +196,6 @@ CREATE TABLE `contract_items` (
   `price` decimal(18,2) DEFAULT NULL,
   `remarks` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `contract_items`
---
-
-INSERT INTO `contract_items` (`id`, `contract_id`, `origin`, `destination`, `price`, `remarks`) VALUES
-(1, 1, 'Jakarta', 'Surabaya', 5000000.00, 'Kontrak tahunan fix rate'),
-(2, 1, 'Jakarta', 'Semarang', 4000000.00, 'Kontrak tahunan rute tambahan'),
-(3, 2, 'Jakarta', 'Bekasi', 3000000.00, '3 bulan kontrak');
 
 -- --------------------------------------------------------
 
@@ -248,16 +218,6 @@ CREATE TABLE `deals` (
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `deals`
---
-
-INSERT INTO `deals` (`id`, `code`, `lead_id`, `id_contact`, `id_company`, `title`, `value`, `stage`, `owner`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'DL-001', 1, NULL, NULL, 'Deal Pengiriman Reguler', 15000000.00, 'lost', 0, 2, '2025-07-19 02:07:35', '2025-08-15 04:18:28'),
-(2, 'DL-002', 2, NULL, NULL, 'Deal Kontrak Jabodetabek', 9000000.00, 'lost', 0, 2, '2025-07-19 02:07:35', '2025-08-15 04:18:30'),
-(29, 'DL-029', 18, 13, 15, 'wish me luck', 60000.00, 'lost', 0, 1, '2025-08-04 07:56:21', '2025-08-15 04:18:27'),
-(53, 'DL-030', 22, 16, 19, 'deal coy', 10000.00, 'negotiation', 2, 5, '2025-08-15 07:28:44', '2025-08-25 07:39:02');
-
 -- --------------------------------------------------------
 
 --
@@ -274,16 +234,6 @@ CREATE TABLE `deal_comments` (
   `message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `deal_comments`
---
-
-INSERT INTO `deal_comments` (`id`, `deal_id`, `parent_id`, `reply_level`, `user_id`, `user_name`, `message`, `created_at`) VALUES
-(2, 2, NULL, 0, 2, 'Sales One', 'Quotation sudah dikirim, nunggu approval owner.', '2025-07-19 02:07:35'),
-(3, 29, NULL, 0, 1, 'Admin User', 'nyoh', '2025-08-07 08:28:17'),
-(4, 2, 2, 1, 1, 'Admin User', 'aman bg', '2025-08-12 01:57:16'),
-(6, 53, NULL, 0, 1, 'Admin User', 'Stage changed from won to negotiation', '2025-08-25 07:39:03');
 
 -- --------------------------------------------------------
 
@@ -361,7 +311,12 @@ INSERT INTO `leads` (`id`, `code`, `owner`, `company`, `title`, `first_name`, `l
 (20, 'LD-019', 2, 'PT Insan Abadi', 'Mr', 'Irsyad', 'Gaza', 'Irsyad Gaza', 'CMO', 'Irsyad@gmail.com', 'InsanAbadi@gmail.com', '021-879379', '081979317913', '-', 'https://sman9bekasi.sch.id/', 'Service', 1000, 'Website', 'Converted', 'Hot', 'Jl.Bambu Petung', 'Jakarta Timur', 'DKI Jakarta', '1874', 'Indonesia', NULL, '2025-08-13 04:43:33', '2025-08-15 04:19:59', 1),
 (21, 'LD-020', 2, 'PT Irsyad', 'Mr', 'irsyad', 'zufar', 'irsyad zufar', 'Manager', 'irsyadzufar@gmail.com', 'irsyadjaya@gmail.com', '021-55555', '081374372727', '-', 'https://sman9bekasi.sch.id/', 'Soap & Detergent', 1000, 'Website', 'New', 'Hot', 'Jl. Bambu Hitam', 'Jakarta Timur', 'DKI Jakarta', '1835', 'Indonesia', NULL, '2025-08-15 03:08:36', '2025-08-25 05:41:54', 0),
 (22, 'LD-021', 5, 'PT Gaming Irsyad', 'Mr', 'irsyad', 'gaming', 'irsyad gaming', 'Ceo', 'gamingirsyad@gmail.com', 'gamingirsyad@gmail.com', '021-22222', '081727979127', '-', 'https://smk19.sch.id/', 'Technology', 40, 'Advertisement', 'Converted', 'Hot', 'Jl. Prestasi Prima', 'Jakarta Timur', 'DKI Jakarta', '18377', 'Indonesia', NULL, '2025-08-15 07:13:49', '2025-08-15 07:28:44', 1),
-(23, 'LD-022', 2, 'PT Halilintar', 'Mr', 'thoriq', 'hanjay', 'thoriq hanjay', 'Manager', 'thoriq@gmail.com', 'Halilintar@gmail.com', '021-839189', '08190839933', '-', 'https://sman19bekasi.sch.id/', 'Software', 1000, 'Email Campaign', 'Contacted', 'Warm', 'Jl.Bambu Hitam', 'Jakarta Timur', 'DKI Jakarta', '1879', 'Indonesia', NULL, '2025-08-25 02:44:49', '2025-08-25 07:37:03', 0);
+(23, 'LD-022', 2, 'PT Halilintar', 'Mr', 'thoriqq', 'hanjay', 'thoriqq hanjay', 'Manager', 'thoriq@gmail.com', 'Halilintar@gmail.com', '021-839189', '08190839933', '-', 'https://sman19bekasi.sch.id/', 'Software', 1000, 'Email Campaign', 'Qualification', 'Warm', 'Jl.Bambu Hitam', 'Jakarta Timur', 'DKI Jakarta', '1879', 'Indonesia', NULL, '2025-08-25 02:44:49', '2025-08-29 03:50:14', 0),
+(24, 'LD-023', 5, 'PT Susano', 'Mr', 'zufarr', 'susano', 'zufarr susano', 'CTO', 'susano@gmail.com', 'susanooh@gmail.com', '021-81979', '081879137910', NULL, 'https://sman25bekasi.sch.id/', 'Service', 1000, 'Advertisement', 'Converted', 'Hot', 'Jl.Bambu Ungu', 'Jakarta Timur', 'DKI Jakarta', '18012', 'Indonesia', 'nyoh', '2025-08-27 01:13:57', '2025-08-28 03:23:36', 1),
+(25, 'LD-024', 2, 'PT Gaza', 'Mr', 'Raya', 'Gaza', 'Raya Gaza', 'Marketing', 'raya@gmail.com', 'gaza@gmail.com', '021-97593', '081465473456', NULL, 'https://maven-ai-webpage.vercel.app', 'Technology', 8095, 'Email Campaign', 'Converted', 'Hot', 'Jl. Yaman', 'Jakarta Timur', 'DKI Jakarta', '18383', 'Indonesia', 'ini dari gede', '2025-08-27 06:29:22', '2025-08-27 06:39:04', 1),
+(26, 'LD-025', NULL, NULL, 'Mr', 'Rayzaf', 'Gaza', 'Rayzaf Gaza', NULL, 'rayzan@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-08 04:37:50', '2025-09-08 07:34:52', 0),
+(27, 'LD-026', 2, NULL, 'Mr', 'arhan', 'pratama', 'arhan pratama', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Converted', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-09 01:11:40', '2025-09-09 01:12:10', 1),
+(28, 'LD-027', 2, NULL, 'Mr', 'irham', 'qodralullah', 'irham qodralullah', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-09 01:21:41', '2025-09-09 01:21:41', 0);
 
 -- --------------------------------------------------------
 
@@ -426,7 +381,23 @@ INSERT INTO `lead_comments` (`id`, `lead_id`, `parent_id`, `reply_level`, `user_
 (50, 23, NULL, 0, 1, 'Admin User', 'Stage changed from Contacted to New', '2025-08-25 06:57:42'),
 (51, 23, NULL, 0, 1, 'Admin User', 'Lead details updated', '2025-08-25 07:20:32'),
 (55, 23, NULL, 0, 1, 'Admin User', 'Stage changed from Contacted to New', '2025-08-25 07:31:08'),
-(57, 23, NULL, 0, 1, 'Admin User', 'Stage changed from - first_name from \"toriq\" to \"thoriq\"', '2025-08-25 07:37:03');
+(57, 23, NULL, 0, 1, 'Admin User', 'Stage changed from - first_name from \"toriq\" to \"thoriq\"', '2025-08-25 07:37:03'),
+(58, 23, NULL, 0, 1, 'Admin User', 'Stage changed from Contacted to Qualification', '2025-08-26 02:41:44'),
+(59, 23, NULL, 0, 1, 'Admin User', 'Stage changed from Qualification to New', '2025-08-26 02:42:51'),
+(64, 24, NULL, 0, 2, 'Sales One', 'nyoh', '2025-08-27 02:43:15'),
+(65, 24, NULL, 0, 2, 'Sales One', 'Lead details updated:\n- Stage changed from \"New\" to \"Contacted\"', '2025-08-27 03:58:10'),
+(66, 24, NULL, 0, 2, 'Sales One', 'nsifa', '2025-08-27 04:02:32'),
+(67, 24, NULL, 0, 2, 'Sales One', 'Stage changed from Contacted to New', '2025-08-27 04:03:55'),
+(69, 24, NULL, 0, 2, 'Sales One', 'Stage changed from New to Contacted', '2025-08-27 06:20:14'),
+(77, 24, NULL, 0, 2, 'Sales One', 'Stage changed from Contacted to New', '2025-08-28 01:31:55'),
+(78, 24, NULL, 0, 2, 'Sales One', 'Lead details updated:\nStage changed from New to Contacted', '2025-08-28 02:40:25'),
+(79, 24, NULL, 0, 2, 'Sales One', 'Lead details updated:\n- first_name has been updated', '2025-08-28 02:42:06'),
+(80, 24, NULL, 0, 2, 'Sales One', 'Lead details updated:\nStage changed from Contacted to Qualification', '2025-08-28 03:23:24'),
+(81, 23, NULL, 0, 2, 'Sales One', 'Lead details updated:\n- first_name has been updated', '2025-08-28 03:27:26'),
+(82, 23, NULL, 0, 2, 'Sales One', 'Stage changed from New to Contacted', '2025-08-28 03:33:06'),
+(83, 23, NULL, 0, 2, 'Sales One', 'Stage changed from Contacted to Qualification', '2025-08-29 03:50:14'),
+(86, 26, NULL, 0, 2, 'Sales One', 'Lead details updated:\n- first_name has been updated', '2025-09-08 06:56:09'),
+(87, 26, NULL, 0, 2, 'Sales One', 'Lead details updated:\n- email has been updated', '2025-09-08 07:34:52');
 
 -- --------------------------------------------------------
 
@@ -444,14 +415,6 @@ CREATE TABLE `quotations` (
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `quotations`
---
-
-INSERT INTO `quotations` (`id`, `deal_id`, `quotation_number`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 'QO-2025-0001', 'sent', 2, '2025-07-19 02:07:35', '2025-07-19 02:07:35'),
-(2, 2, 'QO-2025-0002', 'sent', 2, '2025-07-19 02:07:35', '2025-07-19 02:07:35');
-
 -- --------------------------------------------------------
 
 --
@@ -466,14 +429,6 @@ CREATE TABLE `quotation_comments` (
   `message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `created_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `quotation_comments`
---
-
-INSERT INTO `quotation_comments` (`id`, `quotation_id`, `user_id`, `user_name`, `message`, `created_at`) VALUES
-(1, 1, 2, 'Sales One', 'Quotation dikirim via email.', '2025-07-19 02:07:35'),
-(2, 2, 2, 'Sales One', 'Quotation ditandatangani owner, akan dibuat kontrak.', '2025-07-19 02:07:35');
 
 -- --------------------------------------------------------
 
@@ -516,9 +471,10 @@ CREATE TABLE `roles` (
 
 INSERT INTO `roles` (`id`, `name`) VALUES
 (1, 'admin'),
-(4, 'akunting'),
-(3, 'partnership'),
-(2, 'sales');
+(3, 'asmen'),
+(4, 'gl'),
+(2, 'manager'),
+(5, 'sales');
 
 -- --------------------------------------------------------
 
@@ -540,15 +496,6 @@ CREATE TABLE `sales_kpi_daily` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `sales_kpi_daily`
---
-
-INSERT INTO `sales_kpi_daily` (`id`, `sales_id`, `sales_name`, `date`, `kanvasing_count`, `followup_count`, `penawaran_count`, `kesepakatan_tarif_count`, `deal_do_count`, `status_kpi`, `created_at`, `updated_at`) VALUES
-(63, 2, 'Sales One', '2025-08-18', 1, 0, 0, 1, 1, 'Tidak Terpenuhi', '2025-08-18 04:05:40', '2025-08-18 08:00:26'),
-(66, 2, 'Sales One', '2025-08-19', 1, 0, 0, 0, 0, 'Tidak Terpenuhi', '2025-08-19 03:46:57', '2025-08-19 03:46:57'),
-(67, 2, 'Sales One', '2025-08-25', 1, 0, 0, 0, 0, 'Tidak Terpenuhi', '2025-08-25 08:31:09', '2025-08-25 08:31:09');
 
 -- --------------------------------------------------------
 
@@ -572,13 +519,6 @@ CREATE TABLE `sales_kpi_monthly` (
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `sales_kpi_monthly`
---
-
-INSERT INTO `sales_kpi_monthly` (`id`, `sales_id`, `sales_name`, `year`, `month`, `kanvasing_count`, `followup_count`, `penawaran_count`, `kesepakatan_tarif_count`, `deal_do_count`, `status_kpi`, `created_at`, `updated_at`) VALUES
-(63, 2, 'Sales One', 2025, 8, 7, 6, 1, 1, 1, 'Tidak Terpenuhi', '2025-08-18 04:05:40', '2025-08-25 08:31:09');
-
 -- --------------------------------------------------------
 
 --
@@ -600,32 +540,6 @@ CREATE TABLE `tasks` (
   `created_by` int DEFAULT NULL,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `tasks`
---
-
-INSERT INTO `tasks` (`id`, `code`, `lead_id`, `assigned_to`, `title`, `description`, `category`, `due_date`, `status`, `created_at`, `priority`, `created_by`, `updated_at`) VALUES
-(13, 'TK-001', 21, 2, 'tolong ya kanvasing', 'tolong ya', 'Kanvasing', '2025-08-16 04:13:00', 'completed', '2025-08-15 04:13:28', 'high', 2, '2025-08-26 08:50:55'),
-(14, 'TK-002', 20, 2, 'tolong pak', 'tolong pak', 'Followup', '2025-08-16 04:19:00', 'completed', '2025-08-15 04:19:19', 'high', 2, '2025-08-26 08:51:01'),
-(15, 'TK-003', 21, 2, 'tolong lagi', 'tolong', 'Kanvasing', '2025-08-16 05:47:00', 'completed', '2025-08-15 05:47:11', 'medium', 2, '2025-08-26 08:51:13'),
-(16, 'TK-004', 21, 2, 'tolong ya plis', 'tolong aku pliss', 'Kanvasing', '2025-08-16 05:47:00', 'completed', '2025-08-15 05:47:48', 'medium', NULL, '2025-08-15 05:53:32'),
-(17, 'TK-005', 21, 2, 'tolong ya lgi kanvasing', 'tolong gan', 'Kanvasing', '2025-08-16 05:48:00', 'completed', '2025-08-15 05:48:14', 'medium', NULL, '2025-08-15 05:53:46'),
-(18, 'TK-006', 21, 2, 'tolong lagi', 'tolong gan', 'Kanvasing', '2025-08-16 05:50:00', 'completed', '2025-08-15 05:50:11', 'medium', NULL, '2025-08-15 05:53:54'),
-(19, 'TK-007', 21, 2, 'tolong ya', 'tolong', 'Followup', '2025-08-16 05:50:00', 'completed', '2025-08-15 05:50:37', 'medium', NULL, '2025-08-15 05:54:02'),
-(25, 'TK-013', 21, 2, 'tolong ya', 'tolong', 'Lainnya', '2025-08-16 06:09:00', 'completed', '2025-08-15 06:09:11', 'medium', NULL, '2025-08-15 06:09:16'),
-(26, 'TK-014', 21, 2, 'tolong', 'tolong', 'Followup', '2025-08-16 06:25:00', 'completed', '2025-08-15 06:25:48', 'medium', NULL, '2025-08-15 06:27:21'),
-(27, 'TK-015', 21, 2, 'tolong ya', 'tolong', 'Followup', '2025-08-16 06:26:00', 'completed', '2025-08-15 06:26:13', 'medium', NULL, '2025-08-15 06:27:31'),
-(28, 'TK-016', 21, 2, 'tolong woy', 'tolong', 'Followup', '2025-08-15 06:26:00', 'completed', '2025-08-15 06:26:33', 'medium', NULL, '2025-08-15 06:27:40'),
-(29, 'TK-017', 21, 2, 'tolong', 'tolong boy', 'Followup', '2025-08-15 06:27:00', 'completed', '2025-08-15 06:27:12', 'medium', NULL, '2025-08-15 06:27:48'),
-(30, 'TK-018', 21, 2, 'tolong oy', 'bos tolongggg', 'Penawaran', '2025-08-16 06:28:00', 'completed', '2025-08-15 06:28:33', 'medium', NULL, '2025-08-15 06:28:43'),
-(31, 'TK-019', 22, 5, 'tolong aku dong', 'tolong', 'Followup', '2025-08-15 07:16:00', 'completed', '2025-08-15 07:16:18', 'medium', NULL, '2025-08-15 07:16:22'),
-(32, 'TK-020', 21, 2, 'task', 'tolong', 'Kanvasing', '2025-08-15 08:50:00', 'completed', '2025-08-15 08:51:00', 'medium', NULL, '2025-08-15 08:51:06'),
-(33, 'TK-021', 21, 2, 'tolong deal ya', 'tolong bos', 'Deal DO', '2025-08-19 04:05:00', 'completed', '2025-08-18 04:05:24', 'high', NULL, '2025-08-18 04:05:40'),
-(34, 'TK-022', 21, 2, 'tolong kesepakatan', 'tolong gan', 'Kesepakatan Tarif', '2025-08-19 06:23:00', 'completed', '2025-08-18 06:23:54', 'medium', NULL, '2025-08-18 06:24:00'),
-(35, 'TK-023', 21, 2, 'tolong gan', 'tolong gan', 'Kanvasing', '2025-08-23 08:00:00', 'cancelled', '2025-08-18 08:00:22', 'medium', NULL, '2025-08-19 07:26:08'),
-(38, 'TK-024', 23, 2, 'coy', 'tolong', 'Followup', '2025-08-26 02:56:00', 'new', '2025-08-25 02:56:36', 'medium', 2, '2025-08-25 02:56:36'),
-(39, 'TK-025', 23, 2, 'tolong', 'tolong ya', 'Kanvasing', '2025-08-26 04:25:00', 'completed', '2025-08-25 04:25:07', 'low', 2, '2025-08-25 08:31:08');
 
 -- --------------------------------------------------------
 
@@ -653,13 +567,7 @@ CREATE TABLE `task_attachments` (
 --
 
 INSERT INTO `task_attachments` (`id`, `task_result_id`, `original_filename`, `stored_filename`, `file_path`, `file_size`, `file_type`, `mime_type`, `compressed_size`, `compression_ratio`, `upload_by`, `uploaded_at`) VALUES
-(9, 42, '100_7303.JPG', '100_7303_1755747727225_ab904af1c671d9da.JPG', 'uploads\\task-attachments\\100_7303_1755747727225_ab904af1c671d9da.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, NULL, '2025-08-21 03:42:07'),
-(11, 44, '100_7303.JPG', '100_7303_1755755582349_77f473aa50ba5daa.JPG', 'uploads\\task-attachments\\100_7303_1755755582349_77f473aa50ba5daa.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, 2, '2025-08-21 05:53:02'),
-(15, 48, '100_7308.JPG', '100_7308_1756111209465_97efa5679e68291f.JPG', 'uploads\\task-attachments\\100_7308_1756111209465_97efa5679e68291f.JPG', 337821, 'image', 'image/jpeg', 337821, 1.00, 2, '2025-08-25 08:40:09'),
-(16, 49, '100_7303.JPG', '100_7303_1756111391122_b25d76eaa5ae4c7b.JPG', 'uploads\\task-attachments\\100_7303_1756111391122_b25d76eaa5ae4c7b.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, 2, '2025-08-25 08:43:11'),
-(17, 50, '100_7303.JPG', '100_7303_1756111503384_e325c20fce415e46.JPG', 'uploads\\task-attachments\\100_7303_1756111503384_e325c20fce415e46.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, 2, '2025-08-25 08:45:03'),
-(18, 51, '100_7303.JPG', '100_7303_1756111776039_683858b6f0b06698.JPG', 'uploads\\task-attachments\\100_7303_1756111776039_683858b6f0b06698.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, 2, '2025-08-25 08:49:36'),
-(19, 52, '100_7303.JPG', '100_7303_1756112108392_6bc1b63393cdaef1.JPG', 'uploads\\task-attachments\\100_7303_1756112108392_6bc1b63393cdaef1.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, 2, '2025-08-25 08:55:08');
+(9, 42, '100_7303.JPG', '100_7303_1755747727225_ab904af1c671d9da.JPG', 'uploads\\task-attachments\\100_7303_1755747727225_ab904af1c671d9da.JPG', 219875, 'image', 'image/jpeg', 219875, 1.00, NULL, '2025-08-21 03:42:07');
 
 -- --------------------------------------------------------
 
@@ -680,7 +588,15 @@ CREATE TABLE `task_comments` (
 --
 
 INSERT INTO `task_comments` (`id`, `task_id`, `comment_text`, `commented_by`, `commented_at`) VALUES
-(1, 1, 'Sudah saya follow up, tinggal kirim penawaran.', 2, '2025-07-22 01:20:57');
+(1, 1, 'Sudah saya follow up, tinggal kirim penawaran.', 2, '2025-07-22 01:20:57'),
+(13, 41, 'Task status changed from \"cancelled\" to \"pending\" by Sales One', 2, '2025-08-28 01:45:43'),
+(14, 41, 'Task status changed from \"pending\" to \"cancelled\" by Sales One', 2, '2025-08-28 01:46:05'),
+(15, 41, 'Task status changed from \"cancelled\" to \"completed\" by Sales One', 2, '2025-08-28 02:40:44'),
+(16, 41, 'Task result added with attachments by Sales One: nyoh', 2, '2025-08-28 02:40:54'),
+(17, 41, 'Task details updated by Sales One:\n- lead_id changed from \"zufarr susano\" to \"thoriqq hanjay\"\n- title changed from \"tolong euy\" to \"tolong bang\"\n- due_date changed from \"Thu Aug 28 2025 13:50:00 GMT+0700 (Western Indonesia Time)\" to \"2025-08-28T06:50\"', 2, '2025-08-29 06:49:00'),
+(18, 42, 'Task details updated by Sales One:\n- category changed from \"Kanvasing\" to \"Followup\"\n- due_date changed from \"Sat Aug 30 2025 13:48:00 GMT+0700 (Western Indonesia Time)\" to \"2025-08-30T06:48\"', 2, '2025-08-29 06:49:24'),
+(19, 41, 'Task status changed from \"completed\" to \"pending\" by Sales One', 2, '2025-08-29 07:03:01'),
+(20, 41, 'Task result added with attachments by Sales One: nj', 2, '2025-09-08 02:54:17');
 
 -- --------------------------------------------------------
 
@@ -738,7 +654,11 @@ INSERT INTO `task_results` (`id`, `task_id`, `result_text`, `result_type`, `resu
 (49, 39, 'nyoh', 'note', '2025-08-25 08:43:11', 2),
 (50, 39, 'noyh', 'note', '2025-08-25 08:45:03', 2),
 (51, 39, 'nyoh', 'meeting', '2025-08-25 08:49:36', 2),
-(52, 39, 'nyoh', 'meeting', '2025-08-25 08:55:08', 2);
+(52, 39, 'nyoh', 'meeting', '2025-08-25 08:55:08', 2),
+(53, 39, 'nyoh', 'meeting', '2025-08-26 04:32:47', 2),
+(54, 39, 'ko', 'note', '2025-08-26 04:34:48', 2),
+(55, 40, 'sudah', 'call', '2025-08-27 06:31:17', 2),
+(59, 41, 'nj', 'note', '2025-09-08 02:54:17', 2);
 
 -- --------------------------------------------------------
 
@@ -751,6 +671,9 @@ CREATE TABLE `users` (
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `manager_id` int DEFAULT NULL,
+  `asmen_id` int DEFAULT NULL,
+  `gl_id` int DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -759,14 +682,26 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `created_at`, `updated_at`) VALUES
-(1, 'Admin User', 'admin@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', '2025-07-19 02:03:29', '2025-07-19 02:03:29'),
-(2, 'Sales One', 'sales1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', '2025-07-19 02:03:29', '2025-07-19 02:03:29'),
-(3, 'Partnership One', 'partner1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', '2025-07-19 02:03:29', '2025-07-19 02:03:29'),
-(4, 'Akunting One', 'finance1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', '2025-07-19 02:03:29', '2025-07-19 02:03:29'),
-(5, 'Sales Two', 'sales2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', '2025-07-19 02:03:29', '2025-07-19 02:03:29'),
-(6, 'GL One', 'gl1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', '2025-07-19 02:03:29', '2025-07-19 02:03:29'),
-(7, 'ASM One', 'asm1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', '2025-07-19 02:03:29', '2025-07-19 02:03:29');
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `manager_id`, `asmen_id`, `gl_id`, `created_at`, `updated_at`) VALUES
+(1, 'Super Admin', 'admin@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(2, 'Manager Jakarta', 'manager.jakarta@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(3, 'Manager Bandung', 'manager.bandung@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(4, 'Asmen Jakarta A', 'asmen.jkt.a@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(5, 'Asmen Jakarta B', 'asmen.jkt.b@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(6, 'Asmen Bandung A', 'asmen.bdg.a@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(7, 'GL Jakarta A1', 'gl.jkt.a1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(8, 'GL Jakarta A2', 'gl.jkt.a2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(9, 'GL Jakarta B1', 'gl.jkt.b1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(10, 'GL Bandung A1', 'gl.bdg.a1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(11, 'Sales Jakarta A1-1', 'sales.jkt.a1.1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(12, 'Sales Jakarta A1-2', 'sales.jkt.a1.2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(13, 'Sales Jakarta A1-3', 'sales.jkt.a1.3@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(14, 'Sales Jakarta A2-1', 'sales.jkt.a2.1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 8, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(15, 'Sales Jakarta A2-2', 'sales.jkt.a2.2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 8, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(16, 'Sales Jakarta B1-1', 'sales.jkt.b1.1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, 9, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(17, 'Sales Jakarta B1-2', 'sales.jkt.b1.2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, 9, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(18, 'Sales Bandung A1-1', 'sales.bdg.a1.1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, 10, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(19, 'Sales Bandung A1-2', 'sales.bdg.a1.2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, 10, '2025-09-10 13:32:00', '2025-09-10 13:32:00');
 
 -- --------------------------------------------------------
 
@@ -786,9 +721,23 @@ CREATE TABLE `user_roles` (
 INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (1, 1),
 (2, 2),
-(5, 2),
-(3, 3),
-(4, 4);
+(3, 2),
+(4, 3),
+(5, 3),
+(6, 3),
+(7, 4),
+(8, 4),
+(9, 4),
+(10, 4),
+(11, 5),
+(12, 5),
+(13, 5),
+(14, 5),
+(15, 5),
+(16, 5),
+(17, 5),
+(18, 5),
+(19, 5);
 
 --
 -- Indexes for dumped tables
@@ -866,7 +815,11 @@ ALTER TABLE `deal_comments`
   ADD KEY `deal_id` (`deal_id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `idx_deal_comments_parent_id` (`parent_id`),
-  ADD KEY `idx_deal_comments_deal_parent` (`deal_id`,`parent_id`);
+  ADD KEY `idx_deal_comments_deal_parent` (`deal_id`,`parent_id`),
+  ADD KEY `deal_comments_deal_id` (`deal_id`),
+  ADD KEY `deal_comments_parent_id` (`parent_id`),
+  ADD KEY `deal_comments_user_id` (`user_id`),
+  ADD KEY `deal_comments_deal_id_parent_id` (`deal_id`,`parent_id`);
 
 --
 -- Indexes for table `kpi_targets`
@@ -896,7 +849,11 @@ ALTER TABLE `lead_comments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `lead_id` (`lead_id`),
   ADD KEY `user_id` (`user_id`),
-  ADD KEY `idx_parent_id` (`parent_id`);
+  ADD KEY `idx_parent_id` (`parent_id`),
+  ADD KEY `lead_comments_lead_id` (`lead_id`),
+  ADD KEY `lead_comments_parent_id` (`parent_id`),
+  ADD KEY `lead_comments_user_id` (`user_id`),
+  ADD KEY `lead_comments_lead_id_parent_id` (`lead_id`,`parent_id`);
 
 --
 -- Indexes for table `quotations`
@@ -960,9 +917,13 @@ ALTER TABLE `tasks`
 --
 ALTER TABLE `task_attachments`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `task_attachments_stored_filename` (`stored_filename`),
   ADD KEY `task_result_id` (`task_result_id`),
   ADD KEY `upload_by` (`upload_by`),
-  ADD KEY `idx_task_attachments_filename` (`stored_filename`);
+  ADD KEY `idx_task_attachments_filename` (`stored_filename`),
+  ADD KEY `task_attachments_task_result_id` (`task_result_id`),
+  ADD KEY `task_attachments_file_type` (`file_type`),
+  ADD KEY `task_attachments_uploaded_at` (`uploaded_at`);
 
 --
 -- Indexes for table `task_comments`
@@ -981,7 +942,10 @@ ALTER TABLE `task_results`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `manager_id` (`manager_id`),
+  ADD KEY `asmen_id` (`asmen_id`),
+  ADD KEY `gl_id` (`gl_id`);
 
 --
 -- Indexes for table `user_roles`
@@ -1004,13 +968,13 @@ ALTER TABLE `approvals`
 -- AUTO_INCREMENT for table `companies`
 --
 ALTER TABLE `companies`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `contacts`
 --
 ALTER TABLE `contacts`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `contracts`
@@ -1034,13 +998,13 @@ ALTER TABLE `contract_items`
 -- AUTO_INCREMENT for table `deals`
 --
 ALTER TABLE `deals`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `deal_comments`
 --
 ALTER TABLE `deal_comments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `kpi_targets`
@@ -1052,7 +1016,7 @@ ALTER TABLE `kpi_targets`
 -- AUTO_INCREMENT for table `leads`
 --
 ALTER TABLE `leads`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `leads_stage`
@@ -1064,7 +1028,7 @@ ALTER TABLE `leads_stage`
 -- AUTO_INCREMENT for table `lead_comments`
 --
 ALTER TABLE `lead_comments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT for table `quotations`
@@ -1088,49 +1052,49 @@ ALTER TABLE `quotation_items`
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `sales_kpi_daily`
 --
 ALTER TABLE `sales_kpi_daily`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- AUTO_INCREMENT for table `sales_kpi_monthly`
 --
 ALTER TABLE `sales_kpi_monthly`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- AUTO_INCREMENT for table `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `task_attachments`
 --
 ALTER TABLE `task_attachments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `task_comments`
 --
 ALTER TABLE `task_comments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `task_results`
 --
 ALTER TABLE `task_results`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- Constraints for dumped tables
@@ -1140,51 +1104,49 @@ ALTER TABLE `users`
 -- Constraints for table `approvals`
 --
 ALTER TABLE `approvals`
-  ADD CONSTRAINT `approvals_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`),
-  ADD CONSTRAINT `approvals_ibfk_2` FOREIGN KEY (`approver_id`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `approvals_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `approvals_ibfk_2` FOREIGN KEY (`approver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `contacts`
 --
 ALTER TABLE `contacts`
-  ADD CONSTRAINT `contacts_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
-  ADD CONSTRAINT `contacts_ibfk_2` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `contacts_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `contacts_ibfk_2` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `contracts`
 --
 ALTER TABLE `contracts`
-  ADD CONSTRAINT `contracts_ibfk_1` FOREIGN KEY (`quotation_id`) REFERENCES `quotations` (`id`),
-  ADD CONSTRAINT `contracts_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `contracts_ibfk_1` FOREIGN KEY (`quotation_id`) REFERENCES `quotations` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `contracts_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `contract_comments`
 --
 ALTER TABLE `contract_comments`
-  ADD CONSTRAINT `contract_comments_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`),
-  ADD CONSTRAINT `contract_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `contract_comments_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `contract_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `contract_items`
 --
 ALTER TABLE `contract_items`
-  ADD CONSTRAINT `contract_items_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`);
+  ADD CONSTRAINT `contract_items_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `deals`
 --
 ALTER TABLE `deals`
-  ADD CONSTRAINT `deals_ibfk_1` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`),
-  ADD CONSTRAINT `deals_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `deals_ibfk_company` FOREIGN KEY (`id_company`) REFERENCES `companies` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `deals_ibfk_contact` FOREIGN KEY (`id_contact`) REFERENCES `contacts` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `deals_ibfk_1` FOREIGN KEY (`lead_id`) REFERENCES `leads` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `deals_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `deal_comments`
 --
 ALTER TABLE `deal_comments`
-  ADD CONSTRAINT `deal_comments_ibfk_1` FOREIGN KEY (`deal_id`) REFERENCES `deals` (`id`),
-  ADD CONSTRAINT `deal_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `deal_comments_ibfk_1` FOREIGN KEY (`deal_id`) REFERENCES `deals` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `deal_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `deal_comments_parent_fk` FOREIGN KEY (`parent_id`) REFERENCES `deal_comments` (`id`) ON DELETE CASCADE;
 
 --
@@ -1197,8 +1159,14 @@ ALTER TABLE `lead_comments`
 -- Constraints for table `quotations`
 --
 ALTER TABLE `quotations`
-  ADD CONSTRAINT `quotations_ibfk_1` FOREIGN KEY (`deal_id`) REFERENCES `deals` (`id`),
-  ADD CONSTRAINT `quotations_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `quotations_ibfk_1` FOREIGN KEY (`deal_id`) REFERENCES `deals` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `quotations_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `quotation_comments`
+--
+ALTER TABLE `quotation_comments`
+  ADD CONSTRAINT `quotation_comments_ibfk_1` FOREIGN KEY (`quotation_id`) REFERENCES `quotations` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `sales_kpi_daily`
@@ -1216,14 +1184,21 @@ ALTER TABLE `sales_kpi_monthly`
 -- Constraints for table `tasks`
 --
 ALTER TABLE `tasks`
-  ADD CONSTRAINT `tasks_created_by_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `tasks_created_by_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `task_attachments`
 --
 ALTER TABLE `task_attachments`
-  ADD CONSTRAINT `task_attachments_ibfk_1` FOREIGN KEY (`task_result_id`) REFERENCES `task_results` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `task_attachments_ibfk_2` FOREIGN KEY (`upload_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `task_attachments_ibfk_2` FOREIGN KEY (`upload_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `users`
+--
+ALTER TABLE `users`
+  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`manager_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `users_ibfk_2` FOREIGN KEY (`asmen_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `users_ibfk_3` FOREIGN KEY (`gl_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

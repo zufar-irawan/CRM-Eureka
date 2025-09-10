@@ -8,16 +8,38 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
         const user = await User.findOne({ 
             where: { email },
-            include: [{
-                model: Role,
-                as: 'roles',
-                attributes: ['id', 'name'],
-                through: { attributes: [] }
-            }]
+            include: [
+                {
+                    model: Role,
+                    as: 'roles',
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] }
+                },
+                {
+                    model: User,
+                    as: 'Manager',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: User,
+                    as: 'Asmen',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: User,
+                    as: 'GL',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                }
+            ]
         });
+
         if (!user) {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
+
         const md5Hash = crypto.createHash('md5').update(password).digest('hex');
         if (user.password !== md5Hash) {
             return res.status(401).json({ message: "Password salah" });
@@ -30,14 +52,23 @@ export const login = async (req, res) => {
             id: user.id,
             name: user.name,
             email: user.email,
+            manager_id: user.manager_id,
+            asmen_id: user.asmen_id,
+            gl_id: user.gl_id,
+            Manager: user.Manager,
+            Asmen: user.Asmen,
+            GL: user.GL,
             roles: roles,
             roleNames: roles.map(role => role.name),
             primaryRole: primaryRole,
-            role: primaryRole, 
+            role: primaryRole,
+            hierarchyInfo: user.getHierarchyInfo(),
+            // Role flags
             isAdmin: roles.some(role => role.name === 'admin'),
             isSales: roles.some(role => role.name === 'sales'),
-            isPartnership: roles.some(role => role.name === 'partnership'),
-            isAkunting: roles.some(role => role.name === 'akunting')
+            isManager: roles.some(role => role.name === 'manager'),
+            isAsmen: roles.some(role => role.name === 'asmen'),
+            isGl: roles.some(role => role.name === 'gl')
         };
 
         const token = jwt.sign(
@@ -46,13 +77,16 @@ export const login = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 roles: roles.map(role => role.name),
-                primaryRole: primaryRole
+                primaryRole: primaryRole,
+                manager_id: user.manager_id,
+                asmen_id: user.asmen_id,
+                gl_id: user.gl_id
             },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
-        // simpan token ke cookie HttpOnly
+        // Save token to HttpOnly cookie
         res.cookie("accessToken", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -65,11 +99,14 @@ export const login = async (req, res) => {
             user: userData,
             permissions: {
                 canCreateLeads: true,
-                canEditLeads: ['admin', 'sales'].some(role => roles.map(r => r.name).includes(role)),
-                canDeleteLeads: roles.some(role => role.name === 'admin'),
+                canEditLeads: ['admin', 'sales', 'gl'].some(role => roles.map(r => r.name).includes(role)),
+                canDeleteLeads: roles.some(role => ['admin', 'manager'].includes(role.name)),
                 canManageUsers: roles.some(role => role.name === 'admin'),
-                canViewReports: ['admin', 'sales', 'partnership'].some(role => roles.map(r => r.name).includes(role)),
-                canApproveContracts: ['admin', 'partnership', 'akunting'].some(role => roles.map(r => r.name).includes(role))
+                canViewReports: ['admin', 'sales', 'manager', 'asmen', 'gl'].some(role => roles.map(r => r.name).includes(role)),
+                canApproveContracts: ['admin', 'manager', 'asmen'].some(role => roles.map(r => r.name).includes(role)),
+                canManageTeam: ['admin', 'manager', 'asmen', 'gl'].some(role => roles.map(r => r.name).includes(role)),
+                canViewAllLeads: ['admin', 'manager'].some(role => roles.map(r => r.name).includes(role)),
+                canViewTeamLeads: ['admin', 'manager', 'asmen', 'gl'].some(role => roles.map(r => r.name).includes(role))
             }
         });
     } catch (error) {
@@ -81,13 +118,33 @@ export const login = async (req, res) => {
 export const me = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, { 
-            attributes: ['id', 'name', 'email', 'created_at'],
-            include: [{
-                model: Role,
-                as: 'roles',
-                attributes: ['id', 'name'],
-                through: { attributes: [] }
-            }]
+            attributes: ['id', 'name', 'email', 'created_at', 'manager_id', 'asmen_id', 'gl_id'],
+            include: [
+                {
+                    model: Role,
+                    as: 'roles',
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] }
+                },
+                {
+                    model: User,
+                    as: 'Manager',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: User,
+                    as: 'Asmen',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: User,
+                    as: 'GL',
+                    attributes: ['id', 'name', 'email'],
+                    required: false
+                }
+            ]
         });
 
         if (!user) {
@@ -102,14 +159,23 @@ export const me = async (req, res) => {
             name: user.name,
             email: user.email,
             created_at: user.created_at,
+            manager_id: user.manager_id,
+            asmen_id: user.asmen_id,
+            gl_id: user.gl_id,
+            Manager: user.Manager,
+            Asmen: user.Asmen,
+            GL: user.GL,
             roles: roles,
             roleNames: roles.map(role => role.name),
             primaryRole: primaryRole,
-            role: primaryRole, 
+            role: primaryRole,
+            hierarchyInfo: user.getHierarchyInfo(),
+            // Role flags
             isAdmin: roles.some(role => role.name === 'admin'),
             isSales: roles.some(role => role.name === 'sales'),
-            isPartnership: roles.some(role => role.name === 'partnership'),
-            isAkunting: roles.some(role => role.name === 'akunting')
+            isManager: roles.some(role => role.name === 'manager'),
+            isAsmen: roles.some(role => role.name === 'asmen'),
+            isGl: roles.some(role => role.name === 'gl')
         };
 
         res.status(200).json({
@@ -125,7 +191,7 @@ export const me = async (req, res) => {
 export const refreshUser = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, { 
-            attributes: ['id', 'name', 'email', 'created_at', 'updated_at'],
+            attributes: ['id', 'name', 'email', 'created_at', 'updated_at', 'manager_id', 'asmen_id', 'gl_id'],
             include: [{
                 model: Role,
                 as: 'roles',
@@ -147,13 +213,16 @@ export const refreshUser = async (req, res) => {
                 email: user.email,
                 name: user.name,
                 roles: roles.map(role => role.name),
-                primaryRole: primaryRole
+                primaryRole: primaryRole,
+                manager_id: user.manager_id,
+                asmen_id: user.asmen_id,
+                gl_id: user.gl_id
             },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
-        // update cookie
+        // Update cookie
         res.cookie("accessToken", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -169,9 +238,13 @@ export const refreshUser = async (req, res) => {
                 email: user.email,
                 created_at: user.created_at,
                 updated_at: user.updated_at,
+                manager_id: user.manager_id,
+                asmen_id: user.asmen_id,
+                gl_id: user.gl_id,
                 roles,
                 roleNames: roles.map(role => role.name),
                 primaryRole,
+                hierarchyInfo: user.getHierarchyInfo()
             }
         });
     } catch (error) {

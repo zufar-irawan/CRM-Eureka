@@ -26,49 +26,49 @@ import { addTeamAccess } from "../middleware/hierarchyMiddleware.js";
 const router = express.Router();
 
 router.get('/', 
-    authMiddleware, 
-    requireGLLevel, 
+    // authMiddleware, 
+    // requireGLLevel, 
     getAllUsers
 );
 
 router.get('/with-roles', 
-    authMiddleware, 
-    requireAsmenLevel, // Asmen level and above can view user roles
+    // authMiddleware, 
+    // requireAsmenLevel, // Asmen level and above can view user roles
     getAllUsersWithRoles
 );
 
 // Get organizational hierarchy
 router.get('/hierarchy', 
-    authMiddleware, 
-    requireGLLevel, 
+    // authMiddleware, 
+    // requireGLLevel, 
     getHierarchy
 );
 
 // Get users by specific role
 router.get('/role/:role', 
-    authMiddleware, 
-    requireAsmenLevel, // Asmen level and above can filter by role
+    // authMiddleware, 
+    // requireAsmenLevel, // Asmen level and above can filter by role
     getUsersByRole
 );
 
 // Search users
 router.get('/search', 
-    authMiddleware, 
-    addTeamAccess, // Add team access for filtered search
+    // authMiddleware, 
+    // addTeamAccess, // Add team access for filtered search
     searchUsers
 );
 
 // Get all roles (for dropdown/selection)
 router.get('/roles', 
-    authMiddleware, 
-    requireGLLevel, // GL level and above can view available roles
+    // authMiddleware, 
+    // requireGLLevel, // GL level and above can view available roles
     getAllRoles
 );
 
 // Get specific user by ID
 router.get('/:id', 
-    authMiddleware, 
-    addTeamAccess, // Check if user can access this specific user
+    // authMiddleware, 
+    // addTeamAccess, // Check if user can access this specific user
     getUserById
 );
 

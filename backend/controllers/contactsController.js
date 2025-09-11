@@ -9,13 +9,6 @@ import { sequelize } from '../config/db.js';
 
 export const getAllContacts = async (req, res) => {
     try {
-        if (!req.userRoles.includes('admin')) {
-            return res.json({
-                success: true,
-                data: [],
-                pagination: { total: 0, page: 1, limit: 10, totalPages: 0 }
-            });
-        }
         const {
             page = 1,
             limit = 10,
@@ -84,9 +77,6 @@ export const getAllContacts = async (req, res) => {
 
 export const getContactById = async (req, res) => {
     try {
-        if (!req.userRoles.includes('admin')) {
-            return res.status(403).json({ success: false, message: 'Akses ditolak' });
-        }
         const contactId = parseInt(req.params.id);
         if (isNaN(contactId)) {
             return res.status(400).json({
@@ -136,9 +126,6 @@ export const getContactById = async (req, res) => {
 export const createContact = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-        if (!req.userRoles.includes('admin')) {
-            return res.status(403).json({ success: false, message: 'Akses ditolak' });
-        }
         const {
             company_id,
             name,
@@ -236,9 +223,6 @@ export const createContact = async (req, res) => {
 export const updateContact = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-        if (!req.userRoles.includes('admin')) {
-            return res.status(403).json({ success: false, message: 'Akses ditolak' });
-        }
         const contactId = parseInt(req.params.id);
         
         if (isNaN(contactId)) {
@@ -349,9 +333,6 @@ export const updateContact = async (req, res) => {
 export const deleteContact = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
-        if (!req.userRoles.includes('admin')) {
-            return res.status(403).json({ success: false, message: 'Akses ditolak' });
-        }
         const contactId = parseInt(req.params.id);
         
         if (isNaN(contactId)) {
@@ -402,9 +383,6 @@ export const deleteContact = async (req, res) => {
 
 export const getContactsByCompany = async (req, res) => {
     try {
-        if (!req.userRoles.includes('admin')) {
-            return res.json({ success: true, data: [], company: {} });
-        }
         const companyId = parseInt(req.params.companyId);
         
         if (isNaN(companyId)) {

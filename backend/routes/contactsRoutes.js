@@ -12,11 +12,11 @@ import {
 } from '../controllers/contactsController.js';
 
 const router = express.Router();
-router.get('/', authMiddleware, getAllContacts);
-router.get('/:id', authMiddleware, getContactById);
-router.post('/', authMiddleware, createContact);
-router.put('/:id', authMiddleware, updateContact);
-router.delete('/:id', authMiddleware, deleteContact);
-router.get('/company/:companyId', authMiddleware, getContactsByCompany);
-router.get('/:id/tasks', authMiddleware, getTasksByContact);
+router.get('/',  getAllContacts);
+router.get('/:id', getContactById);
+router.post('/', createContact);
+router.put('/:id', updateContact);
+router.delete('/:id', deleteContact);
+router.get('/company/:companyId', getContactsByCompany);
+router.get('/:id/tasks', getTasksByContact);
 export default router;

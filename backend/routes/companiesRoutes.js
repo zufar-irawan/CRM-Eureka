@@ -9,9 +9,9 @@ import { getAllCompanies,
 } from '../controllers/companiesController.js';
 
 const router = express.Router();
-router.get('/', authMiddleware, getAllCompanies);
-router.get('/:id', authMiddleware, getCompanyById);
-router.post('/', authMiddleware, createCompany);
-router.put('/:id', authMiddleware, updateCompany);
-router.delete('/:id', authMiddleware, deleteCompany);
+router.get('/', getAllCompanies);
+router.get('/:id', getCompanyById);
+router.post('/', createCompany);
+router.put('/:id', updateCompany);
+router.delete('/:id', deleteCompany);
 export default router;

@@ -4,6 +4,7 @@ import React from 'react';
 import { CSS } from '@dnd-kit/utilities';
 import { AtSign, FileText, CheckCircle, MessageCircle, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import useUser from '../../../../hooks/useUser';
 
 type ItemsType = {
     id: UniqueIdentifier;
@@ -48,6 +49,9 @@ const Items = ({ id, fullname, organization, email, mobileno, pathname, itemId }
         router.push(getDetailRoute());
     };
 
+    const { user } = useUser()
+    const userValidation = user?.isAdmin || user?.isGl || user?.isSales
+
     return (
         <div
             ref={setNodeRef}
@@ -60,18 +64,19 @@ const Items = ({ id, fullname, organization, email, mobileno, pathname, itemId }
             onClick={handleClick}
             className="group px-2 py-1 bg-white rounded-xl w-full border border-gray-200 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
         >
-            {/* Grip horizontal: bagian normal dari flow */}
-            <div
-                {...listeners}
-                onClick={(e) => e.stopPropagation()}
-                className="
+            {userValidation && (
+                <div
+                    {...listeners}
+                    onClick={(e) => e.stopPropagation()}
+                    className="
                     w-full flex justify-center items-center
                     overflow-hidden transition-all duration-200
                     h-0 group-hover:h-4 cursor-grab
                 "
-            >
-                <div className="w-16 h-1.5 bg-gray-300 rounded-full" />
-            </div>
+                >
+                    <div className="w-16 h-1.5 bg-gray-300 rounded-full" />
+                </div>
+            )}
 
             {/* Konten utama card */}
             <div className="flex pl-1.5 py-2 text-md items-center justify-between transition-all duration-200">

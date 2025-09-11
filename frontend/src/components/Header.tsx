@@ -2,6 +2,7 @@
 
 import { AlignJustify, ChevronDown, Kanban } from "lucide-react";
 import { redirect } from "next/navigation";
+import useUser from "../../hooks/useUser";
 
 type headerProps = {
     isOpen: boolean;
@@ -35,6 +36,11 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
     } else if (pathname.startsWith("/reports")) {
         title = "Reports"
     }
+
+    const { user } = useUser()
+
+    const addButtonTitle = title === "Leads" || title === "Deals" || title === "Tasks"
+    const userRole = user?.isSales || user?.isGl || user?.isAdmin
 
     return (
         <header className="px-6 py-4 flex flex-row shadow-sm border-b border-gray-200">
@@ -105,10 +111,10 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                 )}
             </div>
 
-            {title === "Companies" || title === "Contacts" || title === "Reports" ? '' : (
+            {addButtonTitle && userRole ? (
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="relative inline-block group"
+                    className={`relative inline-block group ${user?.isAsmen || user?.isManager ? 'hidden' : ''}`}
                 >
                     <span className="relative flex hover:scale-105 text-md bg-black rounded-md overflow-hidden transition-all px-3 py-1.5 text-white items-center">
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -117,7 +123,7 @@ export default function Header({ isOpen, setIsOpen, setIsModalOpen, pathname }: 
                         </span>
                     </span>
                 </button>
-            )}
+            ) : ''}
         </header>
     )
 }

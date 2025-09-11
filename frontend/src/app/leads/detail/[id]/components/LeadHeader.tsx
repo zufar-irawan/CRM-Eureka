@@ -8,6 +8,7 @@ import { displayValue, safeString } from '../utils/formatting';
 import { makeAuthenticatedRequest } from '../utils/auth';
 import { useUsers } from '../hooks/useUsers';
 import Swal from 'sweetalert2';
+import useUser from '../../../../../../hooks/useUser';
 
 interface LeadHeaderProps {
   lead: Lead | null;
@@ -133,6 +134,9 @@ export default function LeadHeader({
     ? STATUS_OPTIONS.filter(option => option.name === 'Converted')
     : STATUS_OPTIONS.filter(option => option.name !== 'Converted');
 
+  const { user } = useUser()
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
+
   return (
     <>
       <div className="border-b border-gray-200 p-6">
@@ -183,153 +187,156 @@ export default function LeadHeader({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-3">
-            {/* Assign To Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
-                disabled={isAssigning}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
-              >
-                {isAssigning ? (
-                  <>
-                    <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Assigning...</span>
-                  </>
-                ) : (
-                  <>
-                    <User className="w-4 h-4 text-gray-400" />
-                    <span className="truncate">
-                      {assignedUser ? assignedUser.name : 'Assign to'}
-                    </span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </>
-                )}
-              </button>
+          {userValidation && (
+            <div className="flex items-center space-x-3">
+              {/* Assign To Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
+                  disabled={isAssigning}
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
+                >
+                  {isAssigning ? (
+                    <>
+                      <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Assigning...</span>
+                    </>
+                  ) : (
+                    <>
+                      <User className="w-4 h-4 text-gray-400" />
+                      <span className="truncate">
+                        {assignedUser ? assignedUser.name : 'Assign to'}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </>
+                  )}
+                </button>
 
-              {isAssignDropdownOpen && !isAssigning && (
-                <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-20 max-h-64 overflow-y-auto">
-                  <div className="py-1">
-                    {isLoadingUsers ? (
-                      <div className="px-4 py-2 text-sm text-gray-500 text-center">
-                        Loading users...
-                      </div>
-                    ) : users.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-gray-500 text-center">
-                        No users available
-                      </div>
-                    ) : (
-                      <>
-                        {/* Unassign option */}
+                {isAssignDropdownOpen && !isAssigning && (
+                  <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-20 max-h-64 overflow-y-auto">
+                    <div className="py-1">
+                      {isLoadingUsers ? (
+                        <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                          Loading users...
+                        </div>
+                      ) : users.length === 0 ? (
+                        <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                          No users available
+                        </div>
+                      ) : (
+                        <>
+                          {/* Unassign option */}
+                          <button
+                            onClick={() => handleAssignToUser(0)}
+                            className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                              <X className="w-3 h-3 text-gray-500" />
+                            </div>
+                            <span>Unassigned</span>
+                            {!assignedUser && (
+                              <span className="ml-auto text-blue-600">✓</span>
+                            )}
+                          </button>
+
+                          <div className="border-t border-gray-100 my-1"></div>
+
+                          {users.map((user) => (
+                            <button
+                              key={user.id}
+                              onClick={() => handleAssignToUser(user.id)}
+                              className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${assignedUser?.id === user.id ? 'bg-gray-50 font-medium' : ''
+                                }`}
+                            >
+                              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-medium text-blue-700">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="flex-1 text-left">
+                                <div className="font-medium">{user.name}</div>
+                                <div className="text-xs text-gray-500">{user.email}</div>
+                                {user.roleNames && user.roleNames.length > 0 && (
+                                  <div className="text-xs text-blue-600">
+                                    {user.roleNames.join(', ')}
+                                  </div>
+                                )}
+                              </div>
+                              {assignedUser?.id === user.id && (
+                                <span className="text-blue-600">✓</span>
+                              )}
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Status Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => !isUpdatingStage && setIsDropdownOpen(!isDropdownOpen)}
+                  disabled={isUpdatingStage}
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUpdatingStage ? (
+                    <>
+                      <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`w-2 h-2 rounded-full ${STATUS_OPTIONS.find(s => s.name === selectedStatus)?.color}`}></div>
+                      <span>{selectedStatus}</span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </>
+                  )}
+                </button>
+
+                {isDropdownOpen && !isUpdatingStage && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                    <div className="py-1">
+                      {availableStatusOptions.map((status) => (
                         <button
-                          onClick={() => handleAssignToUser(0)}
-                          className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          key={status.name}
+                          onClick={() => handleStatusChange(status.name)}
+                          className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
+                            }`}
                         >
-                          <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                            <X className="w-3 h-3 text-gray-500" />
-                          </div>
-                          <span>Unassigned</span>
-                          {!assignedUser && (
+                          <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
+                          <span>{status.name}</span>
+                          {status.name === selectedStatus && (
                             <span className="ml-auto text-blue-600">✓</span>
                           )}
                         </button>
-
-                        <div className="border-t border-gray-100 my-1"></div>
-
-                        {users.map((user) => (
-                          <button
-                            key={user.id}
-                            onClick={() => handleAssignToUser(user.id)}
-                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${assignedUser?.id === user.id ? 'bg-gray-50 font-medium' : ''
-                              }`}
-                          >
-                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-medium text-blue-700">
-                                {user.name.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="flex-1 text-left">
-                              <div className="font-medium">{user.name}</div>
-                              <div className="text-xs text-gray-500">{user.email}</div>
-                              {user.roleNames && user.roleNames.length > 0 && (
-                                <div className="text-xs text-blue-600">
-                                  {user.roleNames.join(', ')}
-                                </div>
-                              )}
-                            </div>
-                            {assignedUser?.id === user.id && (
-                              <span className="text-blue-600">✓</span>
-                            )}
-                          </button>
-                        ))}
-                      </>
-                    )}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            {/* Status Dropdown */}
-            <div className="relative">
+              {/* Convert to Deal Button */}
               <button
-                onClick={() => !isUpdatingStage && setIsDropdownOpen(!isDropdownOpen)}
-                disabled={isUpdatingStage}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleConvertClick}
+                disabled={isConverting || !lead || lead.status === true}
+                className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                {isUpdatingStage ? (
+                {isConverting ? (
                   <>
-                    <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Updating...</span>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Converting...</span>
                   </>
+                ) : lead.status === true ? (
+                  <span>Already Converted</span>
                 ) : (
-                  <>
-                    <div className={`w-2 h-2 rounded-full ${STATUS_OPTIONS.find(s => s.name === selectedStatus)?.color}`}></div>
-                    <span>{selectedStatus}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </>
+                  <span>Convert to Deal</span>
                 )}
               </button>
-
-              {isDropdownOpen && !isUpdatingStage && (
-                <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                  <div className="py-1">
-                    {availableStatusOptions.map((status) => (
-                      <button
-                        key={status.name}
-                        onClick={() => handleStatusChange(status.name)}
-                        className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.name === selectedStatus ? 'bg-gray-50 font-medium' : ''
-                          }`}
-                      >
-                        <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
-                        <span>{status.name}</span>
-                        {status.name === selectedStatus && (
-                          <span className="ml-auto text-blue-600">✓</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+          )}
 
-            {/* Convert to Deal Button */}
-            <button
-              onClick={handleConvertClick}
-              disabled={isConverting || !lead || lead.status === true}
-              className="bg-black text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              {isConverting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Converting...</span>
-                </>
-              ) : lead.status === true ? (
-                <span>Already Converted</span>
-              ) : (
-                <span>Convert to Deal</span>
-              )}
-            </button>
-          </div>
         </div>
       </div>
     </>

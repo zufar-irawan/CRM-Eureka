@@ -346,6 +346,10 @@ export default function TasksList() {
   // Fetch data setiap kali assigned berubah
   useEffect(() => {
     handleRefresh();
+
+    window.addEventListener("create", handleRefresh)
+
+    return () => window.removeEventListener("create", handleRefresh)
   }, [assigned, created]);
 
   // Set assigned hanya ketika user berubah

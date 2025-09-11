@@ -101,6 +101,9 @@ export const getLeads = async (req, res) => {
         if (id) {
             whereClause.id = id
         }
+        if (req.teamMemberIds && !req.userRoles.includes('admin')) {
+            whereClause.owner = { [Op.in]: req.teamMemberIds };
+        }
         if (status !== undefined && status !== '') {
             whereClause.status = status === '1' || status === 'true' || status === true;
         }
@@ -111,7 +114,14 @@ export const getLeads = async (req, res) => {
             whereClause.rating = rating;
         }
         if (owner) {
-            whereClause.owner = owner;
+            if (req.userRoles.includes('admin')) {
+                whereClause.owner = owner;
+            } else if (req.teamMemberIds && req.teamMemberIds.includes(parseInt(owner, 10))) {
+                whereClause.owner = owner;
+            } else {
+                // User is trying to filter by an owner they cannot see, so return no results.
+                whereClause.id = -1;
+            }
         }
         if (search) {
             whereClause[Op.or] = [
@@ -162,6 +172,11 @@ export const getLeadById = async (req, res) => {
         if (!response) {
             return res.status(404).json({ message: "Lead not found" });
         }
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(response.owner)) {
+            return res.status(403).json({ message: "Akses ditolak" });
+        }
+
         res.status(200).json(response);
     } catch (error) {
         console.error('Error fetching lead by ID:', error);
@@ -211,7 +226,7 @@ export const createLead = async (req, res) => {
 
         const newLead = await Leads.create({
             code: leadCode, // Tambah kode otomatis
-            owner,
+            owner: req.body.assigned_to || owner,
             company,
             title: title || 'Mr',
             first_name,
@@ -279,6 +294,11 @@ export const updateLead = async (req, res) => {
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
+        }
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(lead.owner)) {
+            await transaction.rollback();
+            return res.status(403).json({ message: "Akses ditolak" });
         }
 
         const {
@@ -395,6 +415,11 @@ export const deleteLead = async (req, res) => {
         if (!lead) {
             await transaction.rollback();
             return res.status(404).json({ message: "Lead not found" });
+        }
+        
+        if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(lead.owner)) {
+            await transaction.rollback();
+            return res.status(403).json({ message: "Akses ditolak" });
         }
 
         await lead.destroy({ transaction });
@@ -974,6 +999,10 @@ export const getUnconvertedLeads = async (req, res) => {
             status: false
         };
 
+        if (req.teamMemberIds && !req.userRoles.includes('admin')) {
+            whereClause.owner = { [Op.in]: req.teamMemberIds };
+        }
+
         if (stage) {
             whereClause.stage = stage;
         }
@@ -1022,6 +1051,10 @@ export const getConvertedLeads = async (req, res) => {
         let whereClause = {
             status: true
         };
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin')) {
+            whereClause.owner = { [Op.in]: req.teamMemberIds };
+        }
 
         if (stage) {
             whereClause.stage = stage;

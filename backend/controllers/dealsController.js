@@ -88,6 +88,10 @@ export const getAllDeals = async (req, res) => {
             whereLead.fullname = { [Op.like]: `%${search}` }
         }
 
+        if (req.teamMemberIds && !req.userRoles.includes('admin')) {
+            whereConditions.owner = { [Op.in]: req.teamMemberIds };
+        }
+
         const deals = await Deals.findAndCountAll({
             where: whereConditions,
             include: [
@@ -234,6 +238,10 @@ export const getDealById = async (req, res) => {
                 success: false,
                 message: 'Deal not found'
             });
+        }
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(deal.owner)) {
+            return res.status(403).json({ success: false, message: 'Akses ditolak' });
         }
 
         res.json({
@@ -461,6 +469,11 @@ export const updateDeal = async (req, res) => {
                 success: false,
                 message: 'Deal not found'
             });
+        }
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(deal.owner)) {
+            await transaction.rollback();
+            return res.status(403).json({ success: false, message: 'Akses ditolak' });
         }
 
         const oldStage = deal.stage;
@@ -825,6 +838,10 @@ export const deleteDeal = async (req, res) => {
                 success: false,
                 message: 'Deal not found'
             });
+        }
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(deal.owner)) {
+            return res.status(403).json({ success: false, message: 'Akses ditolak' });
         }
 
         await DealComments.destroy({

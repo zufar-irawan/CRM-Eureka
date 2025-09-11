@@ -68,16 +68,20 @@ export const getUserById = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = '', include_roles = false, role_filter = '' } = req.query;
+        const { page = 1, limit = 20, search = '', include_roles = false, role_filter = '' } = req.query;
         const offset = (page - 1) * limit;
 
         let whereClause = {};
         
         if (search) {
             whereClause[Op.or] = [
-                { name: { [Op.iLike]: `%${search}%` } },
-                { email: { [Op.iLike]: `%${search}%` } },
+                { name: { [Op.like]: `%${search}%` } },
+                { email: { [Op.like]: `%${search}%` } },
             ];
+        }
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin')) {
+            whereClause.id = { [Op.in]: req.teamMemberIds };
         }
 
         let queryOptions = {
@@ -107,7 +111,7 @@ export const getAllUsers = async (req, res) => {
                     as: 'GL',
                     attributes: ['id', 'name'],
                     required: false
-                }
+                },
             ],
             order: [['created_at', 'DESC']]
         };
@@ -174,9 +178,13 @@ export const getAllUsersWithRoles = async (req, res) => {
         let whereClause = {};
         if (search) {
             whereClause[Op.or] = [
-                { name: { [Op.iLike]: `%${search}%` } },
-                { email: { [Op.iLike]: `%${search}%` } },
+                { name: { [Op.like]: `%${search}%` } },
+                { email: { [Op.like]: `%${search}%` } },
             ];
+        }
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin')) {
+            whereClause.id = { [Op.in]: req.teamMemberIds };
         }
 
         let includeOptions = [
@@ -371,6 +379,12 @@ export const getUsersByRole = async (req, res) => {
         const { role } = req.params;
         const { include_hierarchy = false } = req.query;
 
+        const usershierarchy = await User.findAll({
+            where: {
+                id: req.teamMemberIds
+            }
+        })
+
         const validRoles = ['admin', 'manager', 'asmen', 'gl', 'sales'];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ 
@@ -378,7 +392,7 @@ export const getUsersByRole = async (req, res) => {
                 validRoles: validRoles 
             });
         }
-
+        
         let includeOptions = [
             {
                 model: Role,
@@ -414,6 +428,7 @@ export const getUsersByRole = async (req, res) => {
         }
 
         const users = await User.findAll({
+            where: { id: req.teamMemberIds },
             attributes: ['id', 'name', 'email', 'manager_id', 'asmen_id', 'gl_id'],
             include: includeOptions,
             order: [['name', 'ASC']]
@@ -436,7 +451,7 @@ export const getUsersByRole = async (req, res) => {
 
         res.status(200).json({
             message: `Daftar ${role} berhasil diambil`,
-            data: formattedUsers,
+            data: formattedUsers, 
             total: formattedUsers.length,
             role: role
         });
@@ -544,9 +559,20 @@ export const searchUsers = async (req, res) => {
         const { q = '', limit = 10, role = '' } = req.query;
 
         if (!q.trim()) {
-            return res.status(400).json({ 
-                message: "Query pencarian tidak boleh kosong" 
+            return res.status(400).json({
+                message: "Query pencarian tidak boleh kosong"
             });
+        }
+
+        let whereClause = {
+            [Op.or]: [
+                { name: { [Op.like]: `%${q}%` } },
+                { email: { [Op.like]: `%${q}%` } }
+            ]
+        };
+
+        if (req.teamMemberIds && !req.userRoles.includes('admin')) {
+            whereClause.id = { [Op.in]: req.teamMemberIds };
         }
 
         let includeOptions = [
@@ -565,12 +591,7 @@ export const searchUsers = async (req, res) => {
         }
 
         const users = await User.findAll({
-            where: {
-                [Op.or]: [
-                    { name: { [Op.iLike]: `%${q}%` } },
-                    { email: { [Op.iLike]: `%${q}%` } }
-                ]
-            },
+            where: whereClause,
             attributes: ['id', 'name', 'email', 'manager_id', 'asmen_id', 'gl_id'],
             include: includeOptions,
             limit: parseInt(limit),

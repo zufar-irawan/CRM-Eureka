@@ -11,6 +11,7 @@ interface Props {
   showBackButton?: boolean;
   onBack?: () => void;
   backButtonText?: string;
+  assignedTo?: number;
 }
 
 interface FormState {
@@ -48,7 +49,8 @@ export default function CreateLeadModal({
   onLeadCreated,
   showBackButton = false,
   onBack,
-  backButtonText = "Back"
+  backButtonText = "Back",
+  assignedTo
 }: Props) {
   const { user } = useUser()
 
@@ -75,7 +77,7 @@ export default function CreateLeadModal({
     postal_code: "",
     country: "",
     description: "",
-    owner: user ? user.id.toString() : "",
+    owner: assignedTo ? assignedTo.toString() : (user ? user.id.toString() : ""),
   });
 
   const [openSections, setOpenSections] = useState({
@@ -326,7 +328,7 @@ export default function CreateLeadModal({
         country: form.country.trim() || "",
         description: form.description.trim() || "",
         number_of_employees: form.number_of_employees ? parseInt(form.number_of_employees) : null,
-        owner: user?.id,
+        owner: assignedTo || user?.id,
       };
 
       // Remove empty string values

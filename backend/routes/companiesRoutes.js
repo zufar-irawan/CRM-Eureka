@@ -1,15 +1,17 @@
 import express from 'express';
-import { getAllCompanies, 
-    getCompanyById, 
-    createCompany, 
-    updateCompany, 
-    deleteCompany 
+import authMiddleware from '../middleware/authMiddleware.js';
+import { addTeamAccess } from '../middleware/hierarchyMiddleware.js';
+import { getAllCompanies,
+    getCompanyById,
+    createCompany,
+    updateCompany,
+    deleteCompany
 } from '../controllers/companiesController.js';
 
 const router = express.Router();
-router.get('/', getAllCompanies);
-router.get('/:id', getCompanyById);
-router.post('/', createCompany);
-router.put('/:id', updateCompany);
-router.delete('/:id', deleteCompany);
+router.get('/', authMiddleware, getAllCompanies);
+router.get('/:id', authMiddleware, getCompanyById);
+router.post('/', authMiddleware, createCompany);
+router.put('/:id', authMiddleware, updateCompany);
+router.delete('/:id', authMiddleware, deleteCompany);
 export default router;

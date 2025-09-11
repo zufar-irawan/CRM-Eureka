@@ -1,12 +1,13 @@
 //leadsRoutes.js
 import express from 'express';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { addTeamAccess } from '../middleware/hierarchyMiddleware.js';
 import {
     getLeads,
     getLeadById,
     createLead,
     updateLead,
-    deleteLead, 
+    deleteLead,
     convertLead,
     updateLeadStage,
     getLeadComments,
@@ -19,21 +20,20 @@ import {
 
 const router = express.Router();
 
-// Public routes
-router.get('/', getLeads);
-router.get('/unconverted', getUnconvertedLeads);
-router.get('/converted', getConvertedLeads);
-router.get('/:id', getLeadById);
-router.get('/:id/comments', getLeadComments);
-router.get('/:id/comments/:commentId/thread', getCommentThread);
-
 // Protected routes
+router.get('/', authMiddleware, addTeamAccess, getLeads);
+router.get('/unconverted', authMiddleware, addTeamAccess, getUnconvertedLeads);
+router.get('/converted', authMiddleware, addTeamAccess, getConvertedLeads);
+router.get('/:id', authMiddleware, addTeamAccess, getLeadById);
+router.get('/:id/comments', authMiddleware, getLeadComments);
+router.get('/:id/comments/:commentId/thread', authMiddleware, getCommentThread);
+
 router.post('/', authMiddleware, createLead);
-router.put('/:id', authMiddleware, updateLead);
-router.delete('/:id', authMiddleware, deleteLead);
-router.post('/:id/convert', authMiddleware, convertLead);
-router.patch('/:id/stage', authMiddleware, updateLeadStage);
-router.post('/:id/comments', authMiddleware, addLeadComment);
-router.delete('/comments/:commentId', authMiddleware, deleteLeadComment);
+router.put('/:id', authMiddleware, addTeamAccess, updateLead);
+router.delete('/:id', authMiddleware, addTeamAccess, deleteLead);
+router.post('/:id/convert', authMiddleware, addTeamAccess, convertLead);
+router.patch('/:id/stage', authMiddleware, addTeamAccess, updateLeadStage);
+router.post('/:id/comments', authMiddleware, addTeamAccess, addLeadComment);
+router.delete('/comments/:commentId', authMiddleware, addTeamAccess, deleteLeadComment);
 
 export default router;

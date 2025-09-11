@@ -115,6 +115,19 @@ export const requireGLLevel = (req, res, next) => {
     next();
 };
 
+export const requireSalesLevel = (req, res, next) => {
+    const salesLevelRoles = ['admin', 'manager', 'asmen', 'gl', 'sales'];
+    const hasAccess = req.userRoles && req.userRoles.some(role => salesLevelRoles.includes(role));
+    
+    if (!hasAccess) {
+        return res.status(403).json({
+            success: false,
+            message: 'Akses ditolak: Memerlukan role Sales atau lebih tinggi'
+        });
+    }
+    next();
+}
+
 // Check if user can access another user's data based on hierarchy
 export const canAccessUser = (targetUserId) => {
     return (req, res, next) => {

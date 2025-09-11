@@ -1,10 +1,16 @@
 // middleware/hierarchyMiddleware.js
 import { User } from "../models/usersModel.js";
 
-// Helper function to get user's team members based on hierarchy
 export const getTeamMemberIds = async (userId, userRoles) => {
     try {
         const teamIds = [userId]; // Always include self
+
+        const user = await User.findByPk(userId);
+        if (user) {
+            if (user.gl_id) teamIds.push(user.gl_id);
+            if (user.asmen_id) teamIds.push(user.asmen_id);
+            if (user.manager_id) teamIds.push(user.manager_id);
+        }
 
         // Admin can access everyone
         if (userRoles.includes('admin')) {

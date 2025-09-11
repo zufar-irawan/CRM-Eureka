@@ -79,7 +79,16 @@ export const getTasks = async (req, res) => {
     }
 
     if (assigned_to) {
-      whereClause.assigned_to = assigned_to;
+        if (req.userRoles.includes('admin')) {
+            whereClause.assigned_to = assigned_to;
+        } else if (req.teamMemberIds && req.teamMemberIds.includes(parseInt(assigned_to, 10))) {
+            whereClause.assigned_to = assigned_to;
+        } else {
+            // User is trying to filter by an owner they cannot see, so return no results.
+            whereClause.id = -1;
+        }
+    } else if (req.teamMemberIds && !req.userRoles.includes('admin')) {
+      whereClause.assigned_to = { [Op.in]: req.teamMemberIds };
     }
 
     if (created_by) {
@@ -252,6 +261,11 @@ export const createTask = async (req, res) => {
       created_by: created_by || null
     }, { transaction });
 
+    const lead = await Leads.findByPk(finalLeadId, { transaction });
+    if (lead) {
+        await lead.update({ owner: Number(assigned_to) }, { transaction });
+    }
+
     await transaction.commit();
 
     const taskWithUser = await Tasks.findOne({
@@ -320,6 +334,10 @@ export const updateTask = async (req, res) => {
         success: false,
         message: "Task tidak ditemukan"
       });
+    }
+
+    if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(task.assigned_to) && !req.teamMemberIds.includes(task.created_by)) {
+        return res.status(403).json({ success: false, message: 'Akses ditolak' });
     }
 
     const oldTaskData = task.toJSON();
@@ -493,6 +511,10 @@ export const getTaskById = async (req, res) => {
     responseData.assigned_user_name = responseData.assignee ? responseData.assignee.name : 'Unassigned';
     responseData.created_by_name = responseData.creator ? responseData.creator.name : 'Unknown';
 
+    if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(task.assigned_to) && !req.teamMemberIds.includes(task.created_by)) {
+        return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    }
+
     res.status(200).json({
       success: true,
       data: responseData
@@ -593,6 +615,10 @@ export const deleteTask = async (req, res) => {
         success: false,
         message: "Task tidak ditemukan"
       });
+    }
+
+    if (req.teamMemberIds && !req.userRoles.includes('admin') && !req.teamMemberIds.includes(task.assigned_to) && !req.teamMemberIds.includes(task.created_by)) {
+        return res.status(403).json({ success: false, message: 'Akses ditolak' });
     }
 
     await task.destroy();

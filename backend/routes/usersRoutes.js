@@ -21,54 +21,66 @@ import authMiddleware, {
     requireGLLevel
 } from "../middleware/authMiddleware.js";
 
-import { addTeamAccess } from "../middleware/hierarchyMiddleware.js";
+import { addTeamAccess, canAccessResourceOwner } from "../middleware/hierarchyMiddleware.js";
 
 const router = express.Router();
 
-router.get('/', 
-    // authMiddleware, 
-    // requireGLLevel, 
+router.get('/',
+    authMiddleware,
+    addTeamAccess,
+    // requireGLLevel,
     getAllUsers
 );
 
-router.get('/with-roles', 
-    // authMiddleware, 
+router.get('/with-roles',
+    authMiddleware,
+    addTeamAccess,
     // requireAsmenLevel, // Asmen level and above can view user roles
     getAllUsersWithRoles
 );
 
 // Get organizational hierarchy
-router.get('/hierarchy', 
-    // authMiddleware, 
-    // requireGLLevel, 
+router.get('/hierarchy',
+    authMiddleware,
+    // requireGLLevel,
     getHierarchy
 );
 
 // Get users by specific role
-router.get('/role/:role', 
-    // authMiddleware, 
-    // requireAsmenLevel, // Asmen level and above can filter by role
+router.get('/role/:role',
+    authMiddleware,
+    addTeamAccess,
+    requireGLLevel,
     getUsersByRole
 );
 
 // Search users
-router.get('/search', 
-    // authMiddleware, 
-    // addTeamAccess, // Add team access for filtered search
+router.get('/search',
+    authMiddleware,
+    addTeamAccess, // Add team access for filtered search
     searchUsers
 );
 
 // Get all roles (for dropdown/selection)
-router.get('/roles', 
-    // authMiddleware, 
-    // requireGLLevel, // GL level and above can view available roles
+router.get('/roles',
+    authMiddleware,
+    requireGLLevel, // GL level and above can view available roles
     getAllRoles
 );
 
 // Get specific user by ID
-router.get('/:id', 
-    // authMiddleware, 
-    // addTeamAccess, // Check if user can access this specific user
+router.get('/:id',
+    authMiddleware,
+    addTeamAccess, // Check if user can access this specific user
+    (req, res, next) => {
+        if (req.teamMemberIds && req.teamMemberIds.includes(parseInt(req.params.id))) {
+            return next();
+        }
+        return res.status(403).json({
+            success: false,
+            message: 'Akses ditolak: Tidak dapat mengakses data user ini'
+        });
+    },
     getUserById
 );
 

@@ -203,6 +203,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
             <CreateLeadModal
                 onClose={handleLeadModalClose}
                 onLeadCreated={handleLeadCreated}
+                assignedTo={form.assigned_to}
                 showBackButton={true}
                 onBack={handleLeadModalClose}
                 backButtonText="Back to Task"

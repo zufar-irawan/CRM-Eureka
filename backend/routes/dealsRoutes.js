@@ -1,6 +1,7 @@
 //dealRoutes.js
 import express from 'express';
 import authMiddleware from '../middleware/authMiddleware.js';
+import { addTeamAccess } from '../middleware/hierarchyMiddleware.js';
 import {
     getAllDeals,
     getDealById,
@@ -17,19 +18,18 @@ import {
 
 const router = express.Router();
 
-// Public routes (no auth required)
-router.get('/', getAllDeals);
-router.get('/:id', getDealById);
-router.get('/:id/comments', getDealComments);
-router.get('/:id/comments/:commentId/thread', getDealCommentThread);
-
 // Protected routes (auth required)
+router.get('/', authMiddleware, addTeamAccess, getAllDeals);
+router.get('/:id', authMiddleware, addTeamAccess, getDealById);
+router.get('/:id/comments', authMiddleware, getDealComments);
+router.get('/:id/comments/:commentId/thread', authMiddleware, getDealCommentThread);
+
 router.post('/', authMiddleware, createDeal);
-router.post('/from-lead/:leadId', authMiddleware, createDealFromLead);
-router.put('/:id', authMiddleware, updateDeal);
-router.put('/:id/updateStage', authMiddleware, updateDealStage);
-router.delete('/:id', authMiddleware, deleteDeal);
-router.post('/:id/comments', authMiddleware, addDealComment);
-router.delete('/:id/comments/:commentId', authMiddleware, deleteDealComment);
+router.post('/from-lead/:leadId', authMiddleware, addTeamAccess, createDealFromLead);
+router.put('/:id', authMiddleware, addTeamAccess, updateDeal);
+router.put('/:id/updateStage', authMiddleware, addTeamAccess, updateDealStage);
+router.delete('/:id', authMiddleware, addTeamAccess, deleteDeal);
+router.post('/:id/comments', authMiddleware, addTeamAccess, addDealComment);
+router.delete('/:id/comments/:commentId', authMiddleware, addTeamAccess, deleteDealComment);
 
 export default router;

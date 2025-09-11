@@ -6,6 +6,13 @@ import { sequelize } from '../config/db.js';
 
 export const getAllCompanies = async (req, res) => {
     try {
+        if (!req.userRoles.includes('admin')) {
+            return res.json({
+                success: true,
+                data: [],
+                pagination: { total: 0, page: 1, limit: 10, totalPages: 0 }
+            });
+        }
         const {
             page = 1,
             limit = 10,
@@ -74,6 +81,9 @@ export const getAllCompanies = async (req, res) => {
 
 export const getCompanyById = async (req, res) => {
     try {
+        if (!req.userRoles.includes('admin')) {
+            return res.status(403).json({ success: false, message: 'Akses ditolak' });
+        }
         const companyId = parseInt(req.params.id);
         
         if (isNaN(companyId)) {
@@ -127,6 +137,9 @@ export const createCompany = async (req, res) => {
     const transaction = await sequelize.transaction();
     
     try {
+        if (!req.userRoles.includes('admin')) {
+            return res.status(403).json({ success: false, message: 'Akses ditolak' });
+        }
         const {
             name,
             address,
@@ -199,6 +212,9 @@ export const updateCompany = async (req, res) => {
     const transaction = await sequelize.transaction();
     
     try {
+        if (!req.userRoles.includes('admin')) {
+            return res.status(403).json({ success: false, message: 'Akses ditolak' });
+        }
         const companyId = parseInt(req.params.id);
         
         if (isNaN(companyId)) {
@@ -297,6 +313,9 @@ export const deleteCompany = async (req, res) => {
     const transaction = await sequelize.transaction();
     
     try {
+        if (!req.userRoles.includes('admin')) {
+            return res.status(403).json({ success: false, message: 'Akses ditolak' });
+        }
         const companyId = parseInt(req.params.id);
         
         if (isNaN(companyId)) {

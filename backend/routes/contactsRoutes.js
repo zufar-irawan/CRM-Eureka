@@ -1,20 +1,22 @@
 import express from 'express';
-import { 
-    getAllContacts, 
-    getContactById, 
-    getContactsByCompany, 
-    createContact, 
+import authMiddleware from '../middleware/authMiddleware.js';
+import { addTeamAccess } from '../middleware/hierarchyMiddleware.js';
+import {
+    getAllContacts,
+    getContactById,
+    getContactsByCompany,
+    createContact,
     updateContact,
     deleteContact,
     getTasksByContact
 } from '../controllers/contactsController.js';
 
 const router = express.Router();
-router.get('/', getAllContacts);
-router.get('/:id', getContactById);
-router.post('/', createContact);
-router.put('/:id', updateContact);
-router.delete('/:id', deleteContact);
-router.get('/company/:companyId', getContactsByCompany);
-router.get('/:id/tasks', getTasksByContact);
+router.get('/', authMiddleware, getAllContacts);
+router.get('/:id', authMiddleware, getContactById);
+router.post('/', authMiddleware, createContact);
+router.put('/:id', authMiddleware, updateContact);
+router.delete('/:id', authMiddleware, deleteContact);
+router.get('/company/:companyId', authMiddleware, getContactsByCompany);
+router.get('/:id/tasks', authMiddleware, getTasksByContact);
 export default router;

@@ -61,7 +61,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
 
         const fetchUsers = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/users", {
+                const res = await fetch("http://localhost:3000/api/users/role/sales", {
                     credentials: 'include',
                 })
                 const result = await res.json()

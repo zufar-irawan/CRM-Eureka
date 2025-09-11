@@ -41,7 +41,7 @@ const generateTaskCode = async (transaction) => {
 
 export const getTasks = async (req, res) => {
   try {
-    const { status, priority, category, assigned_to, lead_id, search } = req.query;
+    const { status, priority, category, assigned_to, created_by, lead_id, search } = req.query;
     let whereClause = {}
     const whereConditions = {}
 
@@ -80,6 +80,10 @@ export const getTasks = async (req, res) => {
 
     if (assigned_to) {
       whereClause.assigned_to = assigned_to;
+    }
+
+    if (created_by) {
+      whereClause.created_by = created_by;
     }
 
     if (search) {

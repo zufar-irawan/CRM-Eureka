@@ -29,6 +29,7 @@ export default function LeadHeader({
   onConvertToDeal,
   onLeadUpdate
 }: LeadHeaderProps) {
+  const { user } = useUser()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAssignDropdownOpen, setIsAssignDropdownOpen] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
@@ -134,7 +135,6 @@ export default function LeadHeader({
     ? STATUS_OPTIONS.filter(option => option.name === 'Converted')
     : STATUS_OPTIONS.filter(option => option.name !== 'Converted');
 
-  const { user } = useUser()
   const userValidation = user?.isAdmin || user?.isGl || user?.isSales
 
   return (

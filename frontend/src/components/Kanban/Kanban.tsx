@@ -3,7 +3,7 @@
 
 import { closestCenter, closestCorners, DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, UniqueIdentifier } from "@dnd-kit/core"
 import Sensors from "./Functions/Sensors"
-import { JSX, useEffect, useState } from "react"
+import { JSX, useCallback, useEffect, useState } from "react"
 import handleDragStart from "./Functions/HandleDragStart"
 import handleDragMove from "./Functions/HandleDragMove"
 import handleDragEnd, { rollbackDrag } from "./Functions/HandleDragEnd"
@@ -16,6 +16,7 @@ import fetchKanbanData from "./Functions/FetchKanbanData"
 import TaskResultModal from "./TaskResultModal";
 import updateStage from "./Functions/UpdateStage";
 import path from "path"
+import useUser from "../../../hooks/useUser"
 
 export type DNDType = {
     id: UniqueIdentifier
@@ -39,6 +40,7 @@ type kanbanProps = {
 }
 
 export default function Kanban({ containers, setContainers, setData, pathname }: kanbanProps) {
+    const { user } = useUser()
     const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [currentContainerId, setCurrentContainerId] = useState<UniqueIdentifier>()
@@ -52,6 +54,7 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
     const [pendingDrag, setPendingDrag] = useState<DragEndEvent | null>(null);
 
+    const userValidation = user?.isSales
     // Handle convert modal untuk leads
     const handleOpenConvertModal = (leadId: number) => {
         setConvertingLeadId(leadId);
@@ -68,10 +71,10 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
 
         setOnConfirm(() => confirmFn);
         setShowConvertModal(true);
-    };
+    }
 
     // Fungsi untuk refresh data setelah modal ditutup
-    const refreshKanbanData = () => {
+    const refreshKanbanData = useCallback(() => {
         if (pathname === "Leads") {
             fetchKanbanData({
                 url: "http://localhost:5000/api/leads",
@@ -86,6 +89,7 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                     email: item.lead?.email || item.email || "-",
                     mobileno: item.lead?.phone || item.phone || "-",
                 }),
+                owner: userValidation ? user.id : undefined
             });
         } else if (pathname === "Deals") {
             fetchKanbanData({
@@ -101,6 +105,7 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                     email: deal.lead?.email || "-",
                     mobileno: deal.lead?.phone || "-",
                 }),
+                owner: userValidation ? user.id : undefined
             })
         } else if (pathname === "Tasks") {
             fetchKanbanData({
@@ -116,9 +121,27 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                     email: task.description || "-",
                     mobileno: task.priority || "-",
                 }),
+                created_by: userValidation ? user.id : undefined,
+                assigned_to: userValidation ? user.id : undefined,
             })
         }
-    };
+    }, [pathname, userValidation, user?.id])
+
+    useEffect(() => {
+        if (user) {
+            refreshKanbanData()
+        }
+
+        window.addEventListener("lead-created", refreshKanbanData)
+        window.addEventListener("create", refreshKanbanData)
+        window.addEventListener("deals-add", refreshKanbanData)
+
+        return () => {
+            window.removeEventListener("lead-created", refreshKanbanData)
+            window.removeEventListener("create", refreshKanbanData)
+            window.removeEventListener("create", refreshKanbanData)
+        }
+    }, [user, refreshKanbanData])
 
     return (
         <>

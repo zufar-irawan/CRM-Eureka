@@ -331,6 +331,7 @@ export default function TasksList() {
   }
 
   const [assigned, setAssigned] = useState<number | undefined>();
+  const [created, setCreated] = useState<number | undefined>();
 
   const handleRefresh = async () => {
     await fetchData({
@@ -338,13 +339,14 @@ export default function TasksList() {
       setLoading,
       url: "/tasks/",
       assignedTo: assigned,
+      createdBy: created
     });
   };
 
   // Fetch data setiap kali assigned berubah
   useEffect(() => {
     handleRefresh();
-  }, [assigned]);
+  }, [assigned, created]);
 
   // Set assigned hanya ketika user berubah
   useEffect(() => {
@@ -354,6 +356,14 @@ export default function TasksList() {
       setAssigned(undefined);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user?.isSales) {
+      setCreated(user.id)
+    } else {
+      setCreated(undefined)
+    }
+  }, [user])
 
 
   useEffect(() => {

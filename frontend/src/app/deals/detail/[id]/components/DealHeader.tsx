@@ -7,6 +7,7 @@ import { makeAuthenticatedRequest } from '../utils/auth';
 import { DEAL_STAGES, API_ENDPOINTS } from '../utils/constant';
 import { useUsers } from '../hooks/useUsers';
 import Swal from 'sweetalert2';
+import useUser from '../../../../../../hooks/useUser';
 
 interface DealHeaderProps {
   deal: Deal;
@@ -23,6 +24,7 @@ export default function DealHeader({
   displayValue,
   onDealUpdate
 }: DealHeaderProps) {
+  const { user } = useUser()
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [isAssignDropdownOpen, setIsAssignDropdownOpen] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
@@ -206,6 +208,9 @@ export default function DealHeader({
 
   const currentStage = getCurrentStageConfig();
 
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
+
+
   return (
     <div className="border-b border-gray-200 p-6">
       <div className="flex justify-between items-start mb-4">
@@ -245,149 +250,151 @@ export default function DealHeader({
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
-          {/* Assign To Dropdown */}
-          <div className="relative" data-dropdown>
-            <button
-              onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
-              disabled={isAssigning}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
-            >
-              {isAssigning ? (
-                <>
-                  <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                  <span>Assigning...</span>
-                </>
-              ) : (
-                <>
-                  <User className="w-4 h-4 text-gray-400" />
-                  <span className="truncate flex-1 text-left">
-                    {assignedUser ? assignedUser.name : 'Assign to'}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                </>
-              )}
-            </button>
+        {userValidation && (
+          <div className="flex items-center space-x-3">
+            {/* Assign To Dropdown */}
+            <div className="relative" data-dropdown>
+              <button
+                onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
+                disabled={isAssigning}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
+              >
+                {isAssigning ? (
+                  <>
+                    <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Assigning...</span>
+                  </>
+                ) : (
+                  <>
+                    <User className="w-4 h-4 text-gray-400" />
+                    <span className="truncate flex-1 text-left">
+                      {assignedUser ? assignedUser.name : 'Assign to'}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  </>
+                )}
+              </button>
 
-            {isAssignDropdownOpen && !isAssigning && (
-              <div className="absolute right-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto animate-in fade-in duration-200">
-                <div className="py-1">
-                  <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                    Assign to User
-                  </div>
-                  {isLoadingUsers ? (
-                    <div className="px-4 py-2 text-sm text-gray-500 text-center">
-                      Loading users...
+              {isAssignDropdownOpen && !isAssigning && (
+                <div className="absolute right-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto animate-in fade-in duration-200">
+                  <div className="py-1">
+                    <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                      Assign to User
                     </div>
-                  ) : users.length === 0 ? (
-                    <div className="px-4 py-2 text-sm text-gray-500 text-center">
-                      No users available
-                    </div>
-                  ) : (
-                    <>
-                      {/* Unassign option */}
-                      <button
-                        onClick={() => handleAssignToUser(0)}
-                        className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                          <X className="w-3 h-3 text-gray-500" />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <div className="font-medium">Unassigned</div>
-                        </div>
-                        {!assignedUser && (
-                          <Check className="w-4 h-4 text-blue-600" />
-                        )}
-                      </button>
-
-                      <div className="border-t border-gray-100 my-1"></div>
-
-                      {users.map((user) => (
+                    {isLoadingUsers ? (
+                      <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                        Loading users...
+                      </div>
+                    ) : users.length === 0 ? (
+                      <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                        No users available
+                      </div>
+                    ) : (
+                      <>
+                        {/* Unassign option */}
                         <button
-                          key={user.id}
-                          onClick={() => handleAssignToUser(user.id)}
-                          className={`w-full flex items-center space-x-3 px-3 py-2 text-sm transition-colors ${assignedUser?.id === user.id
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700 hover:bg-gray-50'
-                            }`}
+                          onClick={() => handleAssignToUser(0)}
+                          className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
-                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-medium text-blue-700">
-                              {user.name.charAt(0).toUpperCase()}
-                            </span>
+                          <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                            <X className="w-3 h-3 text-gray-500" />
                           </div>
                           <div className="flex-1 text-left">
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-xs text-gray-500">{user.email}</div>
-                            {user.roleNames && user.roleNames.length > 0 && (
-                              <div className="text-xs text-blue-600">
-                                {user.roleNames.join(', ')}
-                              </div>
-                            )}
+                            <div className="font-medium">Unassigned</div>
                           </div>
-                          {assignedUser?.id === user.id && (
+                          {!assignedUser && (
                             <Check className="w-4 h-4 text-blue-600" />
                           )}
                         </button>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* Stage Update Dropdown */}
-          <div className="relative" data-dropdown>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              disabled={isUpdatingStage}
-              className={`border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] transition-colors ${isUpdatingStage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
-            >
-              <div className={`w-2 h-2 rounded-full ${currentStage.color}`}></div>
-              <span className="flex-1 text-left">
-                {isUpdatingStage ? 'Updating...' : currentStage.name}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''
-                }`} />
-            </button>
+                        <div className="border-t border-gray-100 my-1"></div>
 
-            {isDropdownOpen && !isUpdatingStage && (
-              <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 animate-in fade-in duration-200">
-                <div className="py-1">
-                  <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                    Change Stage
+                        {users.map((user) => (
+                          <button
+                            key={user.id}
+                            onClick={() => handleAssignToUser(user.id)}
+                            className={`w-full flex items-center space-x-3 px-3 py-2 text-sm transition-colors ${assignedUser?.id === user.id
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-gray-700 hover:bg-gray-50'
+                              }`}
+                          >
+                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-medium text-blue-700">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex-1 text-left">
+                              <div className="font-medium">{user.name}</div>
+                              <div className="text-xs text-gray-500">{user.email}</div>
+                              {user.roleNames && user.roleNames.length > 0 && (
+                                <div className="text-xs text-blue-600">
+                                  {user.roleNames.join(', ')}
+                                </div>
+                              )}
+                            </div>
+                            {assignedUser?.id === user.id && (
+                              <Check className="w-4 h-4 text-blue-600" />
+                            )}
+                          </button>
+                        ))}
+                      </>
+                    )}
                   </div>
-                  {DEAL_STAGES.map((stageOption) => {
-                    const isCurrentStage = stageOption.backendStage.toLowerCase() === deal.stage?.toLowerCase();
-
-                    return (
-                      <button
-                        key={stageOption.backendStage}
-                        onClick={() => updateDealStage(stageOption.backendStage)}
-                        disabled={isCurrentStage}
-                        className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${isCurrentStage
-                          ? 'bg-blue-50 text-blue-700 cursor-default'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                          }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-2 h-2 rounded-full ${stageOption.color}`}></div>
-                          <span className="font-medium">{stageOption.name}</span>
-                        </div>
-                        {isCurrentStage && (
-                          <Check className="w-4 h-4 text-blue-600" />
-                        )}
-                      </button>
-                    );
-                  })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Stage Update Dropdown */}
+            <div className="relative" data-dropdown>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                disabled={isUpdatingStage}
+                className={`border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] transition-colors ${isUpdatingStage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${currentStage.color}`}></div>
+                <span className="flex-1 text-left">
+                  {isUpdatingStage ? 'Updating...' : currentStage.name}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''
+                  }`} />
+              </button>
+
+              {isDropdownOpen && !isUpdatingStage && (
+                <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 animate-in fade-in duration-200">
+                  <div className="py-1">
+                    <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                      Change Stage
+                    </div>
+                    {DEAL_STAGES.map((stageOption) => {
+                      const isCurrentStage = stageOption.backendStage.toLowerCase() === deal.stage?.toLowerCase();
+
+                      return (
+                        <button
+                          key={stageOption.backendStage}
+                          onClick={() => updateDealStage(stageOption.backendStage)}
+                          disabled={isCurrentStage}
+                          className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between transition-colors ${isCurrentStage
+                            ? 'bg-blue-50 text-blue-700 cursor-default'
+                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                            }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-2 h-2 rounded-full ${stageOption.color}`}></div>
+                            <span className="font-medium">{stageOption.name}</span>
+                          </div>
+                          {isCurrentStage && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

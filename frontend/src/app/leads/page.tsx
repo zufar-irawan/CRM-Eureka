@@ -226,7 +226,11 @@ export default function MainLeads() {
     fetchUsers();
 
     const refreshLeads = () => {
-      fetchLeads()
+      if (user?.isSales) {
+        fetchLeadsForSales()
+      } else {
+        fetchLeads()
+      }
     }
 
     window.addEventListener("lead-created", refreshLeads)
@@ -379,7 +383,11 @@ export default function MainLeads() {
   };
 
   const handleRefresh = async () => {
-    await fetchLeads();
+    if (user?.isSales) {
+      await fetchLeadsForSales()
+    } else {
+      await fetchLeads()
+    }
   };
 
   const handleEditLead = (lead: any) => {

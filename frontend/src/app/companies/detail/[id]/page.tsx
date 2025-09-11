@@ -18,6 +18,7 @@ import {
 import Swal from 'sweetalert2';
 import { checkAuthStatus } from '../../../../../utils/auth';
 import CompaniesModal from '../../edit/editModal';
+import useUser from '../../../../../hooks/useUser';
 
 interface Company {
   id: number;
@@ -46,6 +47,7 @@ interface Company {
 }
 
 const CompanyDetailPage = () => {
+  const { user } = useUser()
   const router = useRouter();
   const params = useParams();
   const companyId = params.id;
@@ -54,6 +56,7 @@ const CompanyDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State untuk modal edit
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -260,22 +263,25 @@ const CompanyDetailPage = () => {
                 <p className="text-sm text-slate-600">Company Details</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleEditCompany}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 text-sm transition-colors"
-              >
-                <Edit className="w-3.5 h-3.5" />
-                Edit
-              </button>
-              <button
-                onClick={handleDeleteCompany}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </button>
-            </div>
+
+            {userValidation && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleEditCompany}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 text-sm transition-colors"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  Edit
+                </button>
+                <button
+                  onClick={handleDeleteCompany}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

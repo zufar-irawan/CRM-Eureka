@@ -20,6 +20,7 @@ import {
 import Swal from 'sweetalert2';
 import { checkAuthStatus } from '../../../../../utils/auth';
 import ContactModal from '../../edit/editModal';
+import useUser from '../../../../../hooks/useUser';
 
 interface Contact {
   id: number;
@@ -81,6 +82,7 @@ interface Task {
 }
 
 const ContactDetailPage = () => {
+  const { user } = useUser()
   const router = useRouter();
   const params = useParams();
   const contactId = params.id;
@@ -342,6 +344,7 @@ const ContactDetailPage = () => {
   const nameParts = contact.name.split(' ');
   const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(' ');
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -363,22 +366,25 @@ const ContactDetailPage = () => {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleEditContact}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 text-sm transition-colors"
-              >
-                <Edit className="w-3.5 h-3.5" />
-                Edit
-              </button>
-              <button
-                onClick={handleDeleteContact}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete
-              </button>
-            </div>
+
+            {userValidation && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleEditContact}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 text-sm transition-colors"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  Edit
+                </button>
+                <button
+                  onClick={handleDeleteContact}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 text-sm transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

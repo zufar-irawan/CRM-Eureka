@@ -9,6 +9,7 @@ import { useUsers } from "../../../../leads/detail/[id]/hooks/useUsers";
 import { useLeadUser } from "../hooks/useLeadUser";
 import TaskResultWithAttachment from './TaskResultWithAttachment';
 import Swal from 'sweetalert2';
+import useUser from '../../../../../../hooks/useUser';
 
 interface TaskHeaderProps {
   task: Task | null;
@@ -27,6 +28,7 @@ export default function TaskHeader({
   onStatusChange,
   onAssignmentChange
 }: TaskHeaderProps) {
+  const { user } = useUser()
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isAssignDropdownOpen, setIsAssignDropdownOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -204,6 +206,8 @@ export default function TaskHeader({
     return statusOption?.color || 'bg-gray-500';
   };
 
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
+
   const isOverdue = task && new Date(task.due_date) < new Date() && task.status !== 'completed';
 
   if (!task) {
@@ -269,123 +273,125 @@ export default function TaskHeader({
             )}
           </div>
 
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <button
-                onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
-                disabled={isAssigning}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
-              >
-                {isAssigning ? (
-                  <>
-                    <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Assigning...</span>
-                  </>
-                ) : (
-                  <>
-                    <User className="w-4 h-4 text-gray-400" />
-                    <span className="truncate">
-                      {assignedUser ? assignedUser.name : 'Assign to'}
-                    </span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </>
-                )}
-              </button>
+          {userValidation && (
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <button
+                  onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
+                  disabled={isAssigning}
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
+                >
+                  {isAssigning ? (
+                    <>
+                      <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Assigning...</span>
+                    </>
+                  ) : (
+                    <>
+                      <User className="w-4 h-4 text-gray-400" />
+                      <span className="truncate">
+                        {assignedUser ? assignedUser.name : 'Assign to'}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </>
+                  )}
+                </button>
 
-              {isAssignDropdownOpen && !isAssigning && (
-                <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-20 max-h-64 overflow-y-auto">
-                  <div className="py-1">
-                    {isLoadingUsers ? (
-                      <div className="px-4 py-2 text-sm text-gray-500 text-center">
-                        Loading users...
-                      </div>
-                    ) : users.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-gray-500 text-center">
-                        No users available
-                      </div>
-                    ) : (
-                      users.map((user) => (
-                        <button
-                          key={user.id}
-                          onClick={() => handleAssignToUser(user.id)}
-                          className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${assignedUser?.id === user.id ? 'bg-gray-50 font-medium' : ''
-                            }`}
-                        >
-                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-medium text-blue-700">
-                              {user.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="flex-1 text-left">
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-xs text-gray-500">{user.email}</div>
-                          </div>
-                          {assignedUser?.id === user.id && (
-                            <span className="text-blue-600">✓</span>
-                          )}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              {task.status === 'completed' ? (
-                // Completed task - status is locked and cannot be changed
-                <div className="border border-green-300 rounded-md px-3 py-2 text-sm bg-green-50 text-green-800 flex items-center space-x-2 cursor-not-allowed opacity-75">
-                  <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
-                  <span className="capitalize font-medium">{task.status}</span>
-                  <div className="w-4 h-4 flex items-center justify-center">
-                  </div>
-                </div>
-              ) : (
-                // Non-completed task - status can be changed
-                <>
-                  <button
-                    onClick={() => !isUpdating && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                    disabled={isUpdating}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isUpdating ? (
-                      <>
-                        <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span>Updating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
-                        <span className="capitalize">{task.status}</span>
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      </>
-                    )}
-                  </button>
-
-                  {isStatusDropdownOpen && !isUpdating && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                      <div className="py-1">
-                        {TASK_STATUS_OPTIONS.map((status) => (
+                {isAssignDropdownOpen && !isAssigning && (
+                  <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-20 max-h-64 overflow-y-auto">
+                    <div className="py-1">
+                      {isLoadingUsers ? (
+                        <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                          Loading users...
+                        </div>
+                      ) : users.length === 0 ? (
+                        <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                          No users available
+                        </div>
+                      ) : (
+                        users.map((user) => (
                           <button
-                            key={status.value}
-                            onClick={() => handleStatusChange(status.value)}
-                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.value === task.status ? 'bg-gray-50 font-medium' : ''
+                            key={user.id}
+                            onClick={() => handleAssignToUser(user.id)}
+                            className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${assignedUser?.id === user.id ? 'bg-gray-50 font-medium' : ''
                               }`}
                           >
-                            <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
-                            <span className="capitalize">{status.label}</span>
-                            {status.value === task.status && (
-                              <span className="ml-auto text-blue-600">✓</span>
+                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-medium text-blue-700">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex-1 text-left">
+                              <div className="font-medium">{user.name}</div>
+                              <div className="text-xs text-gray-500">{user.email}</div>
+                            </div>
+                            {assignedUser?.id === user.id && (
+                              <span className="text-blue-600">✓</span>
                             )}
                           </button>
-                        ))}
-                      </div>
+                        ))
+                      )}
                     </div>
-                  )}
-                </>
-              )}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative">
+                {task.status === 'completed' ? (
+                  // Completed task - status is locked and cannot be changed
+                  <div className="border border-green-300 rounded-md px-3 py-2 text-sm bg-green-50 text-green-800 flex items-center space-x-2 cursor-not-allowed opacity-75">
+                    <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
+                    <span className="capitalize font-medium">{task.status}</span>
+                    <div className="w-4 h-4 flex items-center justify-center">
+                    </div>
+                  </div>
+                ) : (
+                  // Non-completed task - status can be changed
+                  <>
+                    <button
+                      onClick={() => !isUpdating && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                      disabled={isUpdating}
+                      className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isUpdating ? (
+                        <>
+                          <div className="w-2 h-2 border border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                          <span>Updating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
+                          <span className="capitalize">{task.status}</span>
+                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                        </>
+                      )}
+                    </button>
+
+                    {isStatusDropdownOpen && !isUpdating && (
+                      <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                        <div className="py-1">
+                          {TASK_STATUS_OPTIONS.map((status) => (
+                            <button
+                              key={status.value}
+                              onClick={() => handleStatusChange(status.value)}
+                              className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 ${status.value === task.status ? 'bg-gray-50 font-medium' : ''
+                                }`}
+                            >
+                              <div className={`w-2 h-2 rounded-full ${status.color}`}></div>
+                              <span className="capitalize">{status.label}</span>
+                              {status.value === task.status && (
+                                <span className="ml-auto text-blue-600">✓</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

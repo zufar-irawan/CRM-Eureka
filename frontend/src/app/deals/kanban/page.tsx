@@ -10,9 +10,11 @@ import Header from '@/components/Header';
 import { usePathname, useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { checkAuthStatus } from '../../../../utils/auth';
+import useUser from '../../../../hooks/useUser';
 
 export default function DealsKanban() {
     const router = useRouter();
+    const { user } = useUser()
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -100,9 +102,10 @@ export default function DealsKanban() {
                 mobileno: deal.lead?.phone || deal.contact?.phone || "-",
             }),
             filterBy: filterOption,
-            searchTerm: searchTerm
+            searchTerm: searchTerm,
+            owner: user?.isSales ? user.id : undefined
         })
-    }, [filterOption, searchTerm])
+    }, [filterOption, searchTerm, user])
 
     const handleRefresh = () => {
         fetchDataWithFilter()
@@ -110,8 +113,10 @@ export default function DealsKanban() {
 
     // Initial data fetch
     useEffect(() => {
-        fetchDataWithFilter()
-    }, [fetchDataWithFilter]);
+        if (user) {
+            fetchDataWithFilter()
+        }
+    }, [fetchDataWithFilter, user]);
 
     // Filter effect - PERBAIKAN: Memanggil fungsi fetchDataWithFilter()
     useEffect(() => {

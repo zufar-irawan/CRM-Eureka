@@ -293,7 +293,7 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
       )}
 
       {/* Quick Action Buttons */}
-      {!showNewComment && comments.length > 0 && !replyingTo && (
+      {/* {!showNewComment && comments.length > 0 && !replyingTo && (
         <div className="flex items-center justify-center space-x-4 mt-8 pt-6 border-t border-gray-200">
           <button
             onClick={() => setShowNewComment(true)}
@@ -313,7 +313,7 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
             </button>
           )}
         </div>
-      )}
+      )} */}
 
       {/* Footer Stats */}
       {totalComments > 0 && (

@@ -278,17 +278,18 @@ export default function Dashboard() {
                     </p>
 
                     {/* Button Add Task - Di sebelah kanan */}
-                    <button
-                        onClick={() => setIsTaskModalOpen(true)}
-                        className="relative inline-block group"
-                    >
-                        <span className="relative flex hover:scale-105 text-sm bg-black hover:bg-gray-800 rounded-md overflow-hidden transition-all px-4 py-2 text-white items-center">
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                            <span className="relative z-10 flex items-center">
-                                <span className="mr-1.5">+</span> Add Task
+                    {user?.isAsmen || user?.isManager ? "" : (
+                        <button
+                            onClick={() => setIsTaskModalOpen(true)}
+                            className="relative inline-block group"
+                        >
+                            <span className="relative flex hover:scale-105 text-sm bg-black hover:bg-gray-800 rounded-md overflow-hidden transition-all px-4 py-2 text-white items-center">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                <span className="relative z-10 flex items-center">
+                                    <span className="mr-1.5">+</span> Add Task
+                                </span>
                             </span>
-                        </span>
-                    </button>
+                        </button>)}
                 </header>
 
                 <main className="px-6 py-4 space-y-4 flex-1 overflow-hidden flex flex-col">

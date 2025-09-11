@@ -12,6 +12,7 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import useUser from "../../../hooks/useUser";
 
 export interface Column {
   key: string;
@@ -229,6 +230,10 @@ export default function DesktopTable({
     }
   };
 
+  const { user } = useUser()
+
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
+
   return (
     <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200">
       <table className="w-full relative">
@@ -255,9 +260,12 @@ export default function DesktopTable({
                   </div>
                 </th>
               ))}
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
-            </th>
+
+            {userValidation && (
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            )}
           </tr>
         </thead>
 
@@ -301,66 +309,69 @@ export default function DesktopTable({
                     </td>
                   ))}
 
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  <div className="relative" data-action-menu>
-                    <button
-                      className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActionMenuOpenId(
-                          row.id.toString() === actionMenuOpenId
-                            ? null
-                            : row.id.toString()
-                        );
-                      }}
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
+                {userValidation && (
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    <div className="relative" data-action-menu>
+                      <button
+                        className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActionMenuOpenId(
+                            row.id.toString() === actionMenuOpenId
+                              ? null
+                              : row.id.toString()
+                          );
+                        }}
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
 
-                    {actionMenuOpenId === row.id.toString() && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActionMenuOpenId(null);
-                          }}
-                        />
+                      {actionMenuOpenId === row.id.toString() && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActionMenuOpenId(null);
+                            }}
+                          />
 
-                        <div
-                          className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${data.indexOf(row) >= data.length - 2
-                            ? "bottom-full mb-1"
-                            : "top-full mt-1"
-                            }`}
-                        >
-                          <div className="py-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEdit?.(row);
-                                setActionMenuOpenId(null);
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete([row.id.toString()]);
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Delete
-                            </button>
+                          <div
+                            className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${data.indexOf(row) >= data.length - 2
+                              ? "bottom-full mb-1"
+                              : "top-full mt-1"
+                              }`}
+                          >
+                            <div className="py-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEdit?.(row);
+                                  setActionMenuOpenId(null);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete([row.id.toString()]);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </td>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                )}
+
               </tr>
             ))
           )}

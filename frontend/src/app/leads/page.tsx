@@ -600,6 +600,8 @@ export default function MainLeads() {
     );
   };
 
+  const userRoleValidation = user?.isSales || user?.isAdmin || user?.isGl
+
   const renderCellContent = (lead: any, columnKey: string) => {
     switch (columnKey) {
       case 'name':
@@ -861,9 +863,11 @@ export default function MainLeads() {
                   );
                 })}
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider right-0 bg-gray-50 z-10">
-                  Actions
-                </th>
+                {userRoleValidation && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider right-0 bg-gray-50 z-10">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
 
@@ -892,60 +896,63 @@ export default function MainLeads() {
                     </td>
                   ))}
 
-                  <td className="px-6 py-4 text-sm text-gray-500 right-0 bg-white" onClick={(e) => e.stopPropagation()}>
-                    <div className="relative" data-action-menu>
-                      <button
-                        className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
-                        }}
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
+                  {userRoleValidation && (
+                    <td className="px-6 py-4 text-sm text-gray-500 right-0 bg-white" onClick={(e) => e.stopPropagation()}>
+                      <div className="relative" data-action-menu>
+                        <button
+                          className="text-gray-400 hover:text-gray-600 mx-auto p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionMenuOpenId(lead.id.toString() === actionMenuOpenId ? null : lead.id.toString())
+                          }}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
 
-                      {actionMenuOpenId === lead.id.toString() && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActionMenuOpenId(null);
-                            }}
-                          />
+                        {actionMenuOpenId === lead.id.toString() && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActionMenuOpenId(null);
+                              }}
+                            />
 
-                          <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
-                            ? 'bottom-full mb-1'
-                            : 'top-full mt-1'
-                            }`}>
-                            <div className="py-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditLead(lead);
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                <Edit className="w-4 h-4" />
-                                Edit
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openDeleteModal([lead.id.toString()]);
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </button>
+                            <div className={`absolute right-0 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden action-menu ${leads.indexOf(lead) >= leads.length - 2
+                              ? 'bottom-full mb-1'
+                              : 'top-full mt-1'
+                              }`}>
+                              <div className="py-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditLead(lead);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openDeleteModal([lead.id.toString()]);
+                                  }}
+                                  className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </>
-                      )}
+                          </>
+                        )}
 
-                    </div>
-                  </td>
+                      </div>
+                    </td>
+                  )}
+
                 </tr>
               ))}
             </tbody>

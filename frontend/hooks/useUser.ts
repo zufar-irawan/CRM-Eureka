@@ -13,8 +13,9 @@ interface User {
   primaryRole?: string;
   isAdmin?: boolean;
   isSales?: boolean;
-  isPartnership?: boolean;
-  isAkunting?: boolean;
+  isManager?: boolean;
+  isAsmen?: boolean;
+  isGl?: boolean;
 }
 
 export default function useUser() {

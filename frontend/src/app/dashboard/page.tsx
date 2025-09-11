@@ -330,7 +330,7 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="flex-1">
+                        <div className="flex-2">
                             <EmptySection />
                         </div>
                     </div>

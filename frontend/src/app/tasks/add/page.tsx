@@ -8,6 +8,7 @@ import { PlusIcon, X, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react"
 import Swal from "sweetalert2";
 import CreateLeadModal from "../../leads/add/AddLeadModal";
+import useUser from "../../../../hooks/useUser";
 
 interface Props {
     onClose: () => void;
@@ -25,6 +26,7 @@ export type TasksForm = {
 }
 
 export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
+    const { user } = useUser();
     const [form, setForm] = useState<TasksForm>({
         lead_id: 0,
         assigned_to: 0,
@@ -42,7 +44,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
     useEffect(() => {
         const fetchLeads = async () => {
             try {
-                const res = await fetch("http://localhost:3000/api/leads", {
+                const res = await fetch("http://localhost:5000/api/leads", {
                     credentials: 'include',
                 })
                 const result = await res.json()
@@ -60,38 +62,54 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
         }
 
         const fetchUsers = async () => {
+            if (!user) return; // Wait for user data to be loaded
+
             try {
-                const res = await fetch("http://localhost:3000/api/users/role/sales", {
-                    credentials: 'include',
-                })
-                const result = await res.json()
-                console.log("API Result:", result)
+                if (user.roles && user.roles.some((role: any) => role.name === 'sales')) {
+                    setUserOptions([{ value: user.id, label: user.name }]);
+                    setForm(prevForm => ({ ...prevForm, assigned_to: user.id }));
+                } else {
+                    const res = await fetch("http://localhost:5000/api/users/role/sales", {
+                        credentials: 'include',
+                    });
+                    const result = await res.json();
+                    
+                    if (!res.ok) {
+                        throw new Error(result.message || "Failed to fetch users");
+                    }
 
-                const data = result.data
+                    const data = result.data;
 
-                if (!Array.isArray(data)) {
-                    throw new Error("Data users is not an array");
+                    if (!Array.isArray(data)) {
+                        // It's possible the API returns an object when no users are found.
+                        // In that case, we can just set the options to an empty array.
+                        if (typeof data === 'object' && data !== null) {
+                            setUserOptions([]);
+                            return;
+                        }
+                        throw new Error("Data users is not an array");
+                    }
+
+                    const mappedOptions = data.map((user: any) => ({
+                        value: user.id,
+                        label: user.name,
+                    }));
+
+                    setUserOptions(mappedOptions);
                 }
-
-                const mappedOptions = data.map((user: any) => ({
-                    value: user.id,
-                    label: user.name,
-                }))
-
-                setUserOptions(mappedOptions)
             } catch (error) {
-                console.error("Failed to fetch users", error)
+                console.error("Failed to fetch users:", error);
             }
-        }
+        };
 
-        fetchLeads()
-        fetchUsers()
-    }, [])
+        fetchLeads();
+        fetchUsers();
+    }, [user])
 
     // Refresh leads when returning from lead modal
     const refreshLeads = async () => {
         try {
-            const res = await fetch("http://localhost:3000/api/leads", {
+            const res = await fetch("http://localhost:5000/api/leads", {
                 credentials: 'include',
             })
             const result = await res.json()
@@ -155,7 +173,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
 
             console.log("Data to submit:", submitData);
 
-            const response = await fetch("http://localhost:3000/api/tasks", {
+            const response = await fetch("http://localhost:5000/api/tasks", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

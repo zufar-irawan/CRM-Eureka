@@ -1,6 +1,12 @@
 //leadsRoutes.js
 import express from 'express';
-import authMiddleware from '../middleware/authMiddleware.js';
+import authMiddleware, {
+    requireRole,
+    requireAdmin,
+    requireManagerLevel,
+    requireAsmenLevel,
+    requireGLLevel
+} from '../middleware/authMiddleware.js';
 import { addTeamAccess } from '../middleware/hierarchyMiddleware.js';
 import {
     getLeads,

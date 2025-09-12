@@ -392,7 +392,7 @@ export const getUsersByRole = async (req, res) => {
                 validRoles: validRoles 
             });
         }
-        
+            
         let includeOptions = [
             {
                 model: Role,

@@ -3,8 +3,7 @@ import { User } from "../models/usersModel.js";
 
 export const getTeamMemberIds = async (userId, userRoles) => {
     try {
-        const teamIds = [userId]; // Always include self
-
+        const teamIds = [userId]; 
         const user = await User.findByPk(userId);
         if (user) {
             if (user.gl_id) teamIds.push(user.gl_id);
@@ -12,13 +11,11 @@ export const getTeamMemberIds = async (userId, userRoles) => {
             if (user.manager_id) teamIds.push(user.manager_id);
         }
 
-        // Admin can access everyone
         if (userRoles.includes('admin')) {
             const allUsers = await User.findAll({ attributes: ['id'] });
             return allUsers.map(user => user.id);
         }
 
-        // Manager can access all users under them
         if (userRoles.includes('manager')) {
             const subordinates = await User.findAll({
                 where: { manager_id: userId },
@@ -27,15 +24,12 @@ export const getTeamMemberIds = async (userId, userRoles) => {
             teamIds.push(...subordinates.map(user => user.id));
         }
 
-        // Asmen can access GLs and Sales under them
         if (userRoles.includes('asmen')) {
             const gls = await User.findAll({
                 where: { asmen_id: userId },
                 attributes: ['id']
             });
             teamIds.push(...gls.map(user => user.id));
-
-            // Also get sales under these GLs
             if (gls.length > 0) {
                 const sales = await User.findAll({
                     where: { gl_id: gls.map(gl => gl.id) },
@@ -45,7 +39,6 @@ export const getTeamMemberIds = async (userId, userRoles) => {
             }
         }
 
-        // GL can access Sales under them
         if (userRoles.includes('gl')) {
             const sales = await User.findAll({
                 where: { gl_id: userId },
@@ -54,14 +47,13 @@ export const getTeamMemberIds = async (userId, userRoles) => {
             teamIds.push(...sales.map(user => user.id));
         }
 
-        return [...new Set(teamIds)]; // Remove duplicates
+        return [...new Set(teamIds)]; 
     } catch (error) {
         console.error('Error getting team member IDs:', error);
-        return [userId]; // Fallback to only self
+        return [userId]; 
     }
 };
 
-// Middleware to add team member access to request
 export const addTeamAccess = async (req, res, next) => {
     try {
         if (!req.userId || !req.userRoles) {
@@ -70,7 +62,6 @@ export const addTeamAccess = async (req, res, next) => {
 
         req.teamMemberIds = await getTeamMemberIds(req.userId, req.userRoles);
         
-        // Add permission flags
         req.permissions = {
             isAdmin: req.userRoles.includes('admin'),
             isManager: req.userRoles.includes('manager'),
@@ -90,15 +81,12 @@ export const addTeamAccess = async (req, res, next) => {
     }
 };
 
-// Check if user can access specific resource owner
 export const canAccessResourceOwner = (resourceOwnerId) => {
     return (req, res, next) => {
-        // Admin can access everything
         if (req.permissions && req.permissions.isAdmin) {
             return next();
         }
 
-        // Check if resource owner is in user's team
         if (req.teamMemberIds && req.teamMemberIds.includes(parseInt(resourceOwnerId))) {
             return next();
         }
@@ -110,26 +98,23 @@ export const canAccessResourceOwner = (resourceOwnerId) => {
     };
 };
 
-// Middleware to filter data based on hierarchy
 export const applyHierarchyFilter = (req, res, next) => {
     if (!req.permissions) {
         return res.status(401).json({ message: "Permission check required" });
     }
 
-    // Admin sees everything
     if (req.permissions.isAdmin) {
         req.dataFilter = {};
         return next();
     }
 
-    // Others see based on their team
     if (req.teamMemberIds && req.teamMemberIds.length > 0) {
         req.dataFilter = {
-            owner: req.teamMemberIds // This should be adapted based on your data structure
+            owner: req.teamMemberIds 
         };
     } else {
         req.dataFilter = {
-            owner: req.userId // Fallback to only own data
+            owner: req.userId 
         };
     }
 

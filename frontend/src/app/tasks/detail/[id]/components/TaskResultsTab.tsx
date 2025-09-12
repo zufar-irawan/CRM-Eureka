@@ -6,6 +6,7 @@ import type { CurrentUser, TaskResult } from '../types';
 import { useTaskResults } from '../hooks/useTaskResults';
 import TaskResultItem from './TaskResultItem';
 import TaskResultWithAttachment from './TaskResultWithAttachment';
+import useUser from '../../../../../../hooks/useUser';
 
 interface TaskResultsTabProps {
   taskId: string | string[] | undefined;
@@ -15,6 +16,9 @@ interface TaskResultsTabProps {
 
 export default function TaskResultsTab({ taskId, currentUser, refreshComments }: TaskResultsTabProps) {
   const [showAddResult, setShowAddResult] = useState(false);
+
+  const { user } = useUser()
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
 
   const {
     results,
@@ -36,15 +40,15 @@ export default function TaskResultsTab({ taskId, currentUser, refreshComments }:
     try {
       // Refresh results first
       await fetchResults();
-      
+
       // Hide the add result form
       setShowAddResult(false);
-      
+
       // Refresh comments in parent component
       if (refreshComments) {
         refreshComments();
       }
-      
+
       console.log('✅ Auto-refresh completed after adding result');
     } catch (error) {
       console.error('Error during auto-refresh:', error);
@@ -93,8 +97,8 @@ export default function TaskResultsTab({ taskId, currentUser, refreshComments }:
             </div>
           )}
         </div>
-        
-        {!showAddResult && (
+
+        {!showAddResult && userValidation && (
           <button
             onClick={handleAddResultClick}
             className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800 transition-colors"
@@ -144,26 +148,28 @@ export default function TaskResultsTab({ taskId, currentUser, refreshComments }:
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-3">No Results Yet</h3>
           <p className="text-gray-600 mb-6">Document the outcomes and results of this task</p>
-          <button
-            onClick={handleAddResultClick}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-          >
-            Add the first result
-          </button>
+          {userValidation && (
+            <button
+              onClick={handleAddResultClick}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              Add the first result
+            </button>
+          )}
         </div>
       ) : (
         /* Results List */
         <div className="space-y-4">
           {resultsArray.map((result) => (
-              <TaskResultItem
-                key={result.id}
-                result={result}
-                currentUser={currentUser}
-                onUpdate={handleResultUpdated}
-                onDelete={handleResultDeleted}
-                attachments={result.attachments || []}
-              />
-            ))}
+            <TaskResultItem
+              key={result.id}
+              result={result}
+              currentUser={currentUser}
+              onUpdate={handleResultUpdated}
+              onDelete={handleResultDeleted}
+              attachments={result.attachments || []}
+            />
+          ))}
         </div>
       )}
 

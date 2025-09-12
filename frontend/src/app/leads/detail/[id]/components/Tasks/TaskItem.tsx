@@ -25,6 +25,7 @@ import { formatDate, getFirstChar, formatBytes } from '../../../../../tasks/deta
 import type { Task, CurrentUser } from '../../types';
 import { compressImage } from '../../../../../tasks/detail/[id]/utils/imageCompression';
 import Swal from 'sweetalert2';
+import useUser from '../../../../../../../hooks/useUser';
 
 // Import constants - adjust path as needed
 const TASK_API_ENDPOINTS = {
@@ -43,7 +44,7 @@ const RESULT_TYPES = [
   },
   {
     value: "call",
-    label: "Phone Call", 
+    label: "Phone Call",
     color: "bg-green-500 text-white",
   },
   {
@@ -126,6 +127,8 @@ export default function TaskItem({
   const [isUploading, setIsUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewAttachment, setPreviewAttachment] = useState<TaskAttachment | null>(null);
+
+  const { user } = useUser()
 
   // Ref untuk cancel request jika component unmount
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -302,11 +305,11 @@ export default function TaskItem({
               maxWidthOrHeight: 1920,
               useWebWorker: true
             });
-            
+
             return new File(
-              [compressed], 
+              [compressed],
               file.name,
-              { 
+              {
                 type: compressed.type || file.type,
                 lastModified: Date.now()
               }
@@ -333,7 +336,7 @@ export default function TaskItem({
   const handleStatusChange = async (newStatus: 'pending' | 'completed' | 'cancelled') => {
     setIsUpdating(true);
     setShowStatusDropdown(false);
-    
+
     try {
       await onUpdateStatus(task.id, newStatus);
 
@@ -347,7 +350,7 @@ export default function TaskItem({
 
   const handleDelete = async () => {
     setShowActionsDropdown(false);
-    
+
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
@@ -367,9 +370,9 @@ export default function TaskItem({
     e.preventDefault();
 
     if (!resultText.trim()) {
-      Swal.fire({ 
-        icon: 'error', 
-        title: 'Error', 
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
         text: 'Please enter a result',
         confirmButtonColor: '#3b82f6',
       });
@@ -418,7 +421,7 @@ export default function TaskItem({
           showConfirmButton: false,
           timerProgressBar: true,
         });
-        
+
         setResultText('');
         setResultType('note');
         setFiles([]);
@@ -470,14 +473,13 @@ export default function TaskItem({
     }
   };
 
-  const canEditTask = currentUser?.role === 'admin' || task.assigned_to === currentUser?.id;
+  const canEditTask = task.assigned_to === currentUser?.id || user?.isAdmin || user?.isGl || user?.isSales
 
   return (
     <>
       <div>
-        <div className={`border p-4 bg-white hover:shadow-md transition-all duration-200 ${
-          isCompleted ? 'bg-gray-50 border-gray-200 rounded-t-lg' : 'border-gray-200 rounded-lg'
-        } ${isOverdue ? 'border-l-4 border-l-red-500' : ''}`}>
+        <div className={`border p-4 bg-white hover:shadow-md transition-all duration-200 ${isCompleted ? 'bg-gray-50 border-gray-200 rounded-t-lg' : 'border-gray-200 rounded-lg'
+          } ${isOverdue ? 'border-l-4 border-l-red-500' : ''}`}>
           <div className="flex items-start justify-between">
             <div className="flex items-start flex-1">
               <div className="flex-1 min-w-0">
@@ -544,9 +546,8 @@ export default function TaskItem({
                   <button
                     onClick={() => setShowStatusDropdown(!showStatusDropdown)}
                     disabled={isUpdating}
-                    className={`flex items-center space-x-1 px-3 py-2 text-xs font-medium rounded-full border transition-colors ${
-                      getStatusColor(task.status)
-                    } hover:bg-opacity-80 disabled:opacity-50`}
+                    className={`flex items-center space-x-1 px-3 py-2 text-xs font-medium rounded-full border transition-colors ${getStatusColor(task.status)
+                      } hover:bg-opacity-80 disabled:opacity-50`}
                   >
                     {isUpdating ? (
                       <>
@@ -568,9 +569,8 @@ export default function TaskItem({
                         <div className="py-1">
                           <button
                             onClick={() => handleStatusChange('pending')}
-                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${
-                              task.status === 'pending' ? 'bg-yellow-50 text-yellow-800' : 'text-gray-700'
-                            }`}
+                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${task.status === 'pending' ? 'bg-yellow-50 text-yellow-800' : 'text-gray-700'
+                              }`}
                           >
                             <Circle className="w-3 h-3" />
                             <span>Pending</span>
@@ -578,9 +578,8 @@ export default function TaskItem({
 
                           <button
                             onClick={() => handleStatusChange('completed')}
-                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${
-                              task.status === 'completed' ? 'bg-green-50 text-green-800' : 'text-gray-700'
-                            }`}
+                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${task.status === 'completed' ? 'bg-green-50 text-green-800' : 'text-gray-700'
+                              }`}
                           >
                             <CheckCircle2 className="w-3 h-3" />
                             <span>Completed</span>
@@ -588,9 +587,8 @@ export default function TaskItem({
 
                           <button
                             onClick={() => handleStatusChange('cancelled')}
-                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${
-                              task.status === 'cancelled' ? 'bg-red-50 text-red-800' : 'text-gray-700'
-                            }`}
+                            className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 flex items-center space-x-2 ${task.status === 'cancelled' ? 'bg-red-50 text-red-800' : 'text-gray-700'
+                              }`}
                           >
                             <X className="w-3 h-3" />
                             <span>Cancelled</span>
@@ -673,10 +671,10 @@ export default function TaskItem({
                     {result.attachments.map((attachment) => {
                       const FileIcon = getFileTypeIcon(attachment.file_type);
                       const colorClass = getFileTypeColor(attachment.file_type);
-                      
+
                       return (
-                        <div 
-                          key={attachment.id} 
+                        <div
+                          key={attachment.id}
                           className="group flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                         >
                           <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${colorClass}`}>
@@ -692,26 +690,26 @@ export default function TaskItem({
                           </div>
                           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             {attachment.file_type === 'image' && (
-                              <button 
+                              <button
                                 onClick={() => handleImagePreview(attachment)}
-                                className="p-2 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50" 
+                                className="p-2 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50"
                                 title="Preview"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                             )}
                             {(attachment.view_url || attachment.file_type !== 'image') && (
-                              <button 
-                                onClick={() => handleView(attachment)} 
-                                className="p-2 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50" 
+                              <button
+                                onClick={() => handleView(attachment)}
+                                className="p-2 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50"
                                 title="View"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                             )}
-                            <button 
-                              onClick={() => handleDownload(attachment)} 
-                              className="p-2 text-gray-500 hover:text-green-600 rounded-full hover:bg-green-50" 
+                            <button
+                              onClick={() => handleDownload(attachment)}
+                              className="p-2 text-gray-500 hover:text-green-600 rounded-full hover:bg-green-50"
                               title="Download"
                             >
                               <Download className="w-4 h-4" />
@@ -743,8 +741,8 @@ export default function TaskItem({
         <>
           <div
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-            onClick={() => { 
-              setShowResultModal(false); 
+            onClick={() => {
+              setShowResultModal(false);
               setResultText('');
               setFiles([]);
               setResultType('note');
@@ -758,7 +756,7 @@ export default function TaskItem({
                 <h2 className="text-lg font-semibold">Add Task Result</h2>
                 <button
                   onClick={() => {
-                    setShowResultModal(false); 
+                    setShowResultModal(false);
                     setResultText('');
                     setFiles([]);
                     setResultType('note');
@@ -769,7 +767,7 @@ export default function TaskItem({
                   <X className="w-5 h-5 text-gray-600" />
                 </button>
               </div>
-              
+
               <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
                 <form onSubmit={handleResultSubmit} className="space-y-4">
                   <div>
@@ -816,7 +814,7 @@ export default function TaskItem({
                       accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
                       disabled={isCompressing || isUploading}
                     />
-                    
+
                     {isCompressing && (
                       <div className="text-sm text-blue-600 mt-2 flex items-center">
                         <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
@@ -849,8 +847,8 @@ export default function TaskItem({
               <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={() => { 
-                    setShowResultModal(false); 
+                  onClick={() => {
+                    setShowResultModal(false);
                     setResultText('');
                     setFiles([]);
                     setResultType('note');

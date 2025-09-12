@@ -7,6 +7,7 @@ import { useComments } from '../../hooks/useComments';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
 import Swal from 'sweetalert2';
+import useUser from '../../../../../../../hooks/useUser';
 
 interface CommentsTabProps {
   leadId: string | string[] | undefined;
@@ -37,6 +38,8 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
     handleDeleteComment,
     handleReplyKeyPress,
   } = useComments(leadId);
+
+  const { user } = useUser()
 
   // Fetch comments on initial load and when leadId changes
   useEffect(() => {
@@ -161,6 +164,8 @@ export default function CommentsTab({ leadId, currentUser }: CommentsTabProps) {
       setNewComment('');
     }
   };
+
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
 
   return (
     <div className="p-6">

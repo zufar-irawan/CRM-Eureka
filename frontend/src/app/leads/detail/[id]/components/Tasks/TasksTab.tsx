@@ -7,6 +7,7 @@ import type { Task, CurrentUser } from '@/app/leads/detail/[id]/types';
 import { useTasks } from '../../hooks/useTasks';
 import CreateTaskModal from './CreateTaskModal';
 import TaskItem from './TaskItem';
+import useUser from '../../../../../../../hooks/useUser';
 
 interface TasksTabProps {
   currentUser: CurrentUser | null;
@@ -14,6 +15,7 @@ interface TasksTabProps {
 
 export default function TasksTab({ currentUser }: TasksTabProps) {
   const { id } = useParams();
+  const { user } = useUser()
   const leadId = typeof id === 'string' ? id : id?.[0];
 
   const {
@@ -38,6 +40,8 @@ export default function TasksTab({ currentUser }: TasksTabProps) {
     fetchTasks();
     setShowCreateModal(false);
   };
+
+  const userValidation = user?.isAdmin || user?.isGl || user?.isSales
 
   return (
     <div className="p-6">
@@ -66,13 +70,16 @@ export default function TasksTab({ currentUser }: TasksTabProps) {
             </div>
           )}
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Task</span>
-        </button>
+
+        {userValidation && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 hover:bg-gray-800 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Task</span>
+          </button>
+        )}
       </div>
 
       {/* Loading */}
@@ -125,7 +132,7 @@ export default function TasksTab({ currentUser }: TasksTabProps) {
       )}
 
       {/* Footer Action */}
-      {!showCreateModal && tasks.length > 0 && (
+      {/* {!showCreateModal && tasks.length > 0 && (
         <div className="flex items-center justify-center mt-8 pt-6 border-t border-gray-200">
           <button
             onClick={() => setShowCreateModal(true)}
@@ -135,7 +142,7 @@ export default function TasksTab({ currentUser }: TasksTabProps) {
             <span>Add Task</span>
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Footer Stats */}
       {taskStats.total > 0 && (

@@ -9,6 +9,8 @@ import { useEffect, useState } from "react"
 import Swal from "sweetalert2";
 import CreateLeadModal from "../../leads/add/AddLeadModal";
 import useUser from "../../../../hooks/useUser";
+import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface Props {
     onClose: () => void;
@@ -27,6 +29,17 @@ export type TasksForm = {
 
 export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
     const { user } = useUser();
+    const router = useRouter()
+
+    if (user?.isManager || user?.isAsmen) {
+        Swal.fire({
+            icon: "info",
+            title: "You're not authorized",
+            text: "you do not have permission to access this page",
+        });
+
+        router.replace("/tasks")
+    }
     const [form, setForm] = useState<TasksForm>({
         lead_id: 0,
         assigned_to: 0,
@@ -40,6 +53,8 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
     const [leadOptions, setLeadOptions] = useState<any[]>([])
     const [userOptions, setUserOptions] = useState<any[]>([])
     const [showLeadModal, setShowLeadModal] = useState(false);
+
+
 
     useEffect(() => {
         const fetchLeads = async () => {
@@ -73,7 +88,7 @@ export default function CreateTasksModal({ onClose, onTaskCreated }: Props) {
                         credentials: 'include',
                     });
                     const result = await res.json();
-                    
+
                     if (!res.ok) {
                         throw new Error(result.message || "Failed to fetch users");
                     }

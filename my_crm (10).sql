@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Sep 10, 2025 at 07:22 AM
+-- Generation Time: Sep 12, 2025 at 01:03 AM
 -- Server version: 8.0.30
 -- PHP Version: 8.2.28
 
@@ -316,7 +316,12 @@ INSERT INTO `leads` (`id`, `code`, `owner`, `company`, `title`, `first_name`, `l
 (25, 'LD-024', 2, 'PT Gaza', 'Mr', 'Raya', 'Gaza', 'Raya Gaza', 'Marketing', 'raya@gmail.com', 'gaza@gmail.com', '021-97593', '081465473456', NULL, 'https://maven-ai-webpage.vercel.app', 'Technology', 8095, 'Email Campaign', 'Converted', 'Hot', 'Jl. Yaman', 'Jakarta Timur', 'DKI Jakarta', '18383', 'Indonesia', 'ini dari gede', '2025-08-27 06:29:22', '2025-08-27 06:39:04', 1),
 (26, 'LD-025', NULL, NULL, 'Mr', 'Rayzaf', 'Gaza', 'Rayzaf Gaza', NULL, 'rayzan@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-08 04:37:50', '2025-09-08 07:34:52', 0),
 (27, 'LD-026', 2, NULL, 'Mr', 'arhan', 'pratama', 'arhan pratama', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Converted', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-09 01:11:40', '2025-09-09 01:12:10', 1),
-(28, 'LD-027', 2, NULL, 'Mr', 'irham', 'qodralullah', 'irham qodralullah', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-09 01:21:41', '2025-09-09 01:21:41', 0);
+(28, 'LD-027', 2, NULL, 'Mr', 'irham', 'qodralullah', 'irham qodralullah', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-09 01:21:41', '2025-09-09 01:21:41', 0),
+(29, 'LD-028', 11, NULL, 'Mr', 'yo', 'ga', 'yo ga', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-11 04:28:22', '2025-09-11 07:04:05', 0),
+(30, 'LD-029', 0, NULL, 'Mr', 'yoga', 'fahrezi', 'yoga fahrezi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-11 07:06:47', '2025-09-11 07:12:05', 0),
+(31, 'LD-030', 11, NULL, 'Mr', 'kaito', 'delux', 'kaito delux', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-11 07:15:36', '2025-09-11 07:17:13', 0),
+(32, 'LD-031', 7, NULL, 'Mr', 'roy', 'mimoshi', 'roy mimoshi', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-11 07:26:07', '2025-09-11 07:26:07', 0),
+(33, 'LD-032', 11, NULL, 'Mrs', 'yeremiah', 'yuliana', 'yeremiah yuliana', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'New', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-11 07:30:00', '2025-09-11 07:30:17', 0);
 
 -- --------------------------------------------------------
 
@@ -397,7 +402,10 @@ INSERT INTO `lead_comments` (`id`, `lead_id`, `parent_id`, `reply_level`, `user_
 (82, 23, NULL, 0, 2, 'Sales One', 'Stage changed from New to Contacted', '2025-08-28 03:33:06'),
 (83, 23, NULL, 0, 2, 'Sales One', 'Stage changed from Contacted to Qualification', '2025-08-29 03:50:14'),
 (86, 26, NULL, 0, 2, 'Sales One', 'Lead details updated:\n- first_name has been updated', '2025-09-08 06:56:09'),
-(87, 26, NULL, 0, 2, 'Sales One', 'Lead details updated:\n- email has been updated', '2025-09-08 07:34:52');
+(87, 26, NULL, 0, 2, 'Sales One', 'Lead details updated:\n- email has been updated', '2025-09-08 07:34:52'),
+(88, 29, NULL, 0, 7, 'GL Jakarta A1', 'Lead details updated:\n- owner has been updated', '2025-09-11 07:04:05'),
+(89, 30, NULL, 0, 7, 'GL Jakarta A1', 'Lead details updated:\n- owner has been updated', '2025-09-11 07:12:05'),
+(90, 31, NULL, 0, 7, 'GL Jakarta A1', 'Lead details updated:\n- owner has been updated', '2025-09-11 07:17:13');
 
 -- --------------------------------------------------------
 
@@ -541,6 +549,16 @@ CREATE TABLE `tasks` (
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `tasks`
+--
+
+INSERT INTO `tasks` (`id`, `code`, `lead_id`, `assigned_to`, `title`, `description`, `category`, `due_date`, `status`, `created_at`, `priority`, `created_by`, `updated_at`) VALUES
+(43, 'TK-001', 29, 11, 'tolong', 'tolong', 'Kanvasing', '2025-09-13 04:38:00', 'new', '2025-09-11 04:38:52', 'medium', 7, '2025-09-11 04:38:52'),
+(45, 'TK-002', 31, 11, 'tolong bos', 'yo tolong', 'Kanvasing', '2025-09-13 07:15:00', 'new', '2025-09-11 07:16:01', 'medium', 7, '2025-09-11 07:16:01'),
+(46, 'TK-003', 32, 11, 'mas tolong ya', 'tolong mas', 'Followup', '2025-09-13 07:26:00', 'new', '2025-09-11 07:26:27', 'medium', 7, '2025-09-11 07:26:27'),
+(47, 'TK-004', 33, 11, 'tolong dungs', 'tolong', 'Penawaran', '2025-09-12 07:30:00', 'new', '2025-09-11 07:30:17', 'medium', 7, '2025-09-11 07:30:17');
+
 -- --------------------------------------------------------
 
 --
@@ -683,25 +701,25 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `manager_id`, `asmen_id`, `gl_id`, `created_at`, `updated_at`) VALUES
-(1, 'Super Admin', 'admin@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(2, 'Manager Jakarta', 'manager.jakarta@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(3, 'Manager Bandung', 'manager.bandung@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(4, 'Asmen Jakarta A', 'asmen.jkt.a@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(5, 'Asmen Jakarta B', 'asmen.jkt.b@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(6, 'Asmen Bandung A', 'asmen.bdg.a@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(7, 'GL Jakarta A1', 'gl.jkt.a1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(8, 'GL Jakarta A2', 'gl.jkt.a2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(9, 'GL Jakarta B1', 'gl.jkt.b1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(10, 'GL Bandung A1', 'gl.bdg.a1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(11, 'Sales Jakarta A1-1', 'sales.jkt.a1.1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(12, 'Sales Jakarta A1-2', 'sales.jkt.a1.2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(13, 'Sales Jakarta A1-3', 'sales.jkt.a1.3@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(14, 'Sales Jakarta A2-1', 'sales.jkt.a2.1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 8, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(15, 'Sales Jakarta A2-2', 'sales.jkt.a2.2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 8, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(16, 'Sales Jakarta B1-1', 'sales.jkt.b1.1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, 9, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(17, 'Sales Jakarta B1-2', 'sales.jkt.b1.2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, 9, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(18, 'Sales Bandung A1-1', 'sales.bdg.a1.1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, 10, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
-(19, 'Sales Bandung A1-2', 'sales.bdg.a1.2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, 10, '2025-09-10 13:32:00', '2025-09-10 13:32:00');
+(1, 'Admin', 'admin@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(2, 'Manager 1', 'manager1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(3, 'Manager 2', 'manager2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', NULL, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(4, 'Asmen A', 'asmenA@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(5, 'Asmen B', 'asmenB@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(6, 'Asmen C', 'asmenC@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, NULL, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(7, 'GL A', 'glA@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(8, 'GL B', 'glB@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(9, 'GL C', 'glC@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(10, 'GL D', 'glD@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, NULL, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(11, 'Sales 1', 'sales1@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(12, 'Sales 2', 'sales2@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(13, 'Sales 3', 'sales3@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 7, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(14, 'Sales 4', 'sales4@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 8, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(15, 'Sales 5', 'sales5@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 4, 8, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(16, 'Sales 6', 'sales6@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, 9, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(17, 'Sales 7', 'sales7@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 2, 5, 9, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(18, 'Sales 8', 'sales8@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, 10, '2025-09-10 13:32:00', '2025-09-10 13:32:00'),
+(19, 'Sales 9', 'sales9@eureka.com', '0ad80eb119d9bf7775aa23786b05b391', 3, 6, 10, '2025-09-10 13:32:00', '2025-09-10 13:32:00');
 
 -- --------------------------------------------------------
 
@@ -1016,7 +1034,7 @@ ALTER TABLE `kpi_targets`
 -- AUTO_INCREMENT for table `leads`
 --
 ALTER TABLE `leads`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `leads_stage`
@@ -1028,7 +1046,7 @@ ALTER TABLE `leads_stage`
 -- AUTO_INCREMENT for table `lead_comments`
 --
 ALTER TABLE `lead_comments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
 
 --
 -- AUTO_INCREMENT for table `quotations`
@@ -1070,7 +1088,7 @@ ALTER TABLE `sales_kpi_monthly`
 -- AUTO_INCREMENT for table `tasks`
 --
 ALTER TABLE `tasks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `task_attachments`

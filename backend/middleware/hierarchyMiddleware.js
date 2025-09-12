@@ -61,7 +61,6 @@ export const addTeamAccess = async (req, res, next) => {
         }
 
         req.teamMemberIds = await getTeamMemberIds(req.userId, req.userRoles);
-        
         req.permissions = {
             isAdmin: req.userRoles.includes('admin'),
             isManager: req.userRoles.includes('manager'),
@@ -73,7 +72,6 @@ export const addTeamAccess = async (req, res, next) => {
             canManageUsers: req.userRoles.includes('admin'),
             canApproveContracts: ['admin', 'manager', 'asmen'].some(role => req.userRoles.includes(role))
         };
-
         next();
     } catch (error) {
         console.error('Error in addTeamAccess middleware:', error);
@@ -90,10 +88,9 @@ export const canAccessResourceOwner = (resourceOwnerId) => {
         if (req.teamMemberIds && req.teamMemberIds.includes(parseInt(resourceOwnerId))) {
             return next();
         }
-
         return res.status(403).json({
             success: false,
-            message: 'Akses ditolak: Tidak dapat mengakses resource ini'
+            message: 'Akses ditolak: Tidak dapat akses diluar tim'
         });
     };
 };

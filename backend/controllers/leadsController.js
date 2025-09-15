@@ -107,7 +107,7 @@ export const getLeads = async (req, res) => {
         if (status !== undefined && status !== '') {
             whereClause.status = status === '1' || status === 'true' || status === true;
         }
-        if (stage) {
+        if (stage) {    
             whereClause.stage = stage;
         }
         if (rating) {
@@ -119,7 +119,6 @@ export const getLeads = async (req, res) => {
             } else if (req.teamMemberIds && req.teamMemberIds.includes(parseInt(owner, 10))) {
                 whereClause.owner = owner;
             } else {
-                // User is trying to filter by an owner they cannot see, so return no results.
                 whereClause.id = -1;
             }
         }

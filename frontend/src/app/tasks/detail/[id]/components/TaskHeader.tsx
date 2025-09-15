@@ -278,7 +278,7 @@ export default function TaskHeader({
               <div className="relative">
                 <button
                   onClick={() => setIsAssignDropdownOpen(!isAssignDropdownOpen)}
-                  disabled={isAssigning}
+                  disabled={isAssigning || !user?.roles?.some((role: any) => role.name === 'gl' || role.name === 'admin' || role.name === 'manager' || role.name === 'asmen')}
                   className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 flex items-center space-x-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px]"
                 >
                   {isAssigning ? (
@@ -309,7 +309,7 @@ export default function TaskHeader({
                           No users available
                         </div>
                       ) : (
-                        users.map((user) => (
+                        users.filter(user => user.roles && user.roles.some((role: any) => role.name === 'sales')).map((user) => (
                           <button
                             key={user.id}
                             onClick={() => handleAssignToUser(user.id)}

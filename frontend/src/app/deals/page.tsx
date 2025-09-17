@@ -60,7 +60,7 @@ const ALL_COLUMNS = {
   // Creator-related
   owner: { key: 'owner', label: 'Owner ID', default: false, sortable: true },
   created_by: { key: 'created_by', label: 'Created By ID', default: false, sortable: true },
-  creator_name: { key: 'creator.name', label: 'Creator Name', default: false, sortable: true },
+  creator_name: { key: 'creator.name', label: 'Owner', default: true, sortable: true },
   creator_email: { key: 'creator.email', label: 'Creator Email', default: false, sortable: true },
 
   // Timestamps

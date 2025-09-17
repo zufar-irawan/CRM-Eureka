@@ -92,7 +92,7 @@ export const getLeads = async (req, res) => {
             search,
             sortBy,
             sortOrder,
-            status = 0
+            status
         } = req.query;
 
         const offset = (page - 1) * limit;

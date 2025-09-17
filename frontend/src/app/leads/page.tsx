@@ -201,7 +201,7 @@ export default function MainLeads() {
       .map(([key, _]) => key);
   });
 
-  const stages = ["new", "contacted", "qualification", "unqualified"];
+  const stages = ["new", "contacted", "qualification", "unqualified", "converted"];
 
   const { user } = useUser()
 
@@ -245,7 +245,6 @@ export default function MainLeads() {
       setLoading(true);
       const response = await api.get("/leads/", {
         params: {
-          status: 0,
           ...(selectedStage ? { stage: selectedStage } : {}),
           ...(debouncedSearch ? { search: debouncedSearch } : {}),
         }
@@ -268,7 +267,6 @@ export default function MainLeads() {
       setLoading(true);
       const response = await api.get("/leads/", {
         params: {
-          status: 0,
           ...(selectedStage ? { stage: selectedStage } : {}),
           ...(debouncedSearch ? { search: debouncedSearch } : {}),
           ...(user?.id ? { owner: user?.id } : {})
@@ -887,7 +885,7 @@ export default function MainLeads() {
               ) : leads.length === 0 ? (
                 <tr>
                   <td className="px-6 py-4 text-gray-500 text-center" colSpan={visibleColumns.length + 2}>
-                    No unconverted leads found
+                    No leads found
                   </td>
                 </tr>
               ) : paginatedLeads.map((lead, index) => (
@@ -973,7 +971,7 @@ export default function MainLeads() {
         {loading ? (
           <p className="text-2xl">Loading...</p>
         ) : leads.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No unconverted leads found</p>
+          <p className="text-gray-500 text-center py-8">No leads found</p>
         ) : leads.map((lead) => (
           <div
             key={lead.id}

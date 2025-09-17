@@ -360,7 +360,7 @@ export default function DealHeader({
                   }`} />
               </button>
 
-              {isDropdownOpen && !isUpdatingStage && (
+              {isDropdownOpen && !isUpdatingStage && deal.stage?.toLowerCase() !== 'won' && deal.stage?.toLowerCase() !== 'lost' && (
                 <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 animate-in fade-in duration-200">
                   <div className="py-1">
                     <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100">

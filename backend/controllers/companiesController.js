@@ -44,7 +44,7 @@ export const getAllCompanies = async (req, res) => {
                     as: 'deals',
                     attributes: ['id', 'title', 'value', 'stage'],
                     required: false
-                }
+                },
             ],
             limit: parseInt(limit),
             offset: parseInt(offset),

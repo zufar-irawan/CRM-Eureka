@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // types/index.ts - Updated types untuk user system
 export interface Lead {
   id: string | number;

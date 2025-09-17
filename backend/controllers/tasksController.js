@@ -45,7 +45,6 @@ export const getTasks = async (req, res) => {
     let whereClause = {}
     const whereConditions = {}
 
-    // Filter berdasarkan lead_id (PENTING untuk detail lead)
     if (lead_id) {
       if (isNaN(lead_id)) {
         const lead = await Leads.findOne({ where: { code: lead_id } });
@@ -84,7 +83,6 @@ export const getTasks = async (req, res) => {
         } else if (req.teamMemberIds && req.teamMemberIds.includes(parseInt(assigned_to, 10))) {
             whereClause.assigned_to = assigned_to;
         } else {
-            // User is trying to filter by an owner they cannot see, so return no results.
             whereClause.id = -1;
         }
     } else if (req.teamMemberIds && !req.userRoles.includes('admin')) {
@@ -162,7 +160,6 @@ export const getTasks = async (req, res) => {
       subQuery: false,
     });
 
-    // Transform data untuk menambahkan assigned_user_name
     const transformedTasks = tasks.map(task => {
       const taskData = task.toJSON();
       return {
@@ -212,7 +209,6 @@ export const createTask = async (req, res) => {
     }
 
     const created_by = req.userId || req.body.created_by;
-
     const validCategories = ['Kanvasing', 'Followup', 'Penawaran', 'Kesepakatan Tarif', 'Deal DO', 'Lainnya'];
     if (category && !validCategories.includes(category)) {
       await transaction.rollback();
@@ -245,9 +241,7 @@ export const createTask = async (req, res) => {
       }
     }
 
-    // Generate kode task otomatis
     const taskCode = await generateTaskCode(transaction);
-
     const newTask = await Tasks.create({
       code: taskCode,
       lead_id: finalLeadId,
@@ -637,7 +631,7 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// GET /api/tasks/:id/comments - Ambil semua komentar pada task tertentu
+// GET /api/tasks/:id/comments
 export const getTaskComments = async (req, res) => {
   try {
     const { id } = req.params;
@@ -687,7 +681,7 @@ export const getTaskComments = async (req, res) => {
   }
 };
 
-// POST /api/tasks/:id/comments - Tambahkan komentar ke task
+// POST /api/tasks/:id/comments
 export const addTaskComment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -742,7 +736,7 @@ export const addTaskComment = async (req, res) => {
   }
 };
 
-// PUT /api/tasks/task-comments/:commentId - Edit komentar tertentu
+// PUT /api/tasks/task-comments/:commentId 
 export const updateTaskComment = async (req, res) => {
   try {
     const { commentId } = req.params;
@@ -1136,7 +1130,6 @@ export const addTaskResultWithAttachments = async (req, res) => {
         }
 
         const compressedSize = originalSize;
-
         let compressionRatio;
         if (compressedSize >= originalSize) {
           compressionRatio = 1.0;
@@ -1147,7 +1140,6 @@ export const addTaskResultWithAttachments = async (req, res) => {
         const finalCompressedSize = Math.max(compressedSize, 1);
         const finalCompressionRatio = Math.max(compressionRatio, 0.01);
 
-        // ✅ DEBUG: Log what we're storing
         console.log(`💾 Storing attachment:`, {
           original_filename: file.originalname,
           stored_filename: file.filename,
@@ -1161,7 +1153,7 @@ export const addTaskResultWithAttachments = async (req, res) => {
 
         const attachment = await TaskAttachments.create({
           task_result_id: newResult.id,
-          original_filename: file.originalname, // ✅ This should contain the real filename
+          original_filename: file.originalname, 
           stored_filename: file.filename,
           file_path: file.path,
           file_size: originalSize,
@@ -1266,8 +1258,6 @@ export const downloadAttachment = async (req, res) => {
     }
 
     const filePath = path.resolve(attachment.file_path);
-
-    // Check if file exists
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
         success: false,
@@ -1275,7 +1265,6 @@ export const downloadAttachment = async (req, res) => {
       });
     }
 
-    // Set proper headers for download
     res.setHeader('Content-Disposition', `attachment; filename="${attachment.original_filename}"`);
     res.setHeader('Content-Type', attachment.mime_type);
     res.setHeader('Content-Length', attachment.file_size);
@@ -1306,7 +1295,7 @@ export const downloadAttachment = async (req, res) => {
   }
 };
 
-// ===== NEW: GET /api/tasks/attachments/:attachmentId/view - View attachment (for images) =====
+// ===== NEW: GET /api/tasks/attachments/:attachmentId/view
 export const viewAttachment = async (req, res) => {
   try {
     const { attachmentId } = req.params;
@@ -1333,7 +1322,7 @@ export const viewAttachment = async (req, res) => {
     // Set proper headers for viewing
     res.setHeader('Content-Type', attachment.mime_type);
     res.setHeader('Content-Length', attachment.file_size);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); 
 
     // Create read stream and pipe to response
     const fileStream = fs.createReadStream(filePath);
@@ -1361,7 +1350,7 @@ export const viewAttachment = async (req, res) => {
   }
 };
 
-// ===== NEW: DELETE /api/tasks/attachments/:attachmentId - Delete attachment =====
+//DELETE /api/tasks/attachments/:attachmentId
 export const deleteAttachment = async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -1369,7 +1358,6 @@ export const deleteAttachment = async (req, res) => {
     const { attachmentId } = req.params;
 
     const attachment = await TaskAttachments.findByPk(attachmentId, { transaction });
-
     if (!attachment) {
       await transaction.rollback();
       return res.status(404).json({
@@ -1430,10 +1418,9 @@ export const getTaskAttachments = async (req, res) => {
       }
     }
 
-    // Get all attachments for this task through task_results
     const attachments = await TaskAttachments.findAll({
       include: [
-        {
+        { 
           model: TaskResults,
           as: 'task_result',
           where: { task_id: taskId },
@@ -1450,7 +1437,6 @@ export const getTaskAttachments = async (req, res) => {
       order: [['uploaded_at', 'DESC']]
     });
 
-    // Add download and view URLs
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const attachmentsWithUrls = attachments.map(attachment => {
       const attachmentData = attachment.toJSON();

@@ -1,9 +1,10 @@
-"use client";
+"use client"
 
 import React, { useState } from 'react';
 import { compressImage } from '../utils/imageCompression';
 import { CurrentUser } from '../types';
 import Swal from 'sweetalert2';
+import { makeAuthenticatedRequest } from '../utils/constants';
 
 interface TaskResultWithAttachmentProps {
   taskId: string;
@@ -18,47 +19,73 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
   const [isCompressing, setIsCompressing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // ✅ Tambahkan fungsi update status mirip useTasks
+  const handleUpdateTaskStatus = async (
+    taskId: string,
+    status: 'pending' | 'completed' | 'cancelled'
+  ) => {
+    try {
+      const response = await makeAuthenticatedRequest(
+        `http://localhost:5000/api/tasks/${taskId}/updateStatus`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update task status');
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update task status');
+      }
+
+      // Optional: tampilkan notifikasi singkat
+      Swal.fire({
+        icon: 'success',
+        title: 'Status Updated',
+        text: `Task marked as ${status}`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update task status. Please try again.',
+      });
+    }
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     setIsCompressing(true);
-
     try {
       const processedFiles = await Promise.all(
         selectedFiles.map(async (file) => {
           if (file.type.startsWith('image/')) {
-            // Compress image files while preserving filename
             const compressed = await compressImage(file, {
               maxSizeMB: 1,
               maxWidthOrHeight: 1920,
               useWebWorker: true
             });
-
-            // ✅ FIXED: Preserve original filename after compression
-            const preservedFile = new File(
-              [compressed],
-              file.name, // Use original filename
-              {
-                type: compressed.type || file.type,
-                lastModified: Date.now()
-              }
-            );
-
-            console.log('✅ Image compressed:', {
-              original: file.name,
-              preserved: preservedFile.name,
-              originalSize: file.size,
-              compressedSize: preservedFile.size
+            return new File([compressed], file.name, {
+              type: compressed.type || file.type,
+              lastModified: Date.now()
             });
-
-            return preservedFile;
           }
-          // Return non-image files as-is
           return file;
         })
       );
-
       setFiles(processedFiles);
-      console.log('✅ Files processed:', processedFiles.map(f => ({ name: f.name, size: f.size })));
     } catch (error) {
       console.error('Error processing files:', error);
       Swal.fire({
@@ -85,7 +112,6 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       return;
     }
 
-    // Show loading alert
     Swal.fire({
       title: 'Uploading Result...',
       text: 'Please wait while we save your result and attachments',
@@ -103,43 +129,32 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       const formData = new FormData();
       formData.append('result_text', resultText);
       formData.append('result_type', resultType);
+      files.forEach((file) => formData.append('attachments', file, file.name));
 
-      // ✅ FIXED: Add files with proper names
-      files.forEach((file, index) => {
-        console.log(`Adding file ${index + 1}: ${file.name} (${file.size} bytes)`);
-        formData.append('attachments', file, file.name); // Explicitly pass filename
-      });
-
-      // Debug FormData
-      console.log('FormData contents:');
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`${key}:`, { name: value.name, size: value.size, type: value.type });
-        } else {
-          console.log(`${key}:`, value);
+      const response = await fetch(
+        `http://localhost:5000/api/tasks/${taskId}/results/with-attachments`,
+        {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
         }
-      }
-
-      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/results/with-attachments`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include', // Ensure cookies are sent
-      });
+      );
 
       const result = await response.json();
 
       if (result.success) {
-        // Show success message
+        // ✅ Update status task menjadi completed setelah result sukses
+        await handleUpdateTaskStatus(taskId, 'completed');
+
         await Swal.fire({
           icon: 'success',
           title: 'Success!',
-          text: 'Task result added successfully!',
+          text: 'Task result added and status updated!',
           timer: 2000,
           showConfirmButton: false,
           timerProgressBar: true,
         });
 
-        // Reset form and notify parent
         setResultText('');
         setFiles([]);
         if (onSuccess) onSuccess();
@@ -158,7 +173,6 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
         title: 'Upload Failed',
         text: 'Error adding task result. Please check your connection and try again.',
         confirmButtonColor: '#3b82f6',
-        footer: '<small>If the problem persists, please contact support</small>'
       });
     } finally {
       setIsUploading(false);

@@ -466,7 +466,6 @@ export default function CreateLeadModal({
                           onBlur={handleBlur}
                           className={getInputClassName('title')}
                         >
-                          <option value="">Select Salutation</option>
                           <option value="Mr">Mr</option>
                           <option value="Mrs">Mrs</option>
                           <option value="Ms">Ms</option>

@@ -99,37 +99,35 @@ export default function CreateLeadModal({
   const [error, setError] = useState("");
 
   // Validation functions
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  // const validateEmail = (email: string): boolean => {
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   return emailRegex.test(email);
+  // };
 
-  const validatePhone = (phone: string): boolean => {
-    // Allow various phone formats: +62, 08, 021, etc.
-    const phoneRegex = /^[\+]?[\d\s\-\(\)]{8,20}$/;
-    return phoneRegex.test(phone.replace(/\s/g, ''));
-  };
+  // const validatePhone = (phone: string): boolean => {
+  //   const phoneRegex = /^[\+]?[\d\s\-\(\)]{8,20}$/;
+  //   return phoneRegex.test(phone.replace(/\s/g, ''));
+  // };
 
-  const validateURL = (url: string): boolean => {
-    try {
-      new URL(url.startsWith('http') ? url : `https://${url}`);
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  // const validateURL = (url: string): boolean => {
+  //   try {
+  //     new URL(url.startsWith('http') ? url : `https://${url}`);
+  //     return true;
+  //   } catch {
+  //     return false;
+  //   }
+  // };
 
   const validateName = (name: string): boolean => {
     // Only allow letters, spaces, hyphens, and apostrophes
-    const nameRegex = /^[a-zA-Z\s\-\']+$/;
+    const nameRegex = /^[a-zA-Z\s\-']+$/;
     return nameRegex.test(name);
   };
 
-  const validatePostalCode = (postalCode: string): boolean => {
-    // Indonesian postal code format (5 digits)
-    const postalRegex = /^\d{5}$/;
-    return postalRegex.test(postalCode);
-  };
+  // const validatePostalCode = (postalCode: string): boolean => {
+  //   const postalRegex = /^\d{5}$/;
+  //   return postalRegex.test(postalCode);
+  // };
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
@@ -245,13 +243,13 @@ export default function CreateLeadModal({
       };
 
       // Remove empty string values
-      Object.keys(submitData).forEach(key => {
-        if ((submitData as any)[key] === '') {
-          delete (submitData as any)[key];
-        }
-      });
+      const cleaned = Object.fromEntries(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        Object.entries(submitData).filter(([_, v]) => v !== '')
+      ) as Record<string, unknown>;
 
-      console.log('Data to submit:', submitData);
+
+      console.log('Data to submit:', cleaned);
 
       const response = await fetch('http://localhost:5000/api/leads', {
         method: 'POST',
@@ -259,7 +257,7 @@ export default function CreateLeadModal({
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(submitData),
+        body: JSON.stringify(cleaned),
       });
 
       const result = await response.json();

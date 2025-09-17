@@ -165,29 +165,6 @@ export default function DealCommentsTab({ dealId, currentUser }: DealCommentsTab
         </div>
       )}
 
-      {/* Quick Action Buttons */}
-      {!showNewComment && comments.length > 0 && !replyingTo && (
-        <div className="flex items-center justify-center space-x-4 mt-8 pt-6 border-t border-gray-200">
-          <button
-            onClick={() => setShowNewComment(true)}
-            className="flex items-center space-x-2 px-6 py-3 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>Add Comment</span>
-          </button>
-
-          {comments.length > 0 && (
-            <button
-              onClick={() => handleStartReply(comments[0].id)}
-              className="flex items-center space-x-2 px-6 py-3 text-sm text-blue-700 hover:text-blue-800 border border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>Quick Reply</span>
-            </button>
-          )}
-        </div>
-      )}
-
       {/* Footer Stats */}
       {totalComments > 0 && (
         <div className="mt-8 pt-4 border-t border-gray-200 text-center">

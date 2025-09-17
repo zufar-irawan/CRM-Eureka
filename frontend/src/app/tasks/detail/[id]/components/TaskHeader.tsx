@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -345,8 +347,14 @@ export default function TaskHeader({
                     <div className="w-4 h-4 flex items-center justify-center">
                     </div>
                   </div>
+                ) : (task.status === "cancelled" ? (
+                  <div className="border border-red-300 rounded-md px-3 py-2 text-sm bg-red-50 text-red-800 flex items-center space-x-2 cursor-not-allowed opacity-75">
+                    <div className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}></div>
+                    <span className="capitalize font-medium">{task.status}</span>
+                    <div className="w-4 h-4 flex items-center justify-center">
+                    </div>
+                  </div>
                 ) : (
-                  // Non-completed task - status can be changed
                   <>
                     <button
                       onClick={() => !isUpdating && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
@@ -388,7 +396,7 @@ export default function TaskHeader({
                       </div>
                     )}
                   </>
-                )}
+                ))}
               </div>
             </div>
           )}

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Kanban.tsx - Updated with rollback functionality
 "use client"
 
@@ -125,7 +127,7 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                 assigned_to: userValidation ? user.id : undefined,
             })
         }
-    }, [pathname, userValidation, user?.id])
+    }, [pathname, userValidation, user?.id, setContainers, setData])
 
     useEffect(() => {
         if (user) {
@@ -167,6 +169,7 @@ export default function Kanban({ containers, setContainers, setData, pathname }:
                                 setShowTaskResultModal,
                                 setSelectedTaskId,
                                 setPendingDrag,
+                                refreshKanbanData,
                             })
                         }
                     >

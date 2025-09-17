@@ -5,7 +5,7 @@ import { FileText } from 'lucide-react';
 import type { CurrentUser } from '../types';
 import { RESULT_TYPES, makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
 import { getFirstChar } from '../utils/formatting';
-import Swal from 'sweetalert2';
+import Swal from 'sweetalert2'
 
 interface AddTaskResultProps {
   taskId: string | string[] | undefined;
@@ -25,14 +25,62 @@ export default function AddTaskResult({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-   const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
+  const normalizedTaskId = Array.isArray(taskId) ? taskId[0] : taskId;
+
+  // Di dalam AddTaskResult (setelah state2 dan sebelum handleSubmit)
+  const handleUpdateTaskStatus = async (
+    taskId: string,
+    status: 'pending' | 'completed' | 'cancelled'
+  ) => {
+    try {
+      const response = await makeAuthenticatedRequest(
+        `http://localhost:5000/api/tasks/${taskId}/updateStatus`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update task status');
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update task status');
+      }
+
+      // Optional: tampilkan notifikasi
+      Swal.fire({
+        icon: 'success',
+        title: 'Status Updated',
+        text: `Task status changed to ${status}`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update task status. Please try again.',
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!resultText.trim()) {
       setError('Result description cannot be empty');
-      
+
       Swal.fire({
         icon: 'warning',
         title: 'Missing Information',
@@ -43,7 +91,7 @@ export default function AddTaskResult({
 
     if (!normalizedTaskId) {
       setError('Task ID is required');
-      
+
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -77,11 +125,15 @@ export default function AddTaskResult({
         throw new Error(errorData.message || 'Failed to add result');
       }
 
+      if (normalizedTaskId) {
+        await handleUpdateTaskStatus(normalizedTaskId, 'completed');
+      }
+
       // Reset form and notify parent
       setResultText('');
       setResultType('note');
       onResultAdded();
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Success',
@@ -94,7 +146,7 @@ export default function AddTaskResult({
       console.error('Error adding result:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to add result';
       setError(errorMessage);
-      
+
       Swal.fire({
         icon: 'error',
         title: 'Failed to Add Result',
@@ -162,7 +214,7 @@ export default function AddTaskResult({
               <div className="text-xs text-gray-500">
                 Recording as <span className="font-medium">{currentUser?.name || 'Unknown User'}</span>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <button
                   type="button"

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -224,7 +225,7 @@ export default function TaskItem({
       setShowResultModal(false);
       setResult(null);
     }
-  }, [isCompleted]);
+  }, [isCompleted, getTaskResult, result, isLoadingResult]);
 
   useEffect(() => {
     return () => {

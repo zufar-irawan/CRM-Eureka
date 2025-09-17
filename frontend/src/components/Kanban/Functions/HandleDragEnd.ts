@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // HandleDragEnd.ts - Updated version with rollback functionality
 import { DragEndEvent, UniqueIdentifier } from "@dnd-kit/core";
 import { DNDType } from "../Kanban";
@@ -5,6 +7,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import findValueOfItems from "./FindValueOfItems";
 import React from "react";
 import updateStage from "./UpdateStage";
+import Swal from "sweetalert2";
 
 // Export the rollback function for use in Kanban component
 export function rollbackDrag(
@@ -74,6 +77,7 @@ type handleDragEndProps = {
     setShowTaskResultModal: React.Dispatch<React.SetStateAction<boolean>>;
     setSelectedTaskId: React.Dispatch<React.SetStateAction<number | null>>;
     setPendingDrag: React.Dispatch<React.SetStateAction<DragEndEvent | null>>;
+    refreshKanbanData: () => void;
 };
 
 export default async function handleDragEnd({
@@ -89,7 +93,8 @@ export default async function handleDragEnd({
     pathname,
     setShowTaskResultModal,
     setSelectedTaskId,
-    setPendingDrag
+    setPendingDrag,
+    refreshKanbanData
 }: handleDragEndProps) {
     const { active, over } = event;
 
@@ -147,6 +152,24 @@ export default async function handleDragEnd({
         console.log("Same container - no update needed");
         setDraggedItem(null);
         return;
+    }
+
+    const lockedStages = ["completed", "converted", "won", "lost", "cancelled"]
+    if(lockedStages.includes(draggedItem.sourceContainer.toLowerCase())) {
+        console.log(
+            `Item is in locked stage "${draggedItem.sourceContainer}" - movement not allowed`
+        )
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Item locked',
+            text: `Item is in locked stage "${draggedItem.sourceContainer}" - movement not allowed`,
+        });
+
+        rollbackDrag(event, containers, setContainers)
+        refreshKanbanData()
+        setDraggedItem(null)
+        return
     }
 
     // Special handling for "Converted" stage

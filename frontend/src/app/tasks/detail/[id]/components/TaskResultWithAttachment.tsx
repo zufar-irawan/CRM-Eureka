@@ -112,20 +112,10 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       return;
     }
 
-    Swal.fire({
-      title: 'Uploading Result...',
-      text: 'Please wait while we save your result and attachments',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      showConfirmButton: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-
     setIsUploading(true);
 
     try {
+      // ====== 1️⃣ Kirim result seperti biasa ======
       const formData = new FormData();
       formData.append('result_text', resultText);
       formData.append('result_type', resultType);
@@ -143,13 +133,26 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       const result = await response.json();
 
       if (result.success) {
-        // ✅ Update status task menjadi completed setelah result sukses
-        await handleUpdateTaskStatus(taskId, 'completed');
+        // ====== 2️⃣ Cek status task di server ======
+        const statusResp = await fetch(
+          `http://localhost:5000/api/tasks/${taskId}`,
+          { credentials: 'include' }
+        );
+        const statusData = await statusResp.json();
+
+        // Pastikan status tidak cancelled sebelum update ke completed
+        if (
+          statusResp.ok &&
+          statusData?.data?.status &&
+          statusData.data.status.toLowerCase() !== 'cancelled'
+        ) {
+          await handleUpdateTaskStatus(taskId, 'completed');
+        }
 
         await Swal.fire({
           icon: 'success',
           title: 'Success!',
-          text: 'Task result added and status updated!',
+          text: 'Task result added successfully!',
           timer: 2000,
           showConfirmButton: false,
           timerProgressBar: true,
@@ -178,6 +181,7 @@ const TaskResultWithAttachment: React.FC<TaskResultWithAttachmentProps> = ({ tas
       setIsUploading(false);
     }
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

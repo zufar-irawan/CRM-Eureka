@@ -1,15 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import DateTime from "@/components/AddModal/DateTime";
 import Dropdown from "@/components/AddModal/Dropdown";
 import Input from "@/components/AddModal/Input";
 import TextArea from "@/components/AddModal/TextArea";
-import { PlusIcon, X, ArrowLeft } from "lucide-react";
+import { PlusIcon, X } from "lucide-react";
 import { useEffect, useState } from "react"
 import Swal from "sweetalert2";
 import CreateLeadModal from "../../leads/add/AddLeadModal";
 import useUser from "../../../../hooks/useUser";
-import { redirect } from "next/navigation";
 import { useRouter } from "next/navigation";
 
 interface Props {

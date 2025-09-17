@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // hooks/useTasks.ts
 import { useState, useCallback } from 'react';
 import type { Task, TaskStats } from '../types';

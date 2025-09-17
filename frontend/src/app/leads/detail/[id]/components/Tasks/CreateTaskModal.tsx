@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { CurrentUser, User } from '../../types';
+import type { CurrentUser } from '../../types';
 import { makeAuthenticatedRequest } from '../../utils/auth';
-import { API_ENDPOINTS, FALLBACK_USERS } from '../../utils/constants';
+import { API_ENDPOINTS } from '../../utils/constants';
 import Swal from "sweetalert2";
+import useUser from "../../../../../../../hooks/useUser";
 
 interface CreateTaskModalProps {
   leadId: string | string[] | undefined;
@@ -30,6 +32,8 @@ export default function CreateTaskModal({
   onClose,
   onTaskCreated
 }: CreateTaskModalProps) {
+  const { user } = useUser()
+
   const [form, setForm] = useState<TaskForm>({
     lead_id: parseInt(String(leadId)) || 0,
     assigned_to: currentUser?.id || 0,
@@ -40,31 +44,54 @@ export default function CreateTaskModal({
     priority: 'medium',
   });
 
-  const [userOptions, setUserOptions] = useState<User[]>([]);
+  const [userOptions, setUserOptions] = useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
-      try {
-        const response = await makeAuthenticatedRequest(API_ENDPOINTS.USERS);
+      if (!user) return; // Wait for user data to be loaded
 
-        if (response.ok) {
-          const result = await response.json();
-          const data = Array.isArray(result) ? result : result.data || [];
-          setUserOptions(data);
+      try {
+        if (user.roles && user.roles.some((role: any) => role.name === 'sales')) {
+          setUserOptions([{ value: user.id, label: user.name }]);
+          setForm(prevForm => ({ ...prevForm, assigned_to: user.id }));
         } else {
-          console.log('Using fallback users due to API error');
-          setUserOptions(FALLBACK_USERS);
+          const res = await fetch("http://localhost:5000/api/users/role/sales", {
+            credentials: 'include',
+          });
+          const result = await res.json();
+
+          if (!res.ok) {
+            throw new Error(result.message || "Failed to fetch users");
+          }
+
+          const data = result.data;
+
+          if (!Array.isArray(data)) {
+            // It's possible the API returns an object when no users are found.
+            // In that case, we can just set the options to an empty array.
+            if (typeof data === 'object' && data !== null) {
+              setUserOptions([]);
+              return;
+            }
+            throw new Error("Data users is not an array");
+          }
+
+          const mappedOptions = data.map((user: any) => ({
+            value: user.id,
+            label: user.name,
+          }));
+
+          setUserOptions(mappedOptions);
         }
       } catch (error) {
-        console.error("Failed to fetch users", error);
-        setUserOptions(FALLBACK_USERS);
+        console.error("Failed to fetch users:", error);
       }
     };
 
     fetchUsers();
-  }, []);
+  }, [user]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -213,9 +240,9 @@ export default function CreateTaskModal({
                       required
                     >
                       <option value="">Select user</option>
-                      {userOptions.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.name}
+                      {userOptions.map((option, index) => (
+                        <option key={index} value={option.value}>
+                          {option.label}
                         </option>
                       ))}
                     </select>

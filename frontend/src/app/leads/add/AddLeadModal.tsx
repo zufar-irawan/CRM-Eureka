@@ -1,6 +1,6 @@
 "use client";
 
-import { X, ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
+import { X, ArrowLeft, ChevronDown, ChevronRight, Asterisk } from "lucide-react";
 import { useState } from "react";
 import Swal from "sweetalert2";
 import useUser from "../../../../hooks/useUser";
@@ -366,8 +366,8 @@ export default function CreateLeadModal({
                   {openSections.personal && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">
-                          Salutation
+                        <label className="text-sm gap-1 flex font-medium text-gray-600">
+                          Salutation <Asterisk size={16} color="#ff0000" />
                         </label>
                         <select
                           name="title"
@@ -384,8 +384,8 @@ export default function CreateLeadModal({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">
-                          First Name
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          First Name <Asterisk size={16} color="#ff0000" />
                         </label>
                         <input
                           name="first_name"
@@ -400,7 +400,9 @@ export default function CreateLeadModal({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">Last Name</label>
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          Last Name
+                        </label>
                         <input
                           name="last_name"
                           placeholder="Enter last name"
@@ -414,7 +416,9 @@ export default function CreateLeadModal({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">Email</label>
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          Email <Asterisk size={16} color="#ff0000" />
+                        </label>
                         <input
                           name="email"
                           type="email"
@@ -429,7 +433,9 @@ export default function CreateLeadModal({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">Mobile</label>
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          Mobile <Asterisk size={16} color="#ff0000" />
+                        </label>
                         <input
                           name="mobile"
                           placeholder="Enter mobile number"
@@ -493,7 +499,9 @@ export default function CreateLeadModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">Company</label>
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          Company <Asterisk size={16} color="#ff0000" />
+                        </label>
                         <input
                           name="company"
                           placeholder="Enter company name"
@@ -595,7 +603,9 @@ export default function CreateLeadModal({
                   {openSections.address && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1 md:col-span-3">
-                        <label className="block text-sm font-medium text-gray-600">Street</label>
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          Street <Asterisk size={16} color="#ff0000" />
+                        </label>
                         <input
                           name="street"
                           placeholder="Enter street address"
@@ -609,7 +619,9 @@ export default function CreateLeadModal({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">City</label>
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          City <Asterisk size={16} color="#ff0000" />
+                        </label>
                         <input
                           name="city"
                           placeholder="Enter city"
@@ -623,7 +635,9 @@ export default function CreateLeadModal({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">State</label>
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          State <Asterisk size={16} color="#ff0000" />
+                        </label>
                         <input
                           name="state"
                           placeholder="Enter state"
@@ -652,7 +666,9 @@ export default function CreateLeadModal({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-600">Country</label>
+                        <label className="flex gap-1 text-sm font-medium text-gray-600">
+                          Country <Asterisk size={16} color="#ff0000" />
+                        </label>
                         <input
                           name="country"
                           placeholder="Enter country"

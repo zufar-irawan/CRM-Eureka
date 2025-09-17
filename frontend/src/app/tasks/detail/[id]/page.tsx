@@ -9,12 +9,12 @@ import TaskSidebar from "./components/TaskSidebar";
 import TaskCommentsTab from "./components/TaskCommentsTab";
 import TaskResultsTab from "./components/TaskResultsTab";
 import TaskAttachmentsList from "./components/TaskAttachmentsList";
-import { MessageSquare, FileText, Paperclip } from "lucide-react";
+import { MessageSquare, FileText, Paperclip, } from "lucide-react";
 import Swal from "sweetalert2";
 import { checkAuthStatus } from "../../../../../utils/auth";
 
 const TASK_TABS = [
-  { name: "Comments", icon: MessageSquare },
+  { name: "Activity", icon: MessageSquare },
   { name: "Results", icon: FileText },
   { name: "Attachments", icon: Paperclip, disabled: false },
 ];
@@ -44,7 +44,7 @@ export default function TaskDetailPage() {
   }, [router]);
 
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState("Comments");
+  const [activeTab, setActiveTab] = useState("Activity");
 
   const { currentUser, userLoading } = useAuth();
   const {
@@ -78,7 +78,7 @@ export default function TaskDetailPage() {
     if (!task) return null;
 
     switch (activeTab) {
-      case "Comments":
+      case "Activity":
         return <TaskCommentsTab taskId={id} currentUser={currentUser} refreshComments={refreshComments} />;
       case "Results":
         return (

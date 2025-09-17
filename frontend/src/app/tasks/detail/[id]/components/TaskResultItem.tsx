@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { TaskResult, CurrentUser, TaskAttachment } from "../types";
-import { formatDate, getFirstChar, formatBytes } from "../utils/formatting";
+import { getFirstChar, formatBytes } from "../utils/formatting";
 import {
   RESULT_TYPES,
   makeAuthenticatedRequest,
@@ -311,7 +311,16 @@ useEffect(() => {
                 </span>
                 <span className="flex items-center space-x-2 text-sm text-gray-500">
                   <Calendar className="w-4 h-4" />
-                  <span>{formatDate(result.result_date)}</span>
+                  <span>
+                    {new Date(result.result_date).toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: 'numeric',
+                      hour12: true,
+                    })}
+                  </span>
                 </span>
                 {result.created_by_name && (
                   <span className="flex items-center space-x-2 text-sm text-gray-500">

@@ -3,7 +3,7 @@
 import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import type { TaskComment, CurrentUser } from '../types';
-import { formatDate, getFirstChar } from '../utils/formatting';
+import { getFirstChar } from '../utils/formatting';
 import { makeAuthenticatedRequest, TASK_API_ENDPOINTS } from '../utils/constants';
 import Swal from 'sweetalert2';
 
@@ -176,7 +176,14 @@ export default function TaskCommentItem({
                 {comment.commentedByUser?.name || 'Unknown User'}
               </span>
               <span className="text-xs text-gray-500">
-                {formatDate(comment.commented_at)}
+                {new Date(comment.commented_at).toLocaleString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: true,
+                })}
               </span>
             </div>
 

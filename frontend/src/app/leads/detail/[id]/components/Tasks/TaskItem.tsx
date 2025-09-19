@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -135,7 +137,11 @@ export default function TaskItem({
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const isCompleted = task.status === 'completed';
+  const isCancelled = task.status === 'cancelled';
+  const isOnResult = isCompleted || isCancelled;
   const isOverdue = new Date(task.due_date) < new Date() && !isCompleted;
+
+  const [taskStatusPending, setTaskStatusPending] = useState<'completed' | 'cancelled' | 'pending'>('pending')
 
   // Effect untuk handle ESC key untuk image preview
   useEffect(() => {
@@ -205,7 +211,7 @@ export default function TaskItem({
         setResult(formatted);
       } else {
         setResult(null);
-        if (isCompleted) {
+        if (isOnResult) {
           setShowResultModal(true);
         }
       }
@@ -216,16 +222,16 @@ export default function TaskItem({
     } finally {
       setIsLoadingResult(false);
     }
-  }, [task.id, isCompleted, isLoadingResult]);
+  }, [task.id, isOnResult, isLoadingResult]);
 
   useEffect(() => {
-    if (isCompleted && !result && !isLoadingResult) {
+    if (isOnResult && !result && !isLoadingResult) {
       getTaskResult();
-    } else if (!isCompleted) {
+    } else if (!isOnResult) {
       setShowResultModal(false);
       setResult(null);
     }
-  }, [isCompleted, getTaskResult, result, isLoadingResult]);
+  }, [isOnResult, getTaskResult, result, isLoadingResult]);
 
   useEffect(() => {
     return () => {
@@ -339,10 +345,11 @@ export default function TaskItem({
     setShowStatusDropdown(false);
 
     try {
-      await onUpdateStatus(task.id, newStatus);
 
-      if (newStatus === 'completed' && !result) {
+      const statusChangeNew = newStatus === 'completed' || newStatus === 'cancelled'
+      if (statusChangeNew && !result) {
         setShowResultModal(true);
+        setTaskStatusPending(newStatus)
       }
     } finally {
       setIsUpdating(false);
@@ -427,6 +434,7 @@ export default function TaskItem({
         setResultType('note');
         setFiles([]);
         setShowResultModal(false);
+        await onUpdateStatus(task.id, taskStatusPending);
         await getTaskResult();
       } else {
         Swal.fire({
@@ -485,7 +493,7 @@ export default function TaskItem({
             <div className="flex items-start flex-1">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-3 mb-2">
-                  <h4 className={`font-medium ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                  <h4 className={`font-medium ${isOnResult ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                     {task.title}
                   </h4>
 
@@ -540,7 +548,7 @@ export default function TaskItem({
               </div>
             </div>
 
-            {canEditTask && (
+            {canEditTask && !isOnResult && (
               <div className="flex items-center space-x-2">
                 {/* Status Dropdown */}
                 <div className="relative">
@@ -633,11 +641,11 @@ export default function TaskItem({
 
         {/* Result Display with Attachments */}
         {result && (
-          <div className="border-green-600 rounded-b-lg p-4 border bg-green-50">
+          <div className={`border-green-600 bg-green-50 ${isCancelled ? "border-red-600 bg-red-50" : ''} rounded-b-lg p-4 border `}>
             <div className="flex items-start space-x-4">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
-                  <h4 className="font-medium text-green-800">Task Result</h4>
+                  <h4 className={`font-medium text-green-800 ${isCancelled ? "text-red-800" : ''}`}>Task Result</h4>
                 </div>
 
                 <p className="text-sm mb-3 text-gray-700">

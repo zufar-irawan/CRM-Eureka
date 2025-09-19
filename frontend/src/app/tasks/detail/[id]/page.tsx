@@ -55,7 +55,6 @@ export default function TaskDetailPage() {
     refreshTask,
     updateTaskStatus,
     updateTaskAssignment,
-    setTask,
     refreshComments,
   } = useTaskDetail(id);
 

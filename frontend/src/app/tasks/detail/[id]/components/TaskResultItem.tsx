@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import {
@@ -12,9 +14,6 @@ import {
   Video,
   Music,
   File,
-  X,
-  ZoomIn,
-  ExternalLink,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { TaskResult, CurrentUser, TaskAttachment } from "../types";
@@ -58,28 +57,28 @@ export default function TaskResultItem({
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-  if (previewImage) {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }
-}, [previewImage]);
-
-// Keyboard navigation - Add this useEffect for ESC key:
-useEffect(() => {
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && previewImage) {
-      setPreviewImage(null);
-      setPreviewAttachment(null);
+    if (previewImage) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
     }
-  };
+  }, [previewImage]);
 
-  document.addEventListener('keydown', handleKeyDown);
-  return () => {
-    document.removeEventListener('keydown', handleKeyDown);
-  };
-}, [previewImage]);
+  // Keyboard navigation - Add this useEffect for ESC key:
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && previewImage) {
+        setPreviewImage(null);
+        setPreviewAttachment(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [previewImage]);
 
   const canEdit =
     currentUser?.id === result.created_by || currentUser?.role === "admin";
@@ -459,7 +458,7 @@ useEffect(() => {
                   {attachments.map((attachment) => {
                     const FileIcon = getFileTypeIcon(attachment.file_type);
                     const colorClass = getFileTypeColor(attachment.file_type);
-                    
+
                     return (
                       <div key={attachment.id} className="group flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                         <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${colorClass}`}>

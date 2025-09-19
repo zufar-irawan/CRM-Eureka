@@ -174,22 +174,70 @@ export default async function handleDragEnd({
 
     // Special handling for "Converted" stage
     if (targetContainerTitle === "Converted") {
-        console.log("Moving to Converted stage - showing convert modal");
-        onConvertRequest(draggedItem.item.itemId);
+        Swal.fire({
+            title:"Are you sure?",
+            icon:"warning",
+            text:"Do you want to change stage to converted?",
+            showCancelButton:true
+        }).then((result) => {
+            if(result.isConfirmed){
+                onConvertRequest(draggedItem.item.itemId);
+            } else {
+                refreshKanbanData()
+            }
+        })
         setDraggedItem(null);
+        return;
+    }
+
+    if(targetContainerTitle === "won" || targetContainerTitle === "lost") {
+        Swal.fire({
+            title:"Are you sure?",
+            text:"Do you want to change stage to won or lost?",
+            icon:"warning",
+            showCancelButton:true
+        }).then( async (result) => {
+            if(result.isConfirmed){
+                try {
+                    await updateStage({
+                        itemId: draggedItem.item.itemId,
+                        newStage: targetContainerTitle,
+                        pathname
+                    });
+                    refreshKanbanData(); // refresh setelah update berhasil
+                } catch (error) {
+                    console.error("Failed to update stage:", error);
+                    rollbackDrag(event, containers, setContainers);
+                }
+            } else{
+                rollbackDrag(event, containers, setContainers)
+                refreshKanbanData()
+            }
+        })
+
+        // setPendingDrag(event);
+        setDraggedItem(null)
         return;
     }
 
     // Special handling for "Completed" status (Tasks only)
     if (targetContainerTitle === "completed" && pathname === "Tasks") {
-        console.log("Moving to Completed status - opening TaskResultModal");
+        Swal.fire({
+            title:"Are you sure?",
+            text:"Do you want to change status to completed",
+            icon:"warning",
+            showCancelButton:true
+        }).then((result) => {
+            if(result.isConfirmed){
+                setSelectedTaskId(draggedItem.item.itemId);
+                setShowTaskResultModal(true);
+            } else{
+                refreshKanbanData()
+            }
+        })
 
-        setSelectedTaskId(draggedItem.item.itemId);
-        setPendingDrag(event);
-        setShowTaskResultModal(true);
-
-        // Don't update status yet → wait for modal confirmation
-        // Don't call setDraggedItem(null) here so we can rollback if needed
+        // setPendingDrag(event);
+        setDraggedItem(null)
         return;
     }
 

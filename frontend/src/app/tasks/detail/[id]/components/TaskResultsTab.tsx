@@ -8,6 +8,8 @@ import { useTaskResults } from '../hooks/useTaskResults';
 import TaskResultItem from './TaskResultItem';
 import TaskResultWithAttachment from './TaskResultWithAttachment';
 import useUser from '../../../../../../hooks/useUser';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 
 interface TaskResultsTabProps {
   taskId: string | string[] | undefined;
@@ -31,11 +33,31 @@ export default function TaskResultsTab({ taskId, currentUser, refreshComments }:
     deleteResult,
   } = useTaskResults(taskId);
 
+  // const [taskStatus, setTaskStatus] = useState()
+
   useEffect(() => {
     if (taskId) {
       fetchResults();
     }
   }, [taskId, fetchResults]);
+
+  const getTaskStatus = async () => {
+    try {
+      const response = await axios({
+        method: 'get',
+        url: `http://localhost:3000/api/tasks/${taskId}`,
+      })
+
+      const taskStatus = response.data.data.status
+      if (taskStatus === "completed" || taskStatus === "cancelled") {
+        return true
+      } else {
+        return false
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   const handleResultAdded = async () => {
     try {
@@ -74,8 +96,21 @@ export default function TaskResultsTab({ taskId, currentUser, refreshComments }:
     }
   };
 
-  const handleAddResultClick = () => {
-    setShowAddResult(true);
+  const handleAddResultClick = async () => {
+    if (await getTaskStatus()) {
+      setShowAddResult(true)
+    } else {
+      Swal.fire({
+        title: "Are you sure?",
+        text: "Do you want to change the status to completed?",
+        showCancelButton: true,
+        icon: "warning",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setShowAddResult(true)
+        }
+      })
+    }
   };
 
   const handleCancelAdd = () => {
